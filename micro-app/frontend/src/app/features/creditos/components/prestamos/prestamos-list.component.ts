@@ -69,6 +69,17 @@ import {
         <mat-card-content>
           <div class="filters">
             <mat-form-field appearance="outline">
+              <mat-label>Buscar por nombre de cliente</mat-label>
+              <input
+                matInput
+                [(ngModel)]="filters.nombreCliente"
+                (keyup.enter)="loadData()"
+                placeholder="Ej: Juan Pérez"
+              />
+              <mat-icon matSuffix>person_search</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
               <mat-label>Buscar por número de crédito</mat-label>
               <input
                 matInput
@@ -97,16 +108,6 @@ import {
                   <mat-option [value]="categoria.id">{{ categoria.codigo }} - {{ categoria.nombre }}</mat-option>
                 }
               </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Desde</mat-label>
-              <input matInput type="date" [(ngModel)]="filters.fechaDesde" (change)="loadData()" />
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Hasta</mat-label>
-              <input matInput type="date" [(ngModel)]="filters.fechaHasta" (change)="loadData()" />
             </mat-form-field>
 
             <div class="filter-actions">
@@ -175,9 +176,9 @@ import {
                   <td mat-cell *matCellDef="let item">
                     <div class="client-info">
                       <span class="client-name">
-                        {{ item.persona?.nombre }} {{ item.persona?.apellido }}
+                        {{ item.cliente?.nombreCompleto || (item.persona?.nombre + ' ' + item.persona?.apellido) || 'N/A' }}
                       </span>
-                      <span class="client-dui">DUI: {{ item.persona?.numeroDui || 'N/A' }}</span>
+                      <span class="client-dui">DUI: {{ item.cliente?.numeroDui || item.persona?.numeroDui || 'N/A' }}</span>
                     </div>
                   </td>
                 </ng-container>
@@ -699,9 +700,8 @@ export class PrestamosListComponent implements OnInit {
     const cleanFilters: PrestamoFilters = {};
     if (this.filters.estado) cleanFilters.estado = this.filters.estado;
     if (this.filters.numeroCredito) cleanFilters.numeroCredito = this.filters.numeroCredito;
+    if (this.filters.nombreCliente) cleanFilters.nombreCliente = this.filters.nombreCliente;
     if (this.filters.clasificacionPrestamoId) cleanFilters.clasificacionPrestamoId = this.filters.clasificacionPrestamoId;
-    if (this.filters.fechaDesde) cleanFilters.fechaDesde = this.filters.fechaDesde;
-    if (this.filters.fechaHasta) cleanFilters.fechaHasta = this.filters.fechaHasta;
     if (this.filters.conMora !== undefined) cleanFilters.conMora = this.filters.conMora;
 
     this.service.getAll(cleanFilters).subscribe({

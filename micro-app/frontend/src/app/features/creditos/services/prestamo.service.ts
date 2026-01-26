@@ -14,8 +14,7 @@ export interface PrestamoFilters {
   estado?: EstadoPrestamo;
   personaId?: number;
   numeroCredito?: string;
-  fechaDesde?: string;
-  fechaHasta?: string;
+  nombreCliente?: string;
   clasificacionPrestamoId?: number;
   conMora?: boolean;
 }
@@ -43,17 +42,14 @@ export class PrestamoService {
       if (filters.numeroCredito) {
         params = params.set('numeroCredito', filters.numeroCredito);
       }
-      if (filters.fechaDesde) {
-        params = params.set('fechaDesde', filters.fechaDesde);
-      }
-      if (filters.fechaHasta) {
-        params = params.set('fechaHasta', filters.fechaHasta);
+      if (filters.nombreCliente) {
+        params = params.set('nombreCliente', filters.nombreCliente);
       }
       if (filters.clasificacionPrestamoId) {
         params = params.set('clasificacionPrestamoId', filters.clasificacionPrestamoId.toString());
       }
       if (filters.conMora !== undefined) {
-        params = params.set('conMora', filters.conMora.toString());
+        params = params.set('enMora', filters.conMora.toString());
       }
     }
 
