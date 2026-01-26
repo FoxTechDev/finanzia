@@ -7,10 +7,27 @@ import helmet from 'helmet';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { Request, Response, NextFunction } from 'express';
+import { DataSource } from 'typeorm';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const isProduction = process.env.NODE_ENV === 'production';
+
+  // Run migrations automatically in production
+  if (isProduction && process.env.RUN_MIGRATIONS === 'true') {
+    logger.log('🔄 Running database migrations...');
+    try {
+      const { dataSourceOptions } = await import('./config/typeorm.config');
+      const dataSource = new DataSource(dataSourceOptions);
+      await dataSource.initialize();
+      await dataSource.runMigrations();
+      logger.log('✅ Migrations completed successfully');
+      await dataSource.destroy();
+    } catch (error) {
+      logger.error('❌ Migration failed:', error);
+      // Continue anyway - migrations might already be applied
+    }
+  }
 
   // Create app with optimized logger for production
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -28,8 +45,10 @@ async function bootstrap() {
   // Performance: Enable compression for all responses
   app.use(compression());
 
-  // Global prefix for all routes
-  app.setGlobalPrefix('api');
+  // Global prefix for all routes (only in development, Digital Ocean handles /api routing)
+  if (!isProduction) {
+    app.setGlobalPrefix('api');
+  }
 
   // CORS Configuration: Dynamic origins based on environment
   const corsOrigins = process.env.CORS_ORIGINS
@@ -84,7 +103,7 @@ async function bootstrap() {
 
   await app.listen(port, host);
 
-  logger.log(`🚀 Application is running on: http://${host}:${port}/api`);
+  logger.log(`🚀 Application is running on: http://${host}:${port}${isProduction ? '' : '/api'}`);
   logger.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.log(`🔒 CORS enabled for: ${corsOrigins.join(', ')}`);
 }
