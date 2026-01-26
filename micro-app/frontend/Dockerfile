@@ -3,26 +3,26 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copiar archivos de dependencias desde frontend/
-COPY frontend/package*.json ./
+# Copiar archivos de dependencias
+COPY package*.json ./
 
 # Instalar dependencias
 RUN npm ci
 
-# Copiar código fuente desde frontend/
-COPY frontend/ .
+# Copiar código fuente
+COPY . .
 
 # Compilar para producción
 RUN npm run build:prod
 
 # Verificar build
-RUN ls -la dist/micro-app/browser/
+RUN echo "=== Contenido de dist ===" && ls -la dist/ && ls -la dist/micro-app/browser/
 
 # --- Etapa de producción con Nginx ---
 FROM nginx:alpine AS production
 
-# Copiar configuración de nginx desde frontend/
-COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+# Copiar configuración de nginx
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copiar el build de Angular
 COPY --from=builder /app/dist/micro-app/browser /usr/share/nginx/html
