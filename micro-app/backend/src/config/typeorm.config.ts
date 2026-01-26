@@ -50,10 +50,11 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         // Multiple statements (security: false by default)
         multipleStatements: false,
 
-        // SSL configuration for Azure/production
+        // SSL configuration for production (Digital Ocean, Azure, AWS)
         ...(isProduction && this.configService.get<string>('DB_SSL') === 'true' ? {
           ssl: {
-            rejectUnauthorized: this.configService.get<string>('DB_SSL_REJECT_UNAUTHORIZED') !== 'false',
+            // Digital Ocean uses self-signed certificates, so we need to allow them
+            rejectUnauthorized: this.configService.get<string>('DB_SSL_REJECT_UNAUTHORIZED') === 'true',
           },
         } : {}),
       },
@@ -98,10 +99,11 @@ export const dataSourceOptions: DataSourceOptions = {
   // Logging for CLI operations
   logging: process.env.NODE_ENV === 'development' ? true : ['error', 'warn', 'migration'],
 
-  // SSL for production (Azure, AWS RDS, etc.)
+  // SSL for production (Digital Ocean, Azure, AWS RDS, etc.)
   extra: process.env.DB_SSL === 'true' ? {
     ssl: {
-      rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false',
+      // Default to false for Digital Ocean self-signed certificates
+      rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true',
     },
   } : {},
 };
