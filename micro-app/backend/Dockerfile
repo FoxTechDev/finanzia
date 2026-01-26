@@ -28,8 +28,8 @@ RUN echo "=== Archivos en src/ ===" && ls -la src/ || echo "No src/ directory"
 # Compilar la aplicación
 RUN npm run build
 
-# Verificar que el build existe
-RUN echo "=== Contenido de dist/ ===" && ls -la dist/
+# Verificar que el build existe (falla si no existe main.js)
+RUN echo "=== Contenido de dist/ ===" && ls -la dist/ && test -f dist/main.js || (echo "ERROR: dist/main.js no existe!" && exit 1)
 
 # Reinstalar solo dependencias de producción
 RUN rm -rf node_modules && \
