@@ -1,0 +1,219 @@
+.container {
+  padding: 16px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @media (max-width: 600px) {
+    padding: 8px;
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .header-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: var(--primary-color);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 500;
+
+      @media (max-width: 600px) {
+        font-size: 24px;
+      }
+    }
+  }
+
+  button[mat-fab] {
+    @media (max-width: 600px) {
+      align-self: flex-end;
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 100;
+    }
+  }
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  gap: 16px;
+
+  p {
+    color: rgba(0, 0, 0, 0.6);
+    margin: 0;
+  }
+}
+
+mat-card {
+  mat-card-content {
+    padding: 0;
+  }
+}
+
+.search-bar {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+
+  .search-field {
+    width: 100%;
+    max-width: 500px;
+  }
+
+  .results-count {
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 14px;
+
+    span {
+      display: inline-block;
+    }
+  }
+}
+
+.table-container {
+  overflow-x: auto;
+
+  @media (max-width: 960px) {
+    // En móviles, permitir scroll horizontal
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+table {
+  mat-icon {
+    vertical-align: middle;
+  }
+
+  th {
+    font-weight: 600;
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+
+  td {
+    padding: 12px 8px;
+
+    @media (max-width: 600px) {
+      padding: 8px 4px;
+      font-size: 14px;
+    }
+  }
+
+  .descripcion-cell {
+    display: block;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    @media (max-width: 960px) {
+      max-width: 150px;
+    }
+  }
+
+  .actions-cell {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+
+    @media (max-width: 600px) {
+      gap: 0;
+    }
+  }
+}
+
+mat-chip {
+  font-size: 12px;
+  min-height: 28px;
+  padding: 4px 8px;
+
+  &.chip-activo {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #66bb6a;
+  }
+
+  &.chip-inactivo {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef5350;
+  }
+
+  .chip-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+  }
+}
+
+.empty {
+  text-align: center;
+  padding: 64px 24px;
+
+  .empty-icon {
+    font-size: 72px;
+    width: 72px;
+    height: 72px;
+    color: rgba(0, 0, 0, 0.26);
+    margin-bottom: 16px;
+  }
+
+  p {
+    color: rgba(0, 0, 0, 0.6);
+    margin: 16px 0 24px;
+    font-size: 16px;
+  }
+}
+
+mat-paginator {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+// Ajustes responsive para columnas en móvil
+@media (max-width: 600px) {
+  // Ocultar columnas menos importantes en móvil
+  ::ng-deep {
+    .mat-column-descripcion,
+    .mat-column-orden {
+      display: none;
+    }
+  }
+}
+
+@media (max-width: 960px) {
+  ::ng-deep {
+    .mat-column-descripcion {
+      max-width: 150px;
+    }
+  }
+}

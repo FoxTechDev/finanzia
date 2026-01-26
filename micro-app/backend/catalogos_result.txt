@@ -1,0 +1,27 @@
+=============================================
+Ejecutando scripts de catalogos MySQL
+=============================================
+Creando tablas de catalogos...
+mysql: [Warning] Using a password on the command line interface can be insecure.
+Insertando datos iniciales...
+mysql: [Warning] Using a password on the command line interface can be insecure.
+
+=============================================
+Verificando tablas creadas...
+=============================================
+mysql: [Warning] Using a password on the command line interface can be insecure.
+Tabla	Registros
+estado_garantia	4
+recomendacion_asesor	3
+tipo_decision_comite	3
+tipo_pago	4
+estado_pago	2
+sexo	3
+estado_solicitud	11
+destino_credito	11
+estado_cuota	4
+tipo_interes	2
+periodicidad_pago	8
+tipo_calculo	2
+
+Catalogos creados exitosamente!

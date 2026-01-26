@@ -1,0 +1,194 @@
+<div class="container">
+  <!-- Header con título y botón de agregar -->
+  <div class="header">
+    <div class="header-title">
+      <mat-icon class="header-icon">{{ config.icono }}</mat-icon>
+      <h1>{{ config.titulo }}</h1>
+    </div>
+    <button
+      mat-fab
+      color="primary"
+      (click)="openDialog()"
+      matTooltip="Agregar nuevo registro"
+      aria-label="Agregar nuevo"
+    >
+      <mat-icon>add</mat-icon>
+    </button>
+  </div>
+
+  <!-- Loading spinner -->
+  @if (isLoading()) {
+    <div class="loading">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Cargando datos...</p>
+    </div>
+  } @else {
+    <!-- Card con tabla -->
+    <mat-card>
+      <mat-card-content>
+        <!-- Barra de búsqueda -->
+        <div class="search-bar">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Buscar</mat-label>
+            <input
+              matInput
+              [value]="filtro()"
+              (input)="onFiltroChange($any($event.target).value)"
+              placeholder="Buscar por código, nombre o descripción..."
+            />
+            <mat-icon matPrefix>search</mat-icon>
+            @if (filtro()) {
+              <button
+                matSuffix
+                mat-icon-button
+                (click)="limpiarFiltro()"
+                matTooltip="Limpiar búsqueda"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            }
+          </mat-form-field>
+
+          <div class="results-count">
+            <span>
+              Mostrando {{ getDatosPaginados().length }} de
+              {{ catalogosFiltrados().length }} registros
+              @if (filtro()) {
+                (filtrados de {{ catalogos().length }} totales)
+              }
+            </span>
+          </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="table-container">
+          <table
+            mat-table
+            [dataSource]="getDatosPaginados()"
+            matSort
+            (matSortChange)="onSortChange($event)"
+            class="full-width"
+          >
+            <!-- Columna Código -->
+            <ng-container matColumnDef="codigo">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Código</th>
+              <td mat-cell *matCellDef="let item">
+                <strong>{{ item.codigo }}</strong>
+              </td>
+            </ng-container>
+
+            <!-- Columna Nombre -->
+            <ng-container matColumnDef="nombre">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Nombre</th>
+              <td mat-cell *matCellDef="let item">{{ item.nombre }}</td>
+            </ng-container>
+
+            <!-- Columna Descripción -->
+            <ng-container matColumnDef="descripcion">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                Descripción
+              </th>
+              <td mat-cell *matCellDef="let item">
+                <span class="descripcion-cell">
+                  {{ item.descripcion || '-' }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Columna Estado -->
+            <ng-container matColumnDef="activo">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th>
+              <td mat-cell *matCellDef="let item">
+                <mat-chip
+                  [class.chip-activo]="item.activo"
+                  [class.chip-inactivo]="!item.activo"
+                >
+                  <mat-icon class="chip-icon">
+                    {{ item.activo ? 'check_circle' : 'cancel' }}
+                  </mat-icon>
+                  {{ item.activo ? 'Activo' : 'Inactivo' }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Columna Orden -->
+            <ng-container matColumnDef="orden">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Orden</th>
+              <td mat-cell *matCellDef="let item">{{ item.orden || '-' }}</td>
+            </ng-container>
+
+            <!-- Columna Acciones -->
+            <ng-container matColumnDef="acciones">
+              <th mat-header-cell *matHeaderCellDef>Acciones</th>
+              <td mat-cell *matCellDef="let item">
+                <div class="actions-cell">
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    (click)="openDialog(item)"
+                    matTooltip="Editar"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    [color]="item.activo ? 'warn' : 'accent'"
+                    (click)="toggleActivo(item)"
+                    [matTooltip]="item.activo ? 'Desactivar' : 'Activar'"
+                  >
+                    <mat-icon>
+                      {{ item.activo ? 'toggle_on' : 'toggle_off' }}
+                    </mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    (click)="eliminar(item)"
+                    matTooltip="Eliminar"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        </div>
+
+        <!-- Estado vacío -->
+        @if (catalogosFiltrados().length === 0 && !isLoading()) {
+          <div class="empty">
+            <mat-icon class="empty-icon">{{ config.icono }}</mat-icon>
+            @if (filtro()) {
+              <p>No se encontraron resultados para "{{ filtro() }}"</p>
+              <button mat-raised-button color="primary" (click)="limpiarFiltro()">
+                Limpiar búsqueda
+              </button>
+            } @else {
+              <p>No hay registros en este catálogo</p>
+              <button mat-raised-button color="primary" (click)="openDialog()">
+                Agregar el primer registro
+              </button>
+            }
+          </div>
+        }
+
+        <!-- Paginador -->
+        @if (catalogosFiltrados().length > 0) {
+          <mat-paginator
+            [length]="catalogosFiltrados().length"
+            [pageSize]="pageSize"
+            [pageIndex]="pageIndex"
+            [pageSizeOptions]="pageSizeOptions"
+            (page)="onPageChange($event)"
+            showFirstLastButtons
+            aria-label="Seleccionar página"
+          >
+          </mat-paginator>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

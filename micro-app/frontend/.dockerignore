@@ -1,0 +1,31 @@
+# Archivos y carpetas a ignorar en Docker build
+# Esto optimiza el tamaño de la imagen y el tiempo de build
+
+# Dependencias
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Builds
+dist/
+.angular/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Tests
+coverage/
+*.spec.ts
+
+# Git
+.git/
+.gitignore
+
+# Misc
+.DS_Store
+Thumbs.db
+*.log

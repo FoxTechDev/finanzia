@@ -1,0 +1,21 @@
+{
+  "fechaProcesamiento": "2026-01-24T22:09:48.690Z",
+  "archivoOrigen": "prestamos.xlsx",
+  "estadisticas": {
+    "totalClientes": 67,
+    "totalPrestamos": 170,
+    "totalPagos": 969,
+    "totalErrores": 0,
+    "fechasTransacciones": 232,
+    "rangoFechas": {
+      "inicio": "2025-02-03",
+      "fin": "2026-01-17"
+    },
+    "montosResumen": {
+      "totalDesembolsado": 48702.5,
+      "totalPagado": 45209.300000000025,
+      "saldosPendientes": 26999.4
+    }
+  },
+  "errores": []
+}

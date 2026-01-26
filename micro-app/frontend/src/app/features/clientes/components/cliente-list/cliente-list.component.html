@@ -1,0 +1,114 @@
+<div class="cliente-list-container">
+  <div class="header">
+    <h1>Clientes</h1>
+    <a mat-fab color="primary" routerLink="/clientes/nuevo" class="add-btn">
+      <mat-icon>add</mat-icon>
+    </a>
+  </div>
+
+  <mat-card class="search-card">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Buscar cliente</mat-label>
+      <input
+        matInput
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="filterClientes()"
+        placeholder="Nombre, apellido o DUI"
+      />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+  </mat-card>
+
+  @if (isLoading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  } @else {
+    <!-- Vista móvil: Cards -->
+    <div class="mobile-view">
+      @for (cliente of filteredClientes(); track cliente.id) {
+        <mat-card class="cliente-card" (click)="verDetalle(cliente.id!)">
+          <mat-card-header>
+            <mat-card-title>{{ cliente.nombre }} {{ cliente.apellido }}</mat-card-title>
+            <mat-card-subtitle>DUI: {{ cliente.numeroDui }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            @if (cliente.telefono) {
+              <p><mat-icon class="inline-icon">phone</mat-icon> {{ cliente.telefono }}</p>
+            }
+            @if (cliente.correoElectronico) {
+              <p><mat-icon class="inline-icon">email</mat-icon> {{ cliente.correoElectronico }}</p>
+            }
+          </mat-card-content>
+          <mat-card-actions align="end">
+            <button mat-icon-button color="primary" (click)="editar(cliente.id!); $event.stopPropagation()">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="eliminar(cliente.id!); $event.stopPropagation()">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      } @empty {
+        <mat-card class="empty-card">
+          <mat-card-content>
+            <mat-icon>person_off</mat-icon>
+            <p>No hay clientes registrados</p>
+            <a mat-raised-button color="primary" routerLink="/clientes/nuevo">
+              Registrar primer cliente
+            </a>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+
+    <!-- Vista desktop: Tabla -->
+    <div class="desktop-view">
+      <mat-card>
+        <table mat-table [dataSource]="filteredClientes()" class="full-width">
+          <ng-container matColumnDef="nombre">
+            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+            <td mat-cell *matCellDef="let cliente">
+              {{ cliente.nombre }} {{ cliente.apellido }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="dui">
+            <th mat-header-cell *matHeaderCellDef>DUI</th>
+            <td mat-cell *matCellDef="let cliente">{{ cliente.numeroDui }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="telefono">
+            <th mat-header-cell *matHeaderCellDef>Teléfono</th>
+            <td mat-cell *matCellDef="let cliente">{{ cliente.telefono || '-' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let cliente">
+              <button mat-icon-button (click)="verDetalle(cliente.id)">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button mat-icon-button color="primary" (click)="editar(cliente.id)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="eliminar(cliente.id)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+
+        @if (filteredClientes().length === 0) {
+          <div class="empty-table">
+            <mat-icon>person_off</mat-icon>
+            <p>No hay clientes registrados</p>
+          </div>
+        }
+      </mat-card>
+    </div>
+  }
+</div>

@@ -1,0 +1,12 @@
+<div class="home-container">
+  <mat-card class="welcome-card">
+    <mat-card-header>
+      <mat-card-title>Bienvenido{{ user()?.firstName ? ', ' + user()?.firstName : '' }}</mat-card-title>
+      <mat-card-subtitle>{{ user()?.email }}</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <p>Has iniciado sesión correctamente en Micro App.</p>
+      <p>Esta es la página principal de tu aplicación.</p>
+    </mat-card-content>
+  </mat-card>
+</div>

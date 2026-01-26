@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagrama de Base de Datos - Sistema Microfinanzas</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+        .header {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #8892b0;
+        }
+        .container {
+            max-width: 100%;
+            padding: 20px;
+        }
+        .section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .section h2 {
+            color: #64ffda;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        .diagram-container {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-card h3 {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+        .stat-card p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        th {
+            background: rgba(100, 255, 218, 0.1);
+            color: #64ffda;
+        }
+        tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tab:hover, .tab.active {
+            background: #64ffda;
+            color: #1a1a2e;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .changes-list {
+            list-style: none;
+        }
+        .changes-list li {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: rgba(100, 255, 218, 0.1);
+            border-left: 3px solid #64ffda;
+            border-radius: 0 5px 5px 0;
+        }
+        .changes-list li strong {
+            color: #64ffda;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Sistema de Microfinanzas</h1>
+        <p>Diagrama de Base de Datos - Generado: 2026-01-25 (Actualizado)</p>
+    </div>
+
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <h3>45</h3>
+                <p>Total de Tablas</p>
+            </div>
+            <div class="stat-card">
+                <h3>43</h3>
+                <p>Foreign Keys</p>
+            </div>
+            <div class="stat-card">
+                <h3>16</h3>
+                <p>Tablas de Catalogos</p>
+            </div>
+            <div class="stat-card">
+                <h3>15</h3>
+                <p>Tablas Transaccionales</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Cambios Recientes (2026-01-25)</h2>
+            <ul class="changes-list">
+                <li><strong>users.id:</strong> Cambiado de UUID (VARCHAR(36)) a INT AUTO_INCREMENT</li>
+                <li><strong>Foreign Keys de Users:</strong> solicitud.analistaId, solicitud.aprobadorId, prestamo.usuarioDesembolsoId, decision_comite.usuarioId ahora referencian users.id</li>
+                <li><strong>prestamo.tasaInteres:</strong> Precision aumentada de DECIMAL(6,4) a DECIMAL(8,4)</li>
+                <li><strong>Tablas normalizadas:</strong> linea_credito, tipo_credito, actividad_economica, referencia_familiar, referencia_personal, solicitud_historial</li>
+                <li><strong>Tablas legacy eliminadas:</strong> lineacredito, referenciafamiliar, referenciapersonal, solicitudhistorial (reemplazadas por versiones snake_case)</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Diagramas por Area</h2>
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('core')">Core del Negocio</button>
+                <button class="tab" onclick="showTab('clients')">Clientes</button>
+                <button class="tab" onclick="showTab('guarantees')">Garantias</button>
+                <button class="tab" onclick="showTab('payments')">Pagos</button>
+                <button class="tab" onclick="showTab('catalogs')">Catalogos</button>
+            </div>
+
+            <div id="core" class="tab-content active">
+                <div class="diagram-container">
+                    <pre class="mermaid">
+erDiagram
+    users {
+        int id PK
+        varchar email
+        varchar password
+        varchar firstName
+        varchar lastName
+        tinyint isActive
+    }
+
+    linea_credito {
+        int id PK
+        varchar codigo
+        varchar nombre
+        tinyint activo
+    }
+
+    tipo_credito {
+        int id PK
+        varchar codigo
+        varchar nombre
+        int lineaCreditoId FK
+        decimal tasaInteres
+        decimal montoMinimo
+        decimal montoMaximo
+        int plazoMinimo
+        int plazoMaximo
+    }
+
+    solicitud {
+        int id PK
+        varchar numeroSolicitud
+        int personaId FK
+        int lineaCreditoId FK
+        int tipoCreditoId FK
+        enum estado
+        decimal montoSolicitado
+        int plazoSolicitado
+        int analistaId FK
+        int aprobadorId FK
+    }
+
+    prestamo {
+        int id PK
+        int solicitudId FK
+        int personaId FK
+        varchar numeroCredito
+        int tipoCreditoId FK
+        decimal montoDesembolsado
+        decimal tasaInteres
+        enum estado
+        int usuarioDesembolsoId FK
+    }
+
+    linea_credito ||--o{ tipo_credito : "contiene"
+    linea_credito ||--o{ solicitud : "pertenece"
+    tipo_credito ||--o{ solicitud : "es de tipo"
+    tipo_credito ||--o{ prestamo : "es de tipo"
+    users ||--o{ solicitud : "analiza"
+    users ||--o{ solicitud : "aprueba"
+    users ||--o{ prestamo : "desembolsa"
+    solicitud ||--o| prestamo : "genera"
+                    </pre>
+                </div>
+            </div>
+
+            <div id="clients" class="tab-content">
+                <div class="diagram-container">
+                    <pre class="mermaid">
+erDiagram
+    persona {
+        int idPersona PK
+        varchar nombre
+        varchar apellido
+        date fechaNacimiento
+        enum sexo
+        varchar telefono
+        varchar correoElectronico
+        varchar numeroDui
+    }
+
+    departamento {
+        int idDepartamento PK
+        varchar nombreDepartamento
+    }
+
+    municipio {
+        int idMunicipio PK
+        varchar nombreMunicipio
+        int idDepartamento FK
+    }
+
+    distrito {
+        int idDistrito PK
+        varchar nombreDistrito
+        int idMunicipio FK
+    }
+
+    direccion {
+        int idDireccion PK
+        int idPersona FK
+        int idDepartamento FK
+        int idMunicipio FK
+        int idDistrito FK
+        varchar detalleDireccion
+    }
+
+    actividad_economica {
+        int idActividad PK
+        int idPersona FK
+        varchar tipoActividad
+        varchar nombreEmpresa
+        decimal ingresosMensuales
+    }
+
+    referencia_familiar {
+        int idFamiliar PK
+        int idPersona FK
+        varchar nombreFamiliar
+        varchar parentesco
+    }
+
+    referencia_personal {
+        int idReferencia PK
+        int idPersona FK
+        varchar nombreReferencia
+        varchar relacion
+    }
+
+    departamento ||--o{ municipio : "tiene"
+    municipio ||--o{ distrito : "tiene"
+    persona ||--o{ direccion : "tiene"
+    persona ||--o{ actividad_economica : "tiene"
+    persona ||--o{ referencia_familiar : "tiene"
+    persona ||--o{ referencia_personal : "tiene"
+    direccion }o--|| departamento : "en"
+    direccion }o--|| municipio : "en"
+    direccion }o--|| distrito : "en"
+                    </pre>
+                </div>
+            </div>
+
+            <div id="guarantees" class="tab-content">
+                <div class="diagram-container">
+                    <pre class="mermaid">
+erDiagram
+    solicitud {
+        int id PK
+        varchar numeroSolicitud
+    }
+
+    tipo_garantia_catalogo {
+        int id PK
+        varchar codigo
+        varchar nombre
+    }
+
+    garantia {
+        int id PK
+        int solicitudId FK
+        int tipoGarantiaId FK
+        text descripcion
+        decimal valorEstimado
+        enum estado
+    }
+
+    garantia_fiador {
+        int id PK
+        int garantiaId FK
+        int personaFiadorId FK
+        varchar parentesco
+        decimal ingresoMensual
+    }
+
+    garantia_hipotecaria {
+        int id PK
+        int garantiaId FK
+        text direccion
+        decimal areaTerreno
+        decimal valorPericial
+    }
+
+    garantia_prendaria {
+        int id PK
+        int garantiaId FK
+        varchar tipoBien
+        varchar marca
+        varchar modelo
+        decimal valorPericial
+    }
+
+    garantia_documentaria {
+        int id PK
+        int garantiaId FK
+        varchar numeroDocumento
+        decimal montoDocumento
+    }
+
+    solicitud ||--o{ garantia : "tiene"
+    tipo_garantia_catalogo ||--o{ garantia : "clasifica"
+    garantia ||--o| garantia_fiador : "fiador"
+    garantia ||--o| garantia_hipotecaria : "hipotecaria"
+    garantia ||--o| garantia_prendaria : "prendaria"
+    garantia ||--o| garantia_documentaria : "documentaria"
+                    </pre>
+                </div>
+            </div>
+
+            <div id="payments" class="tab-content">
+                <div class="diagram-container">
+                    <pre class="mermaid">
+erDiagram
+    prestamo {
+        int id PK
+        varchar numeroCredito
+        decimal montoDesembolsado
+        decimal saldoCapital
+        decimal saldoInteres
+        enum estado
+    }
+
+    plan_pago {
+        int id PK
+        int prestamoId FK
+        int numeroCuota
+        date fechaVencimiento
+        decimal capital
+        decimal interes
+        decimal cuotaTotal
+        decimal capitalPagado
+        decimal interesPagado
+        enum estado
+    }
+
+    pago {
+        int id PK
+        int prestamoId FK
+        varchar numeroPago
+        date fechaPago
+        decimal montoPagado
+        decimal capitalAplicado
+        decimal interesAplicado
+        enum tipoPago
+        enum estado
+    }
+
+    pago_detalle_cuota {
+        int id PK
+        int pagoId FK
+        int planPagoId FK
+        int numeroCuota
+        decimal capitalAplicado
+        decimal interesAplicado
+    }
+
+    deduccion_prestamo {
+        int id PK
+        int prestamoId FK
+        varchar nombre
+        decimal montoCalculado
+    }
+
+    recargo_prestamo {
+        int id PK
+        int prestamoId FK
+        varchar nombre
+        decimal montoCalculado
+    }
+
+    prestamo ||--o{ plan_pago : "tiene"
+    prestamo ||--o{ pago : "recibe"
+    prestamo ||--o{ deduccion_prestamo : "tiene"
+    prestamo ||--o{ recargo_prestamo : "tiene"
+    pago ||--o{ pago_detalle_cuota : "detalla"
+    plan_pago ||--o{ pago_detalle_cuota : "afecta"
+                    </pre>
+                </div>
+            </div>
+
+            <div id="catalogs" class="tab-content">
+                <div class="diagram-container">
+                    <pre class="mermaid">
+erDiagram
+    sexo {
+        int id PK
+        varchar codigo
+        varchar nombre
+        tinyint activo
+    }
+
+    estado_solicitud {
+        int id PK
+        varchar codigo
+        varchar nombre
+        varchar color
+    }
+
+    estado_prestamo {
+        int id PK
+        varchar codigo
+        varchar nombre
+        varchar color
+    }
+
+    estado_cuota {
+        int id PK
+        varchar codigo
+        varchar nombre
+        varchar color
+    }
+
+    estado_pago {
+        int id PK
+        varchar codigo
+        varchar nombre
+        varchar color
+    }
+
+    estado_garantia {
+        int id PK
+        varchar codigo
+        varchar nombre
+        varchar color
+    }
+
+    destino_credito {
+        int id PK
+        varchar codigo
+        varchar nombre
+    }
+
+    tipo_interes {
+        int id PK
+        varchar codigo
+        varchar nombre
+    }
+
+    periodicidad_pago {
+        int id PK
+        varchar codigo
+        varchar nombre
+    }
+
+    tipo_calculo {
+        int id PK
+        varchar codigo
+        varchar nombre
+    }
+
+    tipo_pago {
+        int id PK
+        varchar codigo
+        varchar nombre
+    }
+
+    tipo_decision_comite {
+        int id PK
+        varchar codigo
+        varchar nombre
+    }
+
+    recomendacion_asesor {
+        int id PK
+        varchar codigo
+        varchar nombre
+    }
+
+    clasificacion_prestamo {
+        int id PK
+        varchar codigo
+        varchar nombre
+        int diasMoraMinimo
+        int diasMoraMaximo
+        decimal porcentajeProvision
+    }
+                    </pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Relaciones de Foreign Keys</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tabla Origen</th>
+                        <th>Columna</th>
+                        <th>Tabla Destino</th>
+                        <th>Columna</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>solicitud</td><td>analistaId</td><td>users</td><td>id</td></tr>
+                    <tr><td>solicitud</td><td>aprobadorId</td><td>users</td><td>id</td></tr>
+                    <tr><td>prestamo</td><td>usuarioDesembolsoId</td><td>users</td><td>id</td></tr>
+                    <tr><td>decision_comite</td><td>usuarioId</td><td>users</td><td>id</td></tr>
+                    <tr><td>solicitud</td><td>personaId</td><td>persona</td><td>idPersona</td></tr>
+                    <tr><td>prestamo</td><td>personaId</td><td>persona</td><td>idPersona</td></tr>
+                    <tr><td>tipo_credito</td><td>lineaCreditoId</td><td>linea_credito</td><td>id</td></tr>
+                    <tr><td>solicitud</td><td>lineaCreditoId</td><td>linea_credito</td><td>id</td></tr>
+                    <tr><td>solicitud</td><td>tipoCreditoId</td><td>tipo_credito</td><td>id</td></tr>
+                    <tr><td>prestamo</td><td>tipoCreditoId</td><td>tipo_credito</td><td>id</td></tr>
+                    <tr><td>prestamo</td><td>solicitudId</td><td>solicitud</td><td>id</td></tr>
+                    <tr><td>garantia</td><td>solicitudId</td><td>solicitud</td><td>id</td></tr>
+                    <tr><td>plan_pago</td><td>prestamoId</td><td>prestamo</td><td>id</td></tr>
+                    <tr><td>pago</td><td>prestamoId</td><td>prestamo</td><td>id</td></tr>
+                    <tr><td>pago_detalle_cuota</td><td>pagoId</td><td>pago</td><td>id</td></tr>
+                    <tr><td>pago_detalle_cuota</td><td>planPagoId</td><td>plan_pago</td><td>id</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Estructura de Tabla users (Actualizada)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Columna</th>
+                        <th>Tipo</th>
+                        <th>Restriccion</th>
+                        <th>Descripcion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>id</td><td>INT</td><td>PK, AUTO_INCREMENT</td><td>Identificador unico (antes era UUID)</td></tr>
+                    <tr><td>email</td><td>VARCHAR(255)</td><td>UNIQUE</td><td>Correo electronico</td></tr>
+                    <tr><td>password</td><td>VARCHAR(255)</td><td>NOT NULL</td><td>Contrasena hasheada</td></tr>
+                    <tr><td>firstName</td><td>VARCHAR(255)</td><td>NULL</td><td>Nombre</td></tr>
+                    <tr><td>lastName</td><td>VARCHAR(255)</td><td>NULL</td><td>Apellido</td></tr>
+                    <tr><td>isActive</td><td>TINYINT</td><td>DEFAULT 1</td><td>Estado activo</td></tr>
+                    <tr><td>createdAt</td><td>DATETIME(6)</td><td>AUTO</td><td>Fecha creacion</td></tr>
+                    <tr><td>updatedAt</td><td>DATETIME(6)</td><td>AUTO</td><td>Fecha actualizacion</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            er: {
+                diagramPadding: 20,
+                layoutDirection: 'TB',
+                minEntityWidth: 100,
+                minEntityHeight: 75,
+                entityPadding: 15,
+                useMaxWidth: true
+            }
+        });
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

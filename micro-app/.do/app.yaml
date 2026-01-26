@@ -1,0 +1,83 @@
+# Digital Ocean App Platform Specification
+# Documentación: https://docs.digitalocean.com/products/app-platform/reference/app-spec/
+
+name: finanzia
+
+# Región - Cambiar según ubicación de usuarios
+region: nyc
+
+# Base de datos MySQL
+databases:
+  - name: finanzia-db
+    engine: MYSQL
+    version: "8"
+    size: db-s-1vcpu-1gb
+    num_nodes: 1
+
+# Servicios
+services:
+  # Backend NestJS
+  - name: backend
+    dockerfile_path: backend/Dockerfile
+    source_dir: /
+    github:
+      branch: main
+      deploy_on_push: true
+      # Cambiar por tu repositorio:
+      # repo: tu-usuario/finanzia
+    http_port: 3000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 10
+      period_seconds: 30
+    routes:
+      - path: /api
+        preserve_path_prefix: true
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: DB_HOST
+        scope: RUN_TIME
+        value: ${finanzia-db.HOSTNAME}
+      - key: DB_PORT
+        scope: RUN_TIME
+        value: ${finanzia-db.PORT}
+      - key: DB_USERNAME
+        scope: RUN_TIME
+        value: ${finanzia-db.USERNAME}
+      - key: DB_PASSWORD
+        scope: RUN_TIME
+        value: ${finanzia-db.PASSWORD}
+      - key: DB_DATABASE
+        scope: RUN_TIME
+        value: ${finanzia-db.DATABASE}
+      - key: DB_SSL
+        value: "true"
+      - key: JWT_SECRET
+        type: SECRET
+        value: "CAMBIAR_POR_CLAVE_SEGURA_DE_32_CARACTERES_MINIMO"
+      - key: JWT_EXPIRATION
+        value: "1d"
+      - key: CORS_ORIGINS
+        value: "${APP_URL}"
+
+# Frontend Angular (Static Site)
+static_sites:
+  - name: frontend
+    dockerfile_path: frontend/Dockerfile
+    source_dir: /
+    github:
+      branch: main
+      deploy_on_push: true
+      # Cambiar por tu repositorio:
+      # repo: tu-usuario/finanzia
+    routes:
+      - path: /
+    envs:
+      - key: API_URL
+        scope: BUILD_TIME
+        value: "${backend.PUBLIC_URL}/api"

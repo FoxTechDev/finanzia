@@ -1,0 +1,135 @@
+<!-- Spinner de carga -->
+@if (cargando()) {
+  <div class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando recibo...</p>
+  </div>
+}
+
+<!-- Mensaje de error -->
+@if (error() && !cargando()) {
+  <div class="error-container">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error() }}</p>
+  </div>
+}
+
+<!-- Botones de acción (solo en pantalla, no se imprimen) -->
+@if (recibo() && !cargando()) {
+  <div class="acciones-recibo no-print">
+    <button mat-raised-button color="primary" (click)="imprimir()">
+      <mat-icon>print</mat-icon>
+      Imprimir
+    </button>
+    <button mat-stroked-button (click)="abrirEnNuevaVentana()">
+      <mat-icon>open_in_new</mat-icon>
+      Abrir en nueva ventana
+    </button>
+  </div>
+
+  <!-- Recibo térmico -->
+  <div class="recibo-termica">
+    <div class="recibo-header">
+      <div class="empresa-nombre">FINANZIA S.C. DE R.L. DE C.V.</div>
+      <div class="empresa-direccion">C.C. Feria Rosa, local 315-H</div>
+      <div class="empresa-direccion">San Salvador</div>
+      <div class="separador-doble">================================</div>
+    </div>
+
+    <div class="recibo-titulo">RECIBO DE PAGO</div>
+    <div class="recibo-numero">No. Recibo: {{ recibo()!.pagoId }}</div>
+    <div class="recibo-numero">N°: {{ recibo()!.numeroPago }}</div>
+    <div class="recibo-fecha">Fecha: {{ recibo()!.fechaPago | date:'dd/MM/yyyy' }}</div>
+
+    <div class="separador">--------------------------------</div>
+
+    <!-- Datos del Cliente -->
+    <div class="seccion-titulo">CLIENTE</div>
+    <div class="datos-linea">
+      <span class="label">Nombre:</span>
+      <span class="valor">{{ recibo()!.cliente.nombre }} {{ recibo()!.cliente.apellido }}</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">DUI:</span>
+      <span class="valor">{{ recibo()!.cliente.numeroDui }}</span>
+    </div>
+
+    <div class="separador">--------------------------------</div>
+
+    <!-- Datos del Préstamo -->
+    <div class="seccion-titulo">PRÉSTAMO</div>
+    <div class="datos-linea">
+      <span class="label">Código:</span>
+      <span class="valor">{{ recibo()!.prestamo.numeroCredito }}</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">Tipo:</span>
+      <span class="valor">{{ recibo()!.prestamo.tipoCredito }}</span>
+    </div>
+
+    <div class="separador">--------------------------------</div>
+
+    <!-- Detalle del Pago -->
+    <div class="seccion-titulo">DETALLE DEL PAGO</div>
+    <div class="monto-pagado">
+      <span class="label">Monto Pagado:</span>
+      <span class="valor-destacado">{{ recibo()!.montoPagado | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+
+    <div class="distribucion-titulo">Distribución:</div>
+    <div class="distribucion-item">
+      <span class="label">  Capital:</span>
+      <span class="valor">{{ recibo()!.distribucion.capitalAplicado | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+    <div class="distribucion-item">
+      <span class="label">  Interés:</span>
+      <span class="valor">{{ recibo()!.distribucion.interesAplicado | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+    <div class="distribucion-item">
+      <span class="label">  Recargos:</span>
+      <span class="valor">{{ recibo()!.distribucion.recargosAplicado | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+    <div class="distribucion-item">
+      <span class="label">  Mora:</span>
+      <span class="valor">{{ recibo()!.distribucion.interesMoratorioAplicado | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+
+    <div class="separador">--------------------------------</div>
+
+    <!-- Saldos -->
+    <div class="seccion-titulo">SALDOS</div>
+    <div class="saldo-item">
+      <span class="label">Saldo Anterior:</span>
+      <span class="valor">{{ recibo()!.saldoAnterior | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+    <div class="saldo-item">
+      <span class="label">Saldo Actual:</span>
+      <span class="valor-destacado">{{ recibo()!.saldoActual | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+
+    <div class="separador">--------------------------------</div>
+
+    <!-- Firma del Cliente -->
+    <div class="firma-seccion">
+      <div class="firma-espacio"></div>
+      <div class="firma-linea">_____________________________</div>
+      <div class="firma-texto">Firma del Cliente</div>
+    </div>
+
+    <!-- Información del Usuario e Impresión -->
+    <div class="info-pie">
+      <div>Usuario: {{ recibo()!.nombreUsuario }}</div>
+      <div>Impreso: {{ recibo()!.fechaImpresion | date:'dd/MM/yyyy HH:mm:ss' }}</div>
+    </div>
+
+    <div class="separador">--------------------------------</div>
+
+    <!-- Leyenda Legal -->
+    <div class="leyenda-legal">
+      Conserve este recibo como
+      comprobante de pago
+    </div>
+
+    <div class="separador-doble">================================</div>
+  </div>
+}

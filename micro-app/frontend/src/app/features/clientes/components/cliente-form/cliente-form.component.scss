@@ -1,0 +1,249 @@
+.cliente-form-container {
+  padding: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+
+  @media (max-width: 599px) {
+    padding: 8px;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+
+  h1 {
+    margin: 0;
+    font-size: 20px;
+
+    @media (min-width: 768px) {
+      font-size: 24px;
+    }
+  }
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+
+  @media (min-width: 600px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+.section-title {
+  margin: 24px 0 16px;
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+mat-divider {
+  margin: 24px 0;
+}
+
+.step-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+.references-section {
+  margin: 16px 0;
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 500;
+    }
+  }
+}
+
+.reference-card {
+  margin-bottom: 16px;
+
+  mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    mat-card-title {
+      font-size: 14px;
+    }
+  }
+
+  mat-card-content {
+    padding-top: 16px;
+  }
+}
+
+// Vista desktop/mobile para referencias
+.desktop-view {
+  display: none;
+
+  @media (min-width: 768px) {
+    display: block;
+  }
+
+  table {
+    width: 100%;
+  }
+}
+
+.mobile-view {
+  display: block;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+.reference-card-mobile {
+  margin-bottom: 12px;
+
+  mat-card-header {
+    mat-card-title {
+      font-size: 16px;
+    }
+
+    mat-card-subtitle {
+      font-size: 14px;
+    }
+  }
+
+  mat-card-content {
+    padding-top: 8px;
+
+    p {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 4px 0;
+      font-size: 14px;
+    }
+  }
+
+  .inline-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: rgba(0, 0, 0, 0.54);
+  }
+}
+
+.no-data {
+  text-align: center;
+  color: rgba(0, 0, 0, 0.54);
+  padding: 24px;
+  font-style: italic;
+}
+
+.full-width {
+  width: 100%;
+}
+
+// Sección de coordenadas
+.coordinates-section {
+  margin: 16px 0;
+
+  .section-header-coords {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+
+    @media (min-width: 600px) {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    h3 {
+      margin: 0;
+    }
+  }
+
+  .location-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    button {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      mat-spinner {
+        margin-right: 4px;
+      }
+    }
+  }
+
+  .view-map-btn {
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+}
+
+// Stepper responsive
+::ng-deep {
+  .mat-vertical-stepper-header {
+    padding: 16px 8px !important;
+
+    @media (min-width: 600px) {
+      padding: 24px !important;
+    }
+  }
+
+  .mat-vertical-content {
+    padding: 0 8px 8px 16px !important;
+
+    @media (min-width: 600px) {
+      padding: 0 24px 24px 24px !important;
+    }
+  }
+
+  .mat-step-label {
+    font-size: 14px;
+
+    @media (max-width: 480px) {
+      font-size: 12px;
+    }
+  }
+}

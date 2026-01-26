@@ -1,0 +1,252 @@
+### =====================================================
+### PRUEBAS DE ENDPOINTS DE CATÁLOGOS
+### =====================================================
+
+@baseUrl = http://localhost:3000
+@token = your-jwt-token-here
+
+### 1. ESTADO DE GARANTÍA
+### =====================================================
+
+### Listar todos los estados de garantía
+GET {{baseUrl}}/catalogos/estado-garantia
+Authorization: Bearer {{token}}
+
+### Listar solo estados activos
+GET {{baseUrl}}/catalogos/estado-garantia/activos
+Authorization: Bearer {{token}}
+
+### Obtener estado por ID
+GET {{baseUrl}}/catalogos/estado-garantia/1
+Authorization: Bearer {{token}}
+
+### Obtener estado por código
+GET {{baseUrl}}/catalogos/estado-garantia/codigo/PENDIENTE
+Authorization: Bearer {{token}}
+
+### Crear nuevo estado de garantía
+POST {{baseUrl}}/catalogos/estado-garantia
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "codigo": "EN_REVISION",
+  "nombre": "En Revisión",
+  "descripcion": "Garantía en proceso de revisión legal",
+  "orden": 5,
+  "color": "#17A2B8",
+  "activo": true
+}
+
+### Actualizar estado de garantía
+PATCH {{baseUrl}}/catalogos/estado-garantia/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "descripcion": "Garantía pendiente de constitución formal"
+}
+
+### Eliminar estado de garantía
+DELETE {{baseUrl}}/catalogos/estado-garantia/5
+Authorization: Bearer {{token}}
+
+### 2. RECOMENDACIÓN DE ASESOR
+### =====================================================
+
+### Listar todas las recomendaciones
+GET {{baseUrl}}/catalogos/recomendacion-asesor
+Authorization: Bearer {{token}}
+
+### Obtener recomendación por código
+GET {{baseUrl}}/catalogos/recomendacion-asesor/codigo/APROBAR
+Authorization: Bearer {{token}}
+
+### 3. TIPO DE DECISIÓN DE COMITÉ
+### =====================================================
+
+### Listar todos los tipos de decisión
+GET {{baseUrl}}/catalogos/tipo-decision-comite
+Authorization: Bearer {{token}}
+
+### Obtener por código
+GET {{baseUrl}}/catalogos/tipo-decision-comite/codigo/AUTORIZADA
+Authorization: Bearer {{token}}
+
+### 4. TIPO DE PAGO
+### =====================================================
+
+### Listar todos los tipos de pago
+GET {{baseUrl}}/catalogos/tipo-pago
+Authorization: Bearer {{token}}
+
+### Obtener tipo de pago activos
+GET {{baseUrl}}/catalogos/tipo-pago/activos
+Authorization: Bearer {{token}}
+
+### 5. ESTADO DE PAGO
+### =====================================================
+
+### Listar todos los estados de pago
+GET {{baseUrl}}/catalogos/estado-pago
+Authorization: Bearer {{token}}
+
+### 6. SEXO
+### =====================================================
+
+### Listar opciones de sexo
+GET {{baseUrl}}/catalogos/sexo
+Authorization: Bearer {{token}}
+
+### Obtener por código
+GET {{baseUrl}}/catalogos/sexo/codigo/MASCULINO
+Authorization: Bearer {{token}}
+
+### 7. ESTADO DE SOLICITUD
+### =====================================================
+
+### Listar todos los estados de solicitud
+GET {{baseUrl}}/catalogos/estado-solicitud
+Authorization: Bearer {{token}}
+
+### Obtener estados activos
+GET {{baseUrl}}/catalogos/estado-solicitud/activos
+Authorization: Bearer {{token}}
+
+### Obtener por código
+GET {{baseUrl}}/catalogos/estado-solicitud/codigo/EN_ANALISIS
+Authorization: Bearer {{token}}
+
+### 8. DESTINO DE CRÉDITO
+### =====================================================
+
+### Listar todos los destinos de crédito
+GET {{baseUrl}}/catalogos/destino-credito
+Authorization: Bearer {{token}}
+
+### Obtener destinos activos
+GET {{baseUrl}}/catalogos/destino-credito/activos
+Authorization: Bearer {{token}}
+
+### 9. ESTADO DE CUOTA
+### =====================================================
+
+### Listar todos los estados de cuota
+GET {{baseUrl}}/catalogos/estado-cuota
+Authorization: Bearer {{token}}
+
+### Obtener por código
+GET {{baseUrl}}/catalogos/estado-cuota/codigo/PENDIENTE
+Authorization: Bearer {{token}}
+
+### 10. TIPO DE INTERÉS
+### =====================================================
+
+### Listar todos los tipos de interés
+GET {{baseUrl}}/catalogos/tipo-interes
+Authorization: Bearer {{token}}
+
+### 11. PERIODICIDAD DE PAGO
+### =====================================================
+
+### Listar todas las periodicidades
+GET {{baseUrl}}/catalogos/periodicidad-pago
+Authorization: Bearer {{token}}
+
+### Obtener periodicidades activas
+GET {{baseUrl}}/catalogos/periodicidad-pago/activos
+Authorization: Bearer {{token}}
+
+### 12. CATEGORÍA NCB-022
+### =====================================================
+
+### Listar todas las categorías
+GET {{baseUrl}}/catalogos/categoria-ncb022
+Authorization: Bearer {{token}}
+
+### Obtener por código
+GET {{baseUrl}}/catalogos/categoria-ncb022/codigo/A
+Authorization: Bearer {{token}}
+
+### 13. TIPO DE CÁLCULO
+### =====================================================
+
+### Listar todos los tipos de cálculo
+GET {{baseUrl}}/catalogos/tipo-calculo
+Authorization: Bearer {{token}}
+
+### =====================================================
+### PRUEBAS DE INTEGRACIÓN CON ENTIDADES
+### =====================================================
+
+### Crear solicitud usando IDs de catálogo
+POST {{baseUrl}}/creditos/solicitud
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "personaId": 1,
+  "lineaCreditoId": 1,
+  "tipoCreditoId": 1,
+  "montoSolicitado": 5000.00,
+  "plazoSolicitado": 12,
+  "tasaInteresPropuesta": 15.5,
+  "estadoSolicitudId": 1,
+  "destinoCreditoId": 3,
+  "descripcionDestino": "Para gastos personales varios",
+  "fechaSolicitud": "2026-01-24"
+}
+
+### Crear pago usando IDs de catálogo
+POST {{baseUrl}}/creditos/pagos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "prestamoId": 1,
+  "fechaPago": "2026-01-24",
+  "montoPagado": 500.00,
+  "tipoPagoId": 1,
+  "estadoPagoId": 1,
+  "observaciones": "Pago de cuota mensual"
+}
+
+### Actualizar persona con sexo del catálogo
+PATCH {{baseUrl}}/persona/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sexoId": 1
+}
+
+### =====================================================
+### CONSULTAS DE VERIFICACIÓN
+### =====================================================
+
+### Verificar que todos los catálogos tienen datos
+GET {{baseUrl}}/catalogos/estado-garantia
+###
+GET {{baseUrl}}/catalogos/recomendacion-asesor
+###
+GET {{baseUrl}}/catalogos/tipo-decision-comite
+###
+GET {{baseUrl}}/catalogos/tipo-pago
+###
+GET {{baseUrl}}/catalogos/estado-pago
+###
+GET {{baseUrl}}/catalogos/sexo
+###
+GET {{baseUrl}}/catalogos/estado-solicitud
+###
+GET {{baseUrl}}/catalogos/destino-credito
+###
+GET {{baseUrl}}/catalogos/estado-cuota
+###
+GET {{baseUrl}}/catalogos/tipo-interes
+###
+GET {{baseUrl}}/catalogos/periodicidad-pago
+###
+GET {{baseUrl}}/catalogos/categoria-ncb022
+###
+GET {{baseUrl}}/catalogos/tipo-calculo

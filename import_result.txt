@@ -1,0 +1,5 @@
+=============================================
+Ejecutando importacion de datos MySQL
+=============================================
+Limpiando tablas existentes...
+mysql: [Warning] Using a password on the command line interface can be insecure.

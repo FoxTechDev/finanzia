@@ -1,0 +1,112 @@
+-- Persona
+CREATE TABLE persona (
+  idPersona BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  nombre VARCHAR(100) NOT NULL,
+  apellido VARCHAR(100) NOT NULL,
+  fechaNacimiento DATE NOT NULL,
+  sexo VARCHAR(20) CHECK (sexo IN ('Masculino','Femenino','Otro')),
+  nacionalidad VARCHAR(60) NOT NULL,
+  estadoCivil VARCHAR(30),
+  telefono VARCHAR(30),
+  correoElectronico VARCHAR(120),
+  numeroDui VARCHAR(10) NOT NULL UNIQUE,
+  fechaEmisionDui DATE NOT NULL,
+  lugarEmisionDui VARCHAR(120) NOT NULL
+);
+
+-- Departamento
+CREATE TABLE departamento (
+  idDepartamento BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  nombreDepartamento VARCHAR(100) NOT NULL
+);
+
+-- Municipio
+CREATE TABLE municipio (
+  idMunicipio BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  idDepartamento BIGINT NOT NULL,
+  nombreMunicipio VARCHAR(100) NOT NULL,
+  CONSTRAINT fkMunicipioDepartamento FOREIGN KEY (idDepartamento)
+    REFERENCES departamento(idDepartamento)
+);
+
+-- Distrito
+CREATE TABLE distrito (
+  idDistrito BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  idMunicipio BIGINT NOT NULL,
+  nombreDistrito VARCHAR(100) NOT NULL,
+  CONSTRAINT fkDistritoMunicipio FOREIGN KEY (idMunicipio)
+    REFERENCES municipio(idMunicipio)
+);
+
+-- Direccion
+CREATE TABLE direccion (
+  idDireccion BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  idPersona BIGINT NOT NULL,
+  idDepartamento BIGINT NOT NULL,
+  idMunicipio BIGINT NOT NULL,
+  idDistrito BIGINT NOT NULL,
+  detalleDireccion VARCHAR(200),
+  CONSTRAINT fkDireccionPersona FOREIGN KEY (idPersona)
+    REFERENCES persona(idPersona),
+  CONSTRAINT fkDireccionDepartamento FOREIGN KEY (idDepartamento)
+    REFERENCES departamento(idDepartamento),
+  CONSTRAINT fkDireccionMunicipio FOREIGN KEY (idMunicipio)
+    REFERENCES municipio(idMunicipio),
+  CONSTRAINT fkDireccionDistrito FOREIGN KEY (idDistrito)
+    REFERENCES distrito(idDistrito)
+);
+
+-- Actividad Economica
+CREATE TABLE actividadEconomica (
+  idActividad BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  idPersona BIGINT NOT NULL,
+  tipoActividad VARCHAR(60) NOT NULL,
+  nombreEmpresa VARCHAR(150),
+  cargoOcupacion VARCHAR(120),
+  ingresosMensuales DECIMAL(14,2) CHECK (ingresosMensuales >= 0),
+  idDepartamento BIGINT NOT NULL,
+  idMunicipio BIGINT NOT NULL,
+  idDistrito BIGINT NOT NULL,
+  detalleDireccion VARCHAR(200),
+  latitud DECIMAL(10,7),
+  longitud DECIMAL(10,7),
+  CONSTRAINT fkActividadPersona FOREIGN KEY (idPersona)
+    REFERENCES persona(idPersona) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT fkActividadDepartamento FOREIGN KEY (idDepartamento)
+    REFERENCES departamento(idDepartamento),
+  CONSTRAINT fkActividadMunicipio FOREIGN KEY (idMunicipio)
+    REFERENCES municipio(idMunicipio),
+  CONSTRAINT fkActividadDistrito FOREIGN KEY (idDistrito)
+    REFERENCES distrito(idDistrito)
+);
+
+-- Referencia Personal
+CREATE TABLE referenciaPersonal (
+  idReferencia BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  idPersona BIGINT NOT NULL,
+  nombreReferencia VARCHAR(150) NOT NULL,
+  relacion VARCHAR(80) NOT NULL,
+  telefonoReferencia VARCHAR(30),
+  direccionReferencia VARCHAR(200),
+  CONSTRAINT fkReferenciaPersonalPersona FOREIGN KEY (idPersona)
+    REFERENCES persona(idPersona) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+-- Referencia Familiar
+CREATE TABLE referenciaFamiliar (
+  idFamiliar BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  idPersona BIGINT NOT NULL,
+  nombreFamiliar VARCHAR(150) NOT NULL,
+  parentesco VARCHAR(80) NOT NULL,
+  telefonoFamiliar VARCHAR(30),
+  direccionFamiliar VARCHAR(200),
+  CONSTRAINT fkReferenciaFamiliarPersona FOREIGN KEY (idPersona)
+    REFERENCES persona(idPersona) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+-- Indices recomendados
+CREATE INDEX idxPersonaDui ON persona(numeroDui);
+CREATE INDEX idxActividadPersona ON actividadEconomica(idPersona);
+CREATE INDEX idxDireccionPersona ON direccion(idPersona);
+CREATE INDEX idxReferenciaPersonalPersona ON referenciaPersonal(idPersona);
+CREATE INDEX idxReferenciaFamiliarPersona ON referenciaFamiliar(idPersona);

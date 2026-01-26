@@ -1,0 +1,19 @@
+# Navegadores soportados para producción en Azure
+# Este archivo define qué navegadores debe soportar la aplicación
+
+# Últimas 2 versiones de navegadores modernos
+last 2 Chrome versions
+last 2 Firefox versions
+last 2 Safari versions
+last 2 Edge versions
+
+# Navegadores con más del 1% de uso global
+> 1%
+
+# Excluir navegadores obsoletos
+not dead
+not IE 11
+not op_mini all
+
+# Soporte para iOS Safari
+iOS >= 12

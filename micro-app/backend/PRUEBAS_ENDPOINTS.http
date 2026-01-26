@@ -1,0 +1,337 @@
+# Archivo de pruebas para endpoints de préstamos
+# Usa la extensión REST Client de VS Code o similar
+
+### Variables
+@baseUrl = http://localhost:3000/api
+@prestamoId = 1
+@personaId = 1
+
+### ==========================================
+### CLASIFICACIÓN DE PRÉSTAMOS NCB-022
+### ==========================================
+
+### Inicializar clasificaciones NCB-022
+POST {{baseUrl}}/clasificacion-prestamo/inicializar
+Content-Type: application/json
+
+### Listar todas las clasificaciones
+GET {{baseUrl}}/clasificacion-prestamo
+
+### Listar clasificaciones activas
+GET {{baseUrl}}/clasificacion-prestamo/activas
+
+### Obtener clasificación por ID
+GET {{baseUrl}}/clasificacion-prestamo/1
+
+### Crear nueva clasificación
+POST {{baseUrl}}/clasificacion-prestamo
+Content-Type: application/json
+
+{
+  "codigo": "F",
+  "nombre": "Castigo",
+  "descripcion": "Préstamos castigados",
+  "diasMoraMinimo": 365,
+  "diasMoraMaximo": null,
+  "porcentajeProvision": 100,
+  "activo": true,
+  "orden": 6
+}
+
+### Actualizar clasificación
+PUT {{baseUrl}}/clasificacion-prestamo/1
+Content-Type: application/json
+
+{
+  "descripcion": "Créditos con riesgo muy bajo de incumplimiento"
+}
+
+### ==========================================
+### ESTADOS DE PRÉSTAMO
+### ==========================================
+
+### Inicializar estados
+POST {{baseUrl}}/estado-prestamo/inicializar
+Content-Type: application/json
+
+### Listar todos los estados
+GET {{baseUrl}}/estado-prestamo
+
+### Listar estados activos
+GET {{baseUrl}}/estado-prestamo/activos
+
+### Obtener estado por ID
+GET {{baseUrl}}/estado-prestamo/1
+
+### Crear nuevo estado
+POST {{baseUrl}}/estado-prestamo
+Content-Type: application/json
+
+{
+  "codigo": "REESTRUCTURADO",
+  "nombre": "Reestructurado",
+  "descripcion": "Préstamo con plan de pagos reestructurado",
+  "activo": true,
+  "color": "#ffc107",
+  "orden": 4
+}
+
+### Actualizar estado
+PUT {{baseUrl}}/estado-prestamo/1
+Content-Type: application/json
+
+{
+  "descripcion": "Préstamo vigente y al corriente"
+}
+
+### ==========================================
+### CONSULTA DE PRÉSTAMOS
+### ==========================================
+
+### Listar todos los préstamos (con paginación)
+GET {{baseUrl}}/prestamos?page=1&limit=10
+
+### Listar préstamos con filtro por estado
+GET {{baseUrl}}/prestamos?estado=VIGENTE&page=1&limit=10
+
+### Buscar préstamos en mora
+GET {{baseUrl}}/prestamos?enMora=true&page=1&limit=10
+
+### Buscar préstamos con mora mayor a 30 días
+GET {{baseUrl}}/prestamos?diasMoraMinimo=30&page=1&limit=10
+
+### Filtrar por clasificación NCB-022
+GET {{baseUrl}}/prestamos?clasificacion=A&page=1&limit=10
+
+### Buscar por número de crédito
+GET {{baseUrl}}/prestamos?numeroCredito=CR2026000001
+
+### Buscar por DUI del cliente
+GET {{baseUrl}}/prestamos?numeroDui=12345678-9
+
+### Buscar por nombre del cliente
+GET {{baseUrl}}/prestamos?nombreCliente=Juan
+
+### Filtrar por rango de fechas
+GET {{baseUrl}}/prestamos?fechaDesde=2026-01-01&fechaHasta=2026-01-31
+
+### Filtrar por tipo de crédito
+GET {{baseUrl}}/prestamos?tipoCreditoId=1
+
+### Filtrar por cliente
+GET {{baseUrl}}/prestamos?personaId={{personaId}}
+
+### Filtros combinados
+GET {{baseUrl}}/prestamos?estado=VIGENTE&enMora=true&diasMoraMinimo=15&page=1&limit=20
+
+### Ordenar por monto autorizado descendente
+GET {{baseUrl}}/prestamos?orderBy=montoAutorizado&orderDirection=DESC&page=1&limit=10
+
+### Ordenar por fecha de otorgamiento ascendente
+GET {{baseUrl}}/prestamos?orderBy=fechaOtorgamiento&orderDirection=ASC&page=1&limit=10
+
+### Obtener préstamo detallado por ID
+GET {{baseUrl}}/prestamos/{{prestamoId}}
+
+### Obtener plan de pagos de un préstamo
+GET {{baseUrl}}/prestamos/{{prestamoId}}/plan-pago
+
+### Obtener préstamos de un cliente
+GET {{baseUrl}}/prestamos/cliente/{{personaId}}
+
+### ==========================================
+### DESEMBOLSO (Endpoints existentes)
+### ==========================================
+
+### Listar solicitudes pendientes de desembolso
+GET {{baseUrl}}/desembolso/pendientes
+
+### Preview de desembolso
+POST {{baseUrl}}/desembolso/preview
+Content-Type: application/json
+
+{
+  "solicitudId": 1,
+  "tipoInteres": "FLAT",
+  "periodicidadPago": "MENSUAL",
+  "fechaPrimeraCuota": "2026-02-15",
+  "deducciones": [
+    {
+      "tipoDeduccionId": 1,
+      "tipoCalculo": "PORCENTAJE",
+      "valor": 2.5
+    }
+  ],
+  "recargos": [
+    {
+      "tipoRecargoId": 1,
+      "tipoCalculo": "MONTO_FIJO",
+      "valor": 5.00,
+      "aplicaDesde": 1,
+      "aplicaHasta": 12
+    }
+  ]
+}
+
+### Crear desembolso
+POST {{baseUrl}}/desembolso
+Content-Type: application/json
+
+{
+  "solicitudId": 1,
+  "tipoInteres": "FLAT",
+  "periodicidadPago": "MENSUAL",
+  "fechaPrimeraCuota": "2026-02-15",
+  "deducciones": [
+    {
+      "tipoDeduccionId": 1,
+      "tipoCalculo": "PORCENTAJE",
+      "valor": 2.5
+    }
+  ],
+  "recargos": [
+    {
+      "tipoRecargoId": 1,
+      "tipoCalculo": "MONTO_FIJO",
+      "valor": 5.00,
+      "aplicaDesde": 1,
+      "aplicaHasta": 12
+    }
+  ],
+  "usuarioDesembolsoId": 1,
+  "nombreUsuarioDesembolso": "Admin Usuario"
+}
+
+### Obtener préstamo (endpoint de desembolso)
+GET {{baseUrl}}/desembolso/{{prestamoId}}
+
+### Obtener plan de pago (endpoint de desembolso)
+GET {{baseUrl}}/desembolso/{{prestamoId}}/plan-pago
+
+### Listar préstamos (endpoint de desembolso)
+GET {{baseUrl}}/desembolso?estado=VIGENTE
+
+### ==========================================
+### EJEMPLOS DE RESPUESTAS ESPERADAS
+### ==========================================
+
+### Respuesta de lista paginada
+# {
+#   "data": [
+#     {
+#       "id": 1,
+#       "numeroCredito": "CR2026000001",
+#       "estado": "VIGENTE",
+#       "categoriaNCB022": "A",
+#       "cliente": {
+#         "id": 1,
+#         "nombreCompleto": "Juan Pérez",
+#         "numeroDui": "12345678-9"
+#       },
+#       "tipoCredito": {
+#         "id": 1,
+#         "nombre": "Crédito Personal"
+#       },
+#       "montoAutorizado": 5000.00,
+#       "saldoCapital": 4500.00,
+#       "diasMora": 0,
+#       "fechaOtorgamiento": "2026-01-15",
+#       "fechaVencimiento": "2027-01-15",
+#       "proximaCuota": {
+#         "numeroCuota": 2,
+#         "fechaVencimiento": "2026-03-15",
+#         "cuotaTotal": 458.33
+#       }
+#     }
+#   ],
+#   "total": 45,
+#   "page": 1,
+#   "limit": 10,
+#   "totalPages": 5
+# }
+
+### Respuesta de préstamo detallado
+# {
+#   "id": 1,
+#   "numeroCredito": "CR2026000001",
+#   "estado": "VIGENTE",
+#   "categoriaNCB022": "A",
+#   "cliente": {
+#     "id": 1,
+#     "nombre": "Juan",
+#     "apellido": "Pérez",
+#     "nombreCompleto": "Juan Pérez",
+#     "numeroDui": "12345678-9",
+#     "telefono": "7777-7777",
+#     "correoElectronico": "juan@email.com"
+#   },
+#   "tipoCredito": {
+#     "id": 1,
+#     "nombre": "Crédito Personal",
+#     "codigo": "CP"
+#   },
+#   "solicitud": {
+#     "id": 1,
+#     "numeroSolicitud": "SOL-2026-0001",
+#     "fechaSolicitud": "2026-01-10"
+#   },
+#   "montoAutorizado": 5000.00,
+#   "montoDesembolsado": 4875.00,
+#   "totalPagar": 5500.00,
+#   "totalInteres": 500.00,
+#   "totalRecargos": 60.00,
+#   "saldoCapital": 4500.00,
+#   "saldoInteres": 0,
+#   "capitalMora": 0,
+#   "interesMora": 0,
+#   "diasMora": 0,
+#   "plazoAutorizado": 12,
+#   "numeroCuotas": 12,
+#   "cuotaNormal": 458.33,
+#   "cuotaTotal": 463.33,
+#   "tasaInteres": 10.00,
+#   "tasaInteresMoratorio": 2.00,
+#   "tipoInteres": "FLAT",
+#   "periodicidadPago": "MENSUAL",
+#   "fechaOtorgamiento": "2026-01-15",
+#   "fechaPrimeraCuota": "2026-02-15",
+#   "fechaVencimiento": "2027-01-15",
+#   "fechaUltimoPago": "2026-02-14",
+#   "fechaCancelacion": null,
+#   "deducciones": [
+#     {
+#       "id": 1,
+#       "nombre": "Gastos Administrativos",
+#       "tipoCalculo": "PORCENTAJE",
+#       "valor": 2.5,
+#       "montoCalculado": 125.00
+#     }
+#   ],
+#   "recargos": [
+#     {
+#       "id": 1,
+#       "nombre": "Seguro de Vida",
+#       "tipoCalculo": "MONTO_FIJO",
+#       "valor": 5.00,
+#       "montoCalculado": 5.00,
+#       "aplicaDesde": 1,
+#       "aplicaHasta": 12
+#     }
+#   ],
+#   "resumenPlanPago": {
+#     "totalCuotas": 12,
+#     "cuotasPendientes": 11,
+#     "cuotasPagadas": 1,
+#     "cuotasEnMora": 0,
+#     "proximaCuota": {
+#       "numeroCuota": 2,
+#       "fechaVencimiento": "2026-03-15",
+#       "cuotaTotal": 463.33,
+#       "saldoPendiente": 463.33
+#     }
+#   },
+#   "usuarioDesembolsoId": 1,
+#   "nombreUsuarioDesembolso": "Admin Usuario",
+#   "createdAt": "2026-01-15T10:30:00.000Z",
+#   "updatedAt": "2026-02-14T15:45:00.000Z"
+# }

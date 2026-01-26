@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build outputs
+dist/
+.angular/
+*.tsbuildinfo
+
+# Environment files (contienen secretos)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+logs/
+*.log
+
+# Testing
+coverage/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Docker volumes
+mysql_data/
+
+# Archivos de despliegue Azure (ya no necesarios)
+micro-app/deploy/
+
+# Archivos problemáticos Windows
+nul
+**/nul
+
+# Logs de Azure
+webapp-logs*/
+LogFiles/
+
+# Archivos Excel y datos de prueba
+*.xlsx
+*.xls
+nul

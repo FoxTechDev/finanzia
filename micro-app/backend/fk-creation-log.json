@@ -1,0 +1,69 @@
+{
+  "timestamp": "2026-01-25T18:13:59.847Z",
+  "results": {
+    "total": 24,
+    "created": 17,
+    "skipped": 0,
+    "failed": 7,
+    "errors": [
+      {
+        "fk": "FK_solicitud_analista",
+        "error": "Referencing column 'analistaId' and referenced column 'id' in foreign key constraint 'FK_solicitud_analista' are incompatible."
+      },
+      {
+        "fk": "FK_solicitud_aprobador",
+        "error": "Referencing column 'aprobadorId' and referenced column 'id' in foreign key constraint 'FK_solicitud_aprobador' are incompatible."
+      },
+      {
+        "fk": "FK_prestamo_usuario_desembolso",
+        "error": "Referencing column 'usuarioDesembolsoId' and referenced column 'id' in foreign key constraint 'FK_prestamo_usuario_desembolso' are incompatible."
+      },
+      {
+        "fk": "FK_pago_usuario",
+        "error": "Referencing column 'usuarioId' and referenced column 'id' in foreign key constraint 'FK_pago_usuario' are incompatible."
+      },
+      {
+        "fk": "FK_pago_usuario_anulacion",
+        "error": "Referencing column 'usuarioAnulacionId' and referenced column 'id' in foreign key constraint 'FK_pago_usuario_anulacion' are incompatible."
+      },
+      {
+        "fk": "FK_decision_comite_usuario",
+        "error": "Referencing column 'usuarioId' and referenced column 'id' in foreign key constraint 'FK_decision_comite_usuario' are incompatible."
+      },
+      {
+        "fk": "FK_solicitud_historial_usuario",
+        "error": "Referencing column 'usuarioId' and referenced column 'id' in foreign key constraint 'FK_solicitud_historial_usuario' are incompatible."
+      }
+    ]
+  },
+  "errors": [
+    {
+      "fk": "FK_solicitud_analista",
+      "error": "Referencing column 'analistaId' and referenced column 'id' in foreign key constraint 'FK_solicitud_analista' are incompatible."
+    },
+    {
+      "fk": "FK_solicitud_aprobador",
+      "error": "Referencing column 'aprobadorId' and referenced column 'id' in foreign key constraint 'FK_solicitud_aprobador' are incompatible."
+    },
+    {
+      "fk": "FK_prestamo_usuario_desembolso",
+      "error": "Referencing column 'usuarioDesembolsoId' and referenced column 'id' in foreign key constraint 'FK_prestamo_usuario_desembolso' are incompatible."
+    },
+    {
+      "fk": "FK_pago_usuario",
+      "error": "Referencing column 'usuarioId' and referenced column 'id' in foreign key constraint 'FK_pago_usuario' are incompatible."
+    },
+    {
+      "fk": "FK_pago_usuario_anulacion",
+      "error": "Referencing column 'usuarioAnulacionId' and referenced column 'id' in foreign key constraint 'FK_pago_usuario_anulacion' are incompatible."
+    },
+    {
+      "fk": "FK_decision_comite_usuario",
+      "error": "Referencing column 'usuarioId' and referenced column 'id' in foreign key constraint 'FK_decision_comite_usuario' are incompatible."
+    },
+    {
+      "fk": "FK_solicitud_historial_usuario",
+      "error": "Referencing column 'usuarioId' and referenced column 'id' in foreign key constraint 'FK_solicitud_historial_usuario' are incompatible."
+    }
+  ]
+}

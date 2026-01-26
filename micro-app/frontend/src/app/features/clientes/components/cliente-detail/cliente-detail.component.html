@@ -1,0 +1,254 @@
+<div class="cliente-detail-container">
+  <div class="header">
+    <button mat-icon-button (click)="volver()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1>Detalle del Cliente</h1>
+    <span class="spacer"></span>
+    <button mat-mini-fab color="primary" (click)="editar()">
+      <mat-icon>edit</mat-icon>
+    </button>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  } @else if (cliente()) {
+    <mat-tab-group>
+      <!-- Tab: Datos Personales -->
+      <mat-tab label="Personal">
+        <mat-card class="detail-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar>person</mat-icon>
+            <mat-card-title>{{ cliente()!.nombre }} {{ cliente()!.apellido }}</mat-card-title>
+            <mat-card-subtitle>DUI: {{ cliente()!.numeroDui }}</mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content>
+            <mat-list>
+              <mat-list-item>
+                <mat-icon matListItemIcon>cake</mat-icon>
+                <span matListItemTitle>Fecha de Nacimiento</span>
+                <span matListItemLine>{{ formatDate(cliente()!.fechaNacimiento) }}</span>
+              </mat-list-item>
+
+              @if (cliente()!.sexo) {
+                <mat-list-item>
+                  <mat-icon matListItemIcon>wc</mat-icon>
+                  <span matListItemTitle>Sexo</span>
+                  <span matListItemLine>{{ cliente()!.sexo }}</span>
+                </mat-list-item>
+              }
+
+              <mat-list-item>
+                <mat-icon matListItemIcon>flag</mat-icon>
+                <span matListItemTitle>Nacionalidad</span>
+                <span matListItemLine>{{ cliente()!.nacionalidad }}</span>
+              </mat-list-item>
+
+              @if (cliente()!.estadoCivil) {
+                <mat-list-item>
+                  <mat-icon matListItemIcon>favorite</mat-icon>
+                  <span matListItemTitle>Estado Civil</span>
+                  <span matListItemLine>{{ cliente()!.estadoCivil }}</span>
+                </mat-list-item>
+              }
+
+              @if (cliente()!.telefono) {
+                <mat-list-item>
+                  <mat-icon matListItemIcon>phone</mat-icon>
+                  <span matListItemTitle>Teléfono</span>
+                  <span matListItemLine>{{ cliente()!.telefono }}</span>
+                </mat-list-item>
+              }
+
+              @if (cliente()!.correoElectronico) {
+                <mat-list-item>
+                  <mat-icon matListItemIcon>email</mat-icon>
+                  <span matListItemTitle>Correo</span>
+                  <span matListItemLine>{{ cliente()!.correoElectronico }}</span>
+                </mat-list-item>
+              }
+            </mat-list>
+
+            <mat-divider></mat-divider>
+
+            <h3 class="section-title">Documento de Identidad</h3>
+            <mat-list>
+              <mat-list-item>
+                <mat-icon matListItemIcon>badge</mat-icon>
+                <span matListItemTitle>Número de DUI</span>
+                <span matListItemLine>{{ cliente()!.numeroDui }}</span>
+              </mat-list-item>
+              <mat-list-item>
+                <mat-icon matListItemIcon>event</mat-icon>
+                <span matListItemTitle>Fecha de Emisión</span>
+                <span matListItemLine>{{ formatDate(cliente()!.fechaEmisionDui) }}</span>
+              </mat-list-item>
+              <mat-list-item>
+                <mat-icon matListItemIcon>location_on</mat-icon>
+                <span matListItemTitle>Lugar de Emisión</span>
+                <span matListItemLine>{{ cliente()!.lugarEmisionDui }}</span>
+              </mat-list-item>
+            </mat-list>
+          </mat-card-content>
+        </mat-card>
+      </mat-tab>
+
+      <!-- Tab: Dirección -->
+      <mat-tab label="Dirección">
+        <mat-card class="detail-card">
+          @if (cliente()!.direccion) {
+            <mat-card-content>
+              <mat-list>
+                <mat-list-item>
+                  <mat-icon matListItemIcon>map</mat-icon>
+                  <span matListItemTitle>Departamento</span>
+                  <span matListItemLine>{{ cliente()!.direccion!.departamento?.nombre || '-' }}</span>
+                </mat-list-item>
+                <mat-list-item>
+                  <mat-icon matListItemIcon>location_city</mat-icon>
+                  <span matListItemTitle>Municipio</span>
+                  <span matListItemLine>{{ cliente()!.direccion!.municipio?.nombre || '-' }}</span>
+                </mat-list-item>
+                <mat-list-item>
+                  <mat-icon matListItemIcon>place</mat-icon>
+                  <span matListItemTitle>Distrito</span>
+                  <span matListItemLine>{{ cliente()!.direccion!.distrito?.nombre || '-' }}</span>
+                </mat-list-item>
+                @if (cliente()!.direccion!.detalleDireccion) {
+                  <mat-list-item>
+                    <mat-icon matListItemIcon>home</mat-icon>
+                    <span matListItemTitle>Detalle</span>
+                    <span matListItemLine>{{ cliente()!.direccion!.detalleDireccion }}</span>
+                  </mat-list-item>
+                }
+              </mat-list>
+            </mat-card-content>
+          } @else {
+            <mat-card-content class="empty-content">
+              <mat-icon>location_off</mat-icon>
+              <p>Sin dirección registrada</p>
+            </mat-card-content>
+          }
+        </mat-card>
+      </mat-tab>
+
+      <!-- Tab: Actividad Económica -->
+      <mat-tab label="Económica">
+        <mat-card class="detail-card">
+          @if (cliente()!.actividadEconomica) {
+            <mat-card-content>
+              <mat-list>
+                <mat-list-item>
+                  <mat-icon matListItemIcon>work</mat-icon>
+                  <span matListItemTitle>Tipo de Actividad</span>
+                  <span matListItemLine>{{ cliente()!.actividadEconomica!.tipoActividad }}</span>
+                </mat-list-item>
+                @if (cliente()!.actividadEconomica!.nombreEmpresa) {
+                  <mat-list-item>
+                    <mat-icon matListItemIcon>business</mat-icon>
+                    <span matListItemTitle>Empresa</span>
+                    <span matListItemLine>{{ cliente()!.actividadEconomica!.nombreEmpresa }}</span>
+                  </mat-list-item>
+                }
+                @if (cliente()!.actividadEconomica!.cargoOcupacion) {
+                  <mat-list-item>
+                    <mat-icon matListItemIcon>assignment_ind</mat-icon>
+                    <span matListItemTitle>Cargo</span>
+                    <span matListItemLine>{{ cliente()!.actividadEconomica!.cargoOcupacion }}</span>
+                  </mat-list-item>
+                }
+                <mat-list-item>
+                  <mat-icon matListItemIcon>attach_money</mat-icon>
+                  <span matListItemTitle>Ingresos Mensuales</span>
+                  <span matListItemLine>{{ formatCurrency(cliente()!.actividadEconomica!.ingresosMensuales) }}</span>
+                </mat-list-item>
+              </mat-list>
+
+              <mat-divider></mat-divider>
+              <h3 class="section-title">Dirección de Trabajo</h3>
+
+              <mat-list>
+                <mat-list-item>
+                  <mat-icon matListItemIcon>map</mat-icon>
+                  <span matListItemTitle>Departamento</span>
+                  <span matListItemLine>{{ cliente()!.actividadEconomica!.departamento?.nombre || '-' }}</span>
+                </mat-list-item>
+                <mat-list-item>
+                  <mat-icon matListItemIcon>location_city</mat-icon>
+                  <span matListItemTitle>Municipio</span>
+                  <span matListItemLine>{{ cliente()!.actividadEconomica!.municipio?.nombre || '-' }}</span>
+                </mat-list-item>
+                <mat-list-item>
+                  <mat-icon matListItemIcon>place</mat-icon>
+                  <span matListItemTitle>Distrito</span>
+                  <span matListItemLine>{{ cliente()!.actividadEconomica!.distrito?.nombre || '-' }}</span>
+                </mat-list-item>
+              </mat-list>
+            </mat-card-content>
+          } @else {
+            <mat-card-content class="empty-content">
+              <mat-icon>work_off</mat-icon>
+              <p>Sin actividad económica registrada</p>
+            </mat-card-content>
+          }
+        </mat-card>
+      </mat-tab>
+
+      <!-- Tab: Referencias -->
+      <mat-tab label="Referencias">
+        <div class="references-container">
+          <h3 class="section-title">Referencias Personales</h3>
+          @if (cliente()!.referenciasPersonales?.length) {
+            @for (ref of cliente()!.referenciasPersonales; track ref.id) {
+              <mat-card class="reference-card">
+                <mat-card-header>
+                  <mat-icon mat-card-avatar>person</mat-icon>
+                  <mat-card-title>{{ ref.nombreReferencia }}</mat-card-title>
+                  <mat-card-subtitle>{{ ref.relacion }}</mat-card-subtitle>
+                </mat-card-header>
+                <mat-card-content>
+                  @if (ref.telefonoReferencia) {
+                    <p><mat-icon class="inline-icon">phone</mat-icon> {{ ref.telefonoReferencia }}</p>
+                  }
+                  @if (ref.direccionReferencia) {
+                    <p><mat-icon class="inline-icon">home</mat-icon> {{ ref.direccionReferencia }}</p>
+                  }
+                </mat-card-content>
+              </mat-card>
+            }
+          } @else {
+            <p class="no-data">Sin referencias personales</p>
+          }
+
+          <mat-divider></mat-divider>
+
+          <h3 class="section-title">Referencias Familiares</h3>
+          @if (cliente()!.referenciasFamiliares?.length) {
+            @for (ref of cliente()!.referenciasFamiliares; track ref.id) {
+              <mat-card class="reference-card">
+                <mat-card-header>
+                  <mat-icon mat-card-avatar>family_restroom</mat-icon>
+                  <mat-card-title>{{ ref.nombreFamiliar }}</mat-card-title>
+                  <mat-card-subtitle>{{ ref.parentesco }}</mat-card-subtitle>
+                </mat-card-header>
+                <mat-card-content>
+                  @if (ref.telefonoFamiliar) {
+                    <p><mat-icon class="inline-icon">phone</mat-icon> {{ ref.telefonoFamiliar }}</p>
+                  }
+                  @if (ref.direccionFamiliar) {
+                    <p><mat-icon class="inline-icon">home</mat-icon> {{ ref.direccionFamiliar }}</p>
+                  }
+                </mat-card-content>
+              </mat-card>
+            }
+          } @else {
+            <p class="no-data">Sin referencias familiares</p>
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  }
+</div>

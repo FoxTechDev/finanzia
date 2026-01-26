@@ -1,0 +1,148 @@
+================================================================================
+LISTADO DE ARCHIVOS GENERADOS - CONVERSIÓN POSTGRESQL → MYSQL
+================================================================================
+Fecha: 2026-01-24
+Ubicación: C:\Users\javie\OneDrive\Documentos\DESARROLLO\MICRO
+================================================================================
+
+ARCHIVOS SQL CONVERTIDOS (MySQL)
+--------------------------------------------------------------------------------
+✓ 01_insert_personas_mysql.sql          25 KB    67 registros
+✓ 02_insert_direcciones_mysql.sql       12 KB    67 registros
+✓ 03_insert_prestamos_mysql.sql        161 KB   170 registros
+✓ 04_insert_pagos_mysql.sql            726 KB   969 registros
+
+ARCHIVOS DE IMPORTACIÓN
+--------------------------------------------------------------------------------
+✓ import_all_mysql.sql                 3.7 KB   Script maestro de importación
+✓ importar_mysql.bat                   1.8 KB   Script batch automatizado
+
+DOCUMENTACIÓN
+--------------------------------------------------------------------------------
+✓ README_IMPORTACION_MYSQL.md          4.6 KB   Guía completa de importación
+✓ RESUMEN_CONVERSION.txt               8.6 KB   Resumen detallado
+✓ ARCHIVOS_GENERADOS.txt              Este archivo
+
+SCRIPTS DE CONVERSIÓN
+--------------------------------------------------------------------------------
+✓ convert_postgres_to_mysql.py         6.8 KB   Script Python (requiere Python)
+✓ convert_to_mysql.bat                 1.8 KB   Script batch de conversión
+
+================================================================================
+RESUMEN DE CONVERSIÓN
+================================================================================
+
+Archivos procesados: 4
+Registros totales: 1,273
+  - Personas: 67
+  - Direcciones: 67
+  - Préstamos: 170
+  - Pagos: 969
+
+Transformaciones aplicadas:
+  ✓ Comillas dobles ("") → Backticks (``)
+  ✓ Comandos PostgreSQL removidos (SELECT setval)
+  ✓ Sintaxis validada para MySQL 5.7+
+
+================================================================================
+COMPARACIÓN DE SINTAXIS
+================================================================================
+
+PostgreSQL (ANTES):
+  INSERT INTO persona (
+    "idPersona", "fechaNacimiento", "estadoCivil"
+  ) VALUES (...)
+  SELECT setval('persona_"idPersona"_seq', ...);
+
+MySQL (DESPUÉS):
+  INSERT INTO persona (
+    `idPersona`, `fechaNacimiento`, `estadoCivil`
+  ) VALUES (...)
+  -- REMOVIDO: SELECT setval (PostgreSQL específico)
+
+================================================================================
+INSTRUCCIONES DE USO RÁPIDO
+================================================================================
+
+OPCIÓN 1: Importación Automática (Más Fácil)
+  → Doble clic en: importar_mysql.bat
+
+OPCIÓN 2: Desde Cliente MySQL
+  mysql -u root -proot micro_app
+  mysql> SOURCE C:/Users/javie/OneDrive/Documentos/DESARROLLO/MICRO/import_all_mysql.sql;
+
+OPCIÓN 3: Línea de Comandos
+  mysql -u root -proot micro_app < import_all_mysql.sql
+
+================================================================================
+VERIFICACIÓN DE CALIDAD
+================================================================================
+
+✓ Todos los archivos generados correctamente
+✓ Sintaxis MySQL validada
+✓ Comandos PostgreSQL removidos
+✓ Caracteres especiales preservados (á, é, í, ó, ú, ñ)
+✓ Valores NULL preservados
+✓ Integridad referencial mantenida
+✓ Orden de importación correcto
+
+Comparación Original vs Convertido:
+  - 01_insert_personas.sql      (PostgreSQL) → 01_insert_personas_mysql.sql      (MySQL) ✓
+  - 02_insert_direcciones.sql   (PostgreSQL) → 02_insert_direcciones_mysql.sql   (MySQL) ✓
+  - 03_insert_prestamos.sql     (PostgreSQL) → 03_insert_prestamos_mysql.sql     (MySQL) ✓
+  - 04_insert_pagos.sql         (PostgreSQL) → 04_insert_pagos_mysql.sql         (MySQL) ✓
+
+================================================================================
+ARCHIVOS ORIGINALES (PostgreSQL - No Modificados)
+================================================================================
+
+Los archivos originales permanecen intactos:
+  - 01_insert_personas.sql
+  - 02_insert_direcciones.sql
+  - 03_insert_prestamos.sql
+  - 04_insert_pagos.sql
+  - import_all.sql
+
+================================================================================
+PRÓXIMOS PASOS
+================================================================================
+
+1. Verificar que MySQL esté en ejecución
+2. Verificar que la base de datos 'micro_app' exista
+3. Verificar que las tablas estén creadas (persona, direccion, prestamo, pago)
+4. Ejecutar: importar_mysql.bat
+5. Verificar los resultados en MySQL
+
+Consultas de verificación:
+  SELECT COUNT(*) FROM persona;     -- Debe retornar: 67
+  SELECT COUNT(*) FROM direccion;   -- Debe retornar: 67
+  SELECT COUNT(*) FROM prestamo;    -- Debe retornar: 170
+  SELECT COUNT(*) FROM pago;        -- Debe retornar: 969
+
+================================================================================
+SOPORTE
+================================================================================
+
+Para más información, consulta:
+  - README_IMPORTACION_MYSQL.md (documentación completa)
+  - RESUMEN_CONVERSION.txt (resumen detallado)
+
+Problemas comunes:
+  - Base de datos no existe → Crear con: CREATE DATABASE micro_app;
+  - Tablas no existen → Ejecutar script de creación de esquema
+  - Credenciales incorrectas → Verificar usuario/contraseña MySQL
+  - Datos duplicados → Limpiar tablas con TRUNCATE antes de importar
+
+================================================================================
+✓ CONVERSIÓN COMPLETADA EXITOSAMENTE
+================================================================================
+
+Todos los archivos SQL han sido convertidos de PostgreSQL a MySQL.
+Los datos están listos para ser importados en la base de datos micro_app.
+
+Total de archivos generados: 9
+Total de registros a importar: 1,273
+
+Ejecuta 'importar_mysql.bat' para comenzar la importación.
+
+================================================================================

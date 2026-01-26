@@ -1,0 +1,16 @@
+### Variables
+@baseUrl = http://localhost:3000/api
+@token = YOUR_JWT_TOKEN_HERE
+@prestamoId = 1
+
+### Obtener estado de cuenta en JSON (para comparar datos)
+GET {{baseUrl}}/pagos/prestamo/{{prestamoId}}/estado-cuenta
+Authorization: Bearer {{token}}
+
+### Descargar estado de cuenta en PDF
+GET {{baseUrl}}/pagos/prestamo/{{prestamoId}}/estado-cuenta-pdf
+Authorization: Bearer {{token}}
+
+### Probar con un préstamo específico
+GET {{baseUrl}}/pagos/prestamo/5/estado-cuenta-pdf
+Authorization: Bearer {{token}}

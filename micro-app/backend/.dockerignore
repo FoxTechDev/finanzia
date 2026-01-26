@@ -1,0 +1,38 @@
+# Dependencias
+node_modules
+npm-debug.log
+
+# Build artifacts
+dist
+
+# Environment files (se configuran en Digital Ocean)
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Tests
+coverage
+test
+*.spec.ts
+
+# Documentación
+*.md
+docs
+
+# Git
+.git
+.gitignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
