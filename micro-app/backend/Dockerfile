@@ -29,8 +29,7 @@ RUN npm ci --only=production && npm cache clean --force
 # Copiar el build compilado desde la etapa anterior
 COPY --from=builder /app/dist ./dist
 
-# Copiar assets si existen
-COPY --from=builder /app/src/assets ./dist/assets 2>/dev/null || true
+# Nota: Los assets se copian como parte del build si existen
 
 # Crear usuario no-root para seguridad
 RUN addgroup -g 1001 -S nodejs && \
