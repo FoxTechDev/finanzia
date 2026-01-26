@@ -24,11 +24,13 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copiar el build de Angular
 COPY --from=builder /app/dist/micro-app/browser /usr/share/nginx/html
 
-# Crear usuario no-root para seguridad
+# Configurar permisos para nginx
 RUN chown -R nginx:nginx /usr/share/nginx/html && \
     chown -R nginx:nginx /var/cache/nginx && \
     chown -R nginx:nginx /var/log/nginx && \
+    mkdir -p /var/run/nginx && \
     touch /var/run/nginx.pid && \
+    chown -R nginx:nginx /var/run/nginx && \
     chown -R nginx:nginx /var/run/nginx.pid
 
 # Exponer puerto
