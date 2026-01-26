@@ -7,20 +7,20 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Copiar archivos de dependencias
-COPY --chown=nestjs:nodejs package*.json ./
+# Copiar archivos de dependencias desde backend/
+COPY --chown=nestjs:nodejs backend/package*.json ./
 
 # Instalar todas las dependencias
 RUN npm ci
 
-# Copiar código fuente
-COPY --chown=nestjs:nodejs . .
+# Copiar código fuente desde backend/
+COPY --chown=nestjs:nodejs backend/ .
 
 # Compilar la aplicación
 RUN npm run build
 
 # Verificar que el build existe
-RUN test -f dist/main.js && echo "Build OK: dist/main.js exists"
+RUN ls -la dist/ && test -f dist/main.js
 
 # Reinstalar solo dependencias de producción
 RUN rm -rf node_modules && \
