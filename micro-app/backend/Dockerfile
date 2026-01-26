@@ -12,16 +12,16 @@ RUN npm ci
 # Copiar código fuente
 COPY . .
 
-# Compilar la aplicación
-RUN npm run build
+# Compilar la aplicación y verificar resultado
+RUN npm run build && ls -la dist/
 
 # --- Etapa de producción ---
 FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Copiar package.json para producción
-COPY package*.json ./
+# Copiar package.json desde el builder
+COPY --from=builder /app/package*.json ./
 
 # Instalar solo dependencias de producción
 RUN npm ci --only=production && npm cache clean --force
