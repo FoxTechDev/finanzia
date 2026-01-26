@@ -163,6 +163,26 @@ export const CREDITOS_ROUTES: Routes = [
         canActivate: [roleGuard],
         data: { roles: [RoleCodes.ADMIN] },
       },
+      {
+        path: 'reportes/colocacion',
+        loadComponent: () =>
+          import('./components/reportes/reporte-colocacion.component').then(
+            (m) => m.ReporteColocacionComponent
+          ),
+        title: 'Reporte de Colocación',
+        canActivate: [roleGuard],
+        data: { roles: [RoleCodes.ADMIN, RoleCodes.ASESOR, RoleCodes.COMITE] },
+      },
+      {
+        path: 'reportes/pagos',
+        loadComponent: () =>
+          import('./components/reportes/reporte-pagos.component').then(
+            (m) => m.ReportePagosComponent
+          ),
+        title: 'Reporte de Pagos',
+        canActivate: [roleGuard],
+        data: { roles: [RoleCodes.ADMIN, RoleCodes.COMITE] },
+      },
     ],
   },
 ];

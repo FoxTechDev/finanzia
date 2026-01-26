@@ -66,6 +66,21 @@
         </a>
       </ng-container>
 
+      <!-- Sección Reportes: ADMIN y COMITE -->
+      <ng-container *appHasRole="[RoleCodes.ADMIN, RoleCodes.COMITE]">
+        <div class="nav-section">
+          <span class="nav-section-title">Reportes</span>
+        </div>
+        <a mat-list-item routerLink="/creditos/reportes/colocacion" routerLinkActive="active">
+          <mat-icon matListItemIcon>assessment</mat-icon>
+          <span matListItemTitle>Colocación de Créditos</span>
+        </a>
+        <a mat-list-item routerLink="/creditos/reportes/pagos" routerLinkActive="active">
+          <mat-icon matListItemIcon>receipt_long</mat-icon>
+          <span matListItemTitle>Reporte de Pagos</span>
+        </a>
+      </ng-container>
+
       <!-- Sección Administración: Solo ADMIN -->
       <ng-container *appHasRole="[RoleCodes.ADMIN]">
         <div class="nav-section">
