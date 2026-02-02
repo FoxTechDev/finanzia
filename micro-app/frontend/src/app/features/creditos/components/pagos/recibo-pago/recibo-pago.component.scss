@@ -47,6 +47,7 @@
 }
 
 // Contenedor del recibo en pantalla
+// Tipografía optimizada para impresoras térmicas 12x24 ASCII
 .recibo-termica {
   width: 80mm;
   margin: 0 auto;
@@ -55,10 +56,11 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  font-family: 'Courier New', Courier, monospace;
+  font-family: 'Consolas', 'Liberation Mono', 'Menlo', 'DejaVu Sans Mono', monospace;
   font-size: 10pt;
-  line-height: 1.4;
+  line-height: 1.3;
   color: #000;
+  letter-spacing: 0.02em;
 }
 
 // ============================================
@@ -224,7 +226,7 @@
     width: 80mm;
   }
 
-  // Recibo térmico en impresión
+  // Recibo térmico en impresión - Tipografía 12x24 ASCII
   .recibo-termica {
     width: 80mm;
     margin: 0;
@@ -233,9 +235,10 @@
     border: none;
     border-radius: 0;
     box-shadow: none;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'Consolas', 'Liberation Mono', 'Menlo', 'DejaVu Sans Mono', monospace;
     font-size: 9pt;
-    line-height: 1.3;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
     color: #000;
   }
 
