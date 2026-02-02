@@ -820,3 +820,41 @@ input, select, textarea {
     font-size: 16px !important; // iOS no hace zoom si el font-size es >= 16px
   }
 }
+
+// ============================================
+// ESTILOS DE IMPRESIÓN GLOBALES
+// ============================================
+@media print {
+  // Ocultar el menú lateral y toolbar
+  mat-sidenav,
+  .mat-drawer,
+  mat-toolbar,
+  .mat-toolbar {
+    display: none !important;
+  }
+
+  // El contenido principal ocupa todo
+  mat-sidenav-content,
+  .mat-drawer-content {
+    margin-left: 0 !important;
+    margin: 0 !important;
+  }
+
+  // Ocultar elementos con clase no-print
+  .no-print {
+    display: none !important;
+  }
+
+  // Reset de altura del contenedor
+  .mat-sidenav-container,
+  .mat-drawer-container {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  // El body y html sin scroll
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+}

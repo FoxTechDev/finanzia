@@ -253,3 +253,35 @@
     min-height: calc(100vh - 56px);
   }
 }
+
+// ============================================
+// ESTILOS DE IMPRESIÓN
+// ============================================
+@media print {
+  // Ocultar el menú lateral
+  .sidenav {
+    display: none !important;
+  }
+
+  // Ocultar el toolbar (header con logo y botón cerrar sesión)
+  .toolbar {
+    display: none !important;
+  }
+
+  // El contenedor principal debe ocupar todo el ancho
+  .sidenav-container {
+    height: auto !important;
+  }
+
+  // El contenido principal sin márgenes
+  .main-content {
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  // Asegurar que mat-sidenav-content ocupe todo
+  mat-sidenav-content {
+    margin-left: 0 !important;
+  }
+}
