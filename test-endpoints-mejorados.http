@@ -1,0 +1,243 @@
+### ==================================================
+### PRUEBAS DE ENDPOINTS MEJORADOS - SOLICITUDES Y COMITÉ
+### ==================================================
+
+@baseUrl = http://localhost:3000/api
+@solicitudId = 1
+
+### ==================================================
+### 1. ENDPOINTS DE SOLICITUDES
+### ==================================================
+
+### 1.1 Obtener solicitud básica (sin plan de pago)
+GET {{baseUrl}}/solicitudes/{{solicitudId}}
+Content-Type: application/json
+
+### 1.2 Obtener solicitud con plan de pago calculado (NUEVO)
+# Este endpoint retorna toda la información incluyendo el plan de pago
+# calculado dinámicamente
+GET {{baseUrl}}/solicitudes/{{solicitudId}}/detalle
+Content-Type: application/json
+
+### 1.3 Obtener todas las solicitudes
+GET {{baseUrl}}/solicitudes
+Content-Type: application/json
+
+### 1.4 Filtrar solicitudes por estado
+GET {{baseUrl}}/solicitudes?estado=EN_COMITE
+Content-Type: application/json
+
+### 1.5 Calcular plan de pago (endpoint independiente)
+POST {{baseUrl}}/solicitudes/calcular-plan
+Content-Type: application/json
+
+{
+  "monto": 5000,
+  "plazo": 12,
+  "tasaInteres": 18.5,
+  "tipoInteres": "AMORTIZADO",
+  "periodicidad": "MENSUAL"
+}
+
+### ==================================================
+### 2. ENDPOINTS DE COMITÉ
+### ==================================================
+
+### 2.1 Obtener solicitudes pendientes en comité
+GET {{baseUrl}}/comite/pendientes
+Content-Type: application/json
+
+### 2.2 Filtrar solicitudes pendientes por monto
+GET {{baseUrl}}/comite/pendientes?montoMinimo=1000&montoMaximo=10000
+Content-Type: application/json
+
+### 2.3 Obtener información completa para revisión de comité (NUEVO)
+# Este endpoint retorna:
+# - Solicitud completa con cliente
+# - Actividad económica del cliente
+# - Ingresos del cliente
+# - Gastos del cliente
+# - Análisis financiero (capacidad de pago, ratio de endeudamiento)
+GET {{baseUrl}}/comite/{{solicitudId}}/revision
+Content-Type: application/json
+
+### 2.4 Obtener historial de decisiones de comité
+GET {{baseUrl}}/comite/historial
+Content-Type: application/json
+
+### 2.5 Obtener decisiones de una solicitud específica
+GET {{baseUrl}}/comite/{{solicitudId}}/decisiones
+Content-Type: application/json
+
+### 2.6 Registrar decisión del comité (APROBAR)
+POST {{baseUrl}}/comite/{{solicitudId}}/decision
+Content-Type: application/json
+
+{
+  "tipoDecision": "AUTORIZADA",
+  "observaciones": "Aprobado según análisis financiero favorable",
+  "montoAutorizado": 5000,
+  "plazoAutorizado": 12,
+  "tasaAutorizada": 18.5,
+  "usuarioId": 1,
+  "nombreUsuario": "Comité de Crédito"
+}
+
+### 2.7 Registrar decisión del comité (OBSERVAR)
+POST {{baseUrl}}/comite/{{solicitudId}}/decision
+Content-Type: application/json
+
+{
+  "tipoDecision": "OBSERVADA",
+  "observaciones": "Solicitar información adicional sobre ingresos",
+  "usuarioId": 1,
+  "nombreUsuario": "Comité de Crédito"
+}
+
+### 2.8 Registrar decisión del comité (DENEGAR)
+POST {{baseUrl}}/comite/{{solicitudId}}/decision
+Content-Type: application/json
+
+{
+  "tipoDecision": "DENEGADA",
+  "observaciones": "Capacidad de pago insuficiente según análisis",
+  "usuarioId": 1,
+  "nombreUsuario": "Comité de Crédito"
+}
+
+### 2.9 Obtener estadísticas de solicitudes pendientes
+GET {{baseUrl}}/comite/estadisticas
+Content-Type: application/json
+
+### ==================================================
+### 3. FLUJO COMPLETO DE USO
+### ==================================================
+
+### 3.1 FLUJO: Vista de consulta de solicitud
+# Paso 1: Obtener solicitud con plan de pago
+GET {{baseUrl}}/solicitudes/{{solicitudId}}/detalle
+Content-Type: application/json
+
+# Esta llamada retorna todo lo necesario para mostrar:
+# - Información del cliente
+# - Detalles de la solicitud
+# - Tipo de crédito y periodicidad
+# - Plan de pago completo con todas las cuotas
+
+### 3.2 FLUJO: Revisión en comité
+# Paso 1: Ver lista de solicitudes pendientes
+GET {{baseUrl}}/comite/pendientes
+Content-Type: application/json
+
+###
+# Paso 2: Ver información completa de una solicitud
+GET {{baseUrl}}/comite/{{solicitudId}}/revision
+Content-Type: application/json
+
+# Esta llamada retorna todo lo necesario para la revisión:
+# - Datos de la solicitud
+# - Información del cliente y actividad económica
+# - Lista de ingresos y gastos
+# - Análisis financiero calculado
+
+###
+# Paso 3: Tomar decisión
+POST {{baseUrl}}/comite/{{solicitudId}}/decision
+Content-Type: application/json
+
+{
+  "tipoDecision": "AUTORIZADA",
+  "observaciones": "Aprobado",
+  "montoAutorizado": 5000,
+  "plazoAutorizado": 12,
+  "tasaAutorizada": 18.5,
+  "usuarioId": 1,
+  "nombreUsuario": "Comité de Crédito"
+}
+
+### ==================================================
+### 4. EJEMPLOS DE RESPUESTAS ESPERADAS
+### ==================================================
+
+### Ejemplo de respuesta: GET /solicitudes/:id/detalle
+# {
+#   "id": 1,
+#   "numeroSolicitud": "SOL-2024-000001",
+#   "personaId": 1,
+#   "montoSolicitado": 5000,
+#   "plazoSolicitado": 12,
+#   "tasaInteresPropuesta": 18.5,
+#   "persona": {
+#     "id": 1,
+#     "nombre": "Juan",
+#     "apellido": "Pérez"
+#   },
+#   "tipoCredito": {
+#     "id": 1,
+#     "nombre": "Crédito Personal"
+#   },
+#   "periodicidadPago": {
+#     "id": 1,
+#     "codigo": "MENSUAL",
+#     "nombre": "Mensual"
+#   },
+#   "planPago": {
+#     "cuotaNormal": 456.78,
+#     "totalInteres": 484.36,
+#     "totalPagar": 5484.36,
+#     "numeroCuotas": 12,
+#     "planPago": [
+#       {
+#         "numeroCuota": 1,
+#         "fechaVencimiento": "2024-02-15",
+#         "capital": 379.53,
+#         "interes": 77.25,
+#         "cuotaTotal": 456.78,
+#         "saldoCapital": 4620.47
+#       }
+#     ]
+#   }
+# }
+
+### Ejemplo de respuesta: GET /comite/:solicitudId/revision
+# {
+#   "solicitud": {
+#     "id": 1,
+#     "numeroSolicitud": "SOL-2024-000001",
+#     "persona": {
+#       "nombre": "Juan",
+#       "apellido": "Pérez",
+#       "actividadEconomica": {
+#         "ocupacion": "Comerciante",
+#         "nombreEmpresa": "Mi Negocio",
+#         "ingresoMensual": 1500
+#       }
+#     }
+#   },
+#   "ingresos": [
+#     {
+#       "tipoIngreso": { "nombre": "Salario" },
+#       "monto": 1200
+#     },
+#     {
+#       "tipoIngreso": { "nombre": "Negocio Propio" },
+#       "monto": 800
+#     }
+#   ],
+#   "gastos": [
+#     {
+#       "tipoGasto": { "nombre": "Alimentación" },
+#       "monto": 400
+#     },
+#     {
+#       "tipoGasto": { "nombre": "Vivienda" },
+#       "monto": 300
+#     }
+#   ],
+#   "analisisFinanciero": {
+#     "totalIngresos": 2000,
+#     "totalGastos": 700,
+#     "capacidadPago": 1300,
+#     "ratioEndeudamiento": 32.15
+#   }
+# }

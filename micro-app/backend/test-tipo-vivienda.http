@@ -1,0 +1,141 @@
+### Variables
+@baseUrl = http://localhost:3000/api
+@tipoViviendaId = 1
+
+### ============================================
+### TIPO VIVIENDA - CRUD Operations
+### ============================================
+
+### 1. Obtener todos los tipos de vivienda
+GET {{baseUrl}}/tipo-vivienda
+Content-Type: application/json
+
+### 2. Obtener solo tipos de vivienda activos
+GET {{baseUrl}}/tipo-vivienda/activos
+Content-Type: application/json
+
+### 3. Obtener un tipo de vivienda específico
+GET {{baseUrl}}/tipo-vivienda/{{tipoViviendaId}}
+Content-Type: application/json
+
+### 4. Crear nuevo tipo de vivienda
+POST {{baseUrl}}/tipo-vivienda
+Content-Type: application/json
+
+{
+  "nombre": "Compartida",
+  "descripcion": "Vivienda compartida con otras personas",
+  "activo": true
+}
+
+### 5. Actualizar tipo de vivienda
+PATCH {{baseUrl}}/tipo-vivienda/6
+Content-Type: application/json
+
+{
+  "descripcion": "Vivienda compartida o en cohabitación"
+}
+
+### 6. Desactivar tipo de vivienda (sin eliminar) - Método 1
+PATCH {{baseUrl}}/tipo-vivienda/6
+Content-Type: application/json
+
+{
+  "activo": false
+}
+
+### 6b. Toggle activo de tipo de vivienda - Método 2 (endpoint específico)
+PATCH {{baseUrl}}/tipo-vivienda/6/toggle-activo
+Content-Type: application/json
+
+{
+  "activo": false
+}
+
+### 7. Eliminar tipo de vivienda
+DELETE {{baseUrl}}/tipo-vivienda/6
+Content-Type: application/json
+
+### ============================================
+### DIRECCION - Uso con nuevo campo
+### ============================================
+
+### 8. Crear dirección con tipo de vivienda
+POST {{baseUrl}}/persona
+Content-Type: application/json
+
+{
+  "primerNombre": "Juan",
+  "primerApellido": "Pérez",
+  "dpi": "1234567890101",
+  "direccion": {
+    "departamentoId": 1,
+    "municipioId": 1,
+    "distritoId": 1,
+    "detalleDireccion": "10 calle 5-20 zona 1",
+    "tipoViviendaId": 1,
+    "tiempoResidenciaAnios": 5
+  }
+}
+
+### 9. Obtener persona con dirección y tipo de vivienda
+GET {{baseUrl}}/persona/1
+Content-Type: application/json
+
+### ============================================
+### VALIDACIONES Y CASOS DE ERROR
+### ============================================
+
+### 10. Intentar crear tipo duplicado (debe fallar)
+POST {{baseUrl}}/tipo-vivienda
+Content-Type: application/json
+
+{
+  "nombre": "Propia",
+  "descripcion": "Duplicado"
+}
+
+### 11. Intentar obtener tipo inexistente (debe retornar 404)
+GET {{baseUrl}}/tipo-vivienda/9999
+Content-Type: application/json
+
+### 12. Crear tipo sin nombre (debe fallar validación)
+POST {{baseUrl}}/tipo-vivienda
+Content-Type: application/json
+
+{
+  "descripcion": "Sin nombre"
+}
+
+### 13. Crear dirección con tipo de vivienda inexistente
+POST {{baseUrl}}/persona
+Content-Type: application/json
+
+{
+  "primerNombre": "Test",
+  "primerApellido": "Error",
+  "dpi": "9999999999999",
+  "direccion": {
+    "departamentoId": 1,
+    "municipioId": 1,
+    "distritoId": 1,
+    "tipoViviendaId": 9999
+  }
+}
+
+### ============================================
+### DATOS DE PRUEBA - Seed Data
+### ============================================
+
+### 14. Verificar datos iniciales migrados
+GET {{baseUrl}}/tipo-vivienda
+Content-Type: application/json
+
+### Respuesta esperada:
+### [
+###   { "id": 1, "nombre": "Propia", "descripcion": "Vivienda en propiedad", "activo": true },
+###   { "id": 2, "nombre": "Alquilada", "descripcion": "Vivienda en alquiler", "activo": true },
+###   { "id": 3, "nombre": "Familiar", "descripcion": "Vivienda familiar", "activo": true },
+###   { "id": 4, "nombre": "Prestada", "descripcion": "Vivienda prestada", "activo": true },
+###   { "id": 5, "nombre": "Otra", "descripcion": "Otro tipo de vivienda", "activo": true }
+### ]

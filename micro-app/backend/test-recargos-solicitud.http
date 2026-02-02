@@ -1,0 +1,297 @@
+### ========================================
+### TEST: Cálculo de Plan de Pago con Recargos
+### ========================================
+
+### Variables
+@baseUrl = http://localhost:3000/api
+@contentType = application/json
+
+### ========================================
+### 1. Calcular Plan de Pago SIN Recargos (baseline)
+### ========================================
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: {{contentType}}
+
+{
+  "monto": 1000,
+  "plazo": 6,
+  "tasaInteres": 12,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2026-03-01"
+}
+
+### ========================================
+### 2. Calcular Plan de Pago CON Recargo FIJO
+### Recargo: GPS $5.00 en todas las cuotas
+### ========================================
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: {{contentType}}
+
+{
+  "monto": 1000,
+  "plazo": 6,
+  "tasaInteres": 12,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2026-03-01",
+  "recargos": [
+    {
+      "nombre": "GPS",
+      "tipo": "FIJO",
+      "valor": 5.00
+    }
+  ]
+}
+
+### ========================================
+### 3. Calcular Plan de Pago CON Recargo PORCENTUAL
+### Recargo: Seguro 2% en todas las cuotas
+### ========================================
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: {{contentType}}
+
+{
+  "monto": 1000,
+  "plazo": 6,
+  "tasaInteres": 12,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2026-03-01",
+  "recargos": [
+    {
+      "nombre": "Seguro de Vida",
+      "tipo": "PORCENTAJE",
+      "valor": 2
+    }
+  ]
+}
+
+### ========================================
+### 4. Calcular Plan de Pago CON MÚLTIPLES Recargos
+### Recargos:
+### - GPS: $5.00 fijo (todas las cuotas)
+### - Seguro: 2% (todas las cuotas)
+### - Ahorro: $10.00 fijo (todas las cuotas)
+### ========================================
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: {{contentType}}
+
+{
+  "monto": 1000,
+  "plazo": 6,
+  "tasaInteres": 12,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2026-03-01",
+  "recargos": [
+    {
+      "nombre": "GPS",
+      "tipo": "FIJO",
+      "valor": 5.00
+    },
+    {
+      "nombre": "Seguro de Vida",
+      "tipo": "PORCENTAJE",
+      "valor": 2
+    },
+    {
+      "nombre": "Ahorro Obligatorio",
+      "tipo": "FIJO",
+      "valor": 10.00
+    }
+  ]
+}
+
+### ========================================
+### 5. Calcular Plan CON Recargos en RANGO ESPECÍFICO
+### Recargo: GPS solo en cuotas 1-3
+### ========================================
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: {{contentType}}
+
+{
+  "monto": 1000,
+  "plazo": 6,
+  "tasaInteres": 12,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2026-03-01",
+  "recargos": [
+    {
+      "nombre": "GPS (Primeros 3 meses)",
+      "tipo": "FIJO",
+      "valor": 5.00,
+      "aplicaDesde": 1,
+      "aplicaHasta": 3
+    }
+  ]
+}
+
+### ========================================
+### 6. Calcular Plan CON Recargos desde cuota específica
+### Recargo: Ahorro desde la cuota 2 hasta el final
+### ========================================
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: {{contentType}}
+
+{
+  "monto": 1000,
+  "plazo": 6,
+  "tasaInteres": 12,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2026-03-01",
+  "recargos": [
+    {
+      "nombre": "Ahorro (desde cuota 2)",
+      "tipo": "FIJO",
+      "valor": 15.00,
+      "aplicaDesde": 2
+    }
+  ]
+}
+
+### ========================================
+### 7. Calcular Plan PERIODICIDAD DIARIA con Recargos
+### ========================================
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: {{contentType}}
+
+{
+  "monto": 500,
+  "plazo": 2,
+  "tasaInteres": 15,
+  "periodicidad": "DIARIO",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2026-03-01",
+  "numeroCuotas": 45,
+  "recargos": [
+    {
+      "nombre": "GPS Diario",
+      "tipo": "FIJO",
+      "valor": 0.50
+    }
+  ]
+}
+
+### ========================================
+### 8. Calcular Plan AMORTIZADO con Recargos
+### ========================================
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: {{contentType}}
+
+{
+  "monto": 5000,
+  "plazo": 12,
+  "tasaInteres": 18,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2026-03-01",
+  "recargos": [
+    {
+      "nombre": "Seguro de Desgravamen",
+      "tipo": "PORCENTAJE",
+      "valor": 1.5
+    },
+    {
+      "nombre": "Comisión Administrativa",
+      "tipo": "FIJO",
+      "valor": 8.00,
+      "aplicaDesde": 1,
+      "aplicaHasta": 1
+    }
+  ]
+}
+
+### ========================================
+### 9. Test de Validación: Recargo con porcentaje inválido
+### Esperado: ERROR 400
+### ========================================
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: {{contentType}}
+
+{
+  "monto": 1000,
+  "plazo": 6,
+  "tasaInteres": 12,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2026-03-01",
+  "recargos": [
+    {
+      "nombre": "Recargo Inválido",
+      "tipo": "PORCENTAJE",
+      "valor": 150
+    }
+  ]
+}
+
+### ========================================
+### 10. Test de Validación: Recargo sin nombre
+### Esperado: ERROR 400
+### ========================================
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: {{contentType}}
+
+{
+  "monto": 1000,
+  "plazo": 6,
+  "tasaInteres": 12,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2026-03-01",
+  "recargos": [
+    {
+      "tipo": "FIJO",
+      "valor": 5.00
+    }
+  ]
+}
+
+### ========================================
+### 11. Calcular Plan QUINCENAL con Recargos
+### ========================================
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: {{contentType}}
+
+{
+  "monto": 2000,
+  "plazo": 3,
+  "tasaInteres": 15,
+  "periodicidad": "QUINCENAL",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2026-03-01",
+  "recargos": [
+    {
+      "nombre": "Seguro Quincenal",
+      "tipo": "FIJO",
+      "valor": 3.50
+    }
+  ]
+}
+
+### ========================================
+### RESULTADO ESPERADO
+### ========================================
+### Para Test #2 (GPS $5.00):
+### - Cuota Base: ~$176.67
+### - Recargo: $5.00
+### - Cuota Total: ~$181.67
+###
+### Para Test #3 (Seguro 2%):
+### - Cuota Base: ~$176.67
+### - Recargo: ~$3.53 (2% de $176.67)
+### - Cuota Total: ~$180.20
+###
+### Para Test #4 (GPS + Seguro + Ahorro):
+### - Cuota Base: ~$176.67
+### - GPS: $5.00
+### - Seguro: ~$3.53
+### - Ahorro: $10.00
+### - Cuota Total: ~$195.20
+###
+### Para Test #5 (GPS solo cuotas 1-3):
+### - Cuotas 1-3: ~$181.67
+### - Cuotas 4-6: ~$176.67
+### ========================================

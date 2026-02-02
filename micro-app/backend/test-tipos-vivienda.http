@@ -1,0 +1,77 @@
+### Variables
+@baseUrl = http://localhost:3000
+@tipoViviendaId = 1
+
+### Obtener todos los tipos de vivienda
+GET {{baseUrl}}/tipo-vivienda
+Content-Type: application/json
+
+### Obtener solo tipos de vivienda activos
+GET {{baseUrl}}/tipo-vivienda/activos
+Content-Type: application/json
+
+### Obtener un tipo de vivienda por ID
+GET {{baseUrl}}/tipo-vivienda/{{tipoViviendaId}}
+Content-Type: application/json
+
+### Crear un nuevo tipo de vivienda
+POST {{baseUrl}}/tipo-vivienda
+Content-Type: application/json
+
+{
+  "codigo": "HIPOTECADA",
+  "nombre": "Hipotecada",
+  "descripcion": "Vivienda adquirida mediante hipoteca",
+  "activo": true,
+  "orden": 25
+}
+
+### Actualizar un tipo de vivienda
+PATCH {{baseUrl}}/tipo-vivienda/{{tipoViviendaId}}
+Content-Type: application/json
+
+{
+  "descripcion": "Vivienda de propiedad del cliente actualizada",
+  "orden": 5
+}
+
+### Cambiar estado activo de un tipo de vivienda
+PATCH {{baseUrl}}/tipo-vivienda/{{tipoViviendaId}}/toggle-activo
+Content-Type: application/json
+
+{
+  "activo": false
+}
+
+### Activar un tipo de vivienda
+PATCH {{baseUrl}}/tipo-vivienda/{{tipoViviendaId}}/toggle-activo
+Content-Type: application/json
+
+{
+  "activo": true
+}
+
+### Eliminar un tipo de vivienda
+DELETE {{baseUrl}}/tipo-vivienda/{{tipoViviendaId}}
+
+### Test: Intentar crear tipo de vivienda con código duplicado (debe fallar)
+POST {{baseUrl}}/tipo-vivienda
+Content-Type: application/json
+
+{
+  "codigo": "PROPIA",
+  "nombre": "Otro nombre",
+  "descripcion": "Esto debería fallar",
+  "activo": true
+}
+
+### Test: Intentar crear tipo de vivienda con nombre duplicado (debe fallar)
+POST {{baseUrl}}/tipo-vivienda
+Content-Type: application/json
+
+{
+  "codigo": "OTRO_CODIGO",
+  "nombre": "Propia",
+  "descripcion": "Esto debería fallar",
+  "activo": true
+}

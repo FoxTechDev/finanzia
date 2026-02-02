@@ -1,0 +1,152 @@
+###
+# Test para validar exclusión de domingos en periodicidad DIARIA
+# Este archivo contiene ejemplos de pruebas para el endpoint de calcular plan de pago
+###
+
+@baseUrl = http://localhost:3000/api
+@token = YOUR_AUTH_TOKEN_HERE
+
+###
+# Test 1: Periodicidad DIARIA - Iniciar viernes (31 enero 2026)
+# Resultado esperado: 5 cuotas
+# - Cuota 1: Sábado 1 febrero 2026
+# - Cuota 2: Lunes 3 febrero 2026 (salta domingo 2)
+# - Cuota 3: Martes 4 febrero 2026
+# - Cuota 4: Miércoles 5 febrero 2026
+# - Cuota 5: Jueves 6 febrero 2026
+POST {{baseUrl}}/creditos/solicitud/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 10000,
+  "plazo": 5,
+  "tasaInteres": 15,
+  "tipoInteres": "FLAT",
+  "periodicidad": "DIARIO",
+  "fechaPrimeraCuota": "2026-01-31"
+}
+
+###
+# Test 2: Periodicidad DIARIA - Iniciar jueves (30 enero 2026)
+# Resultado esperado: 10 cuotas
+# - Cuota 1: Viernes 31 enero 2026
+# - Cuota 2: Sábado 1 febrero 2026
+# - Cuota 3: Lunes 3 febrero 2026 (salta domingo 2)
+# - Cuota 4: Martes 4 febrero 2026
+# - ... y así sucesivamente saltando domingos
+POST {{baseUrl}}/creditos/solicitud/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 10000,
+  "plazo": 10,
+  "tasaInteres": 15,
+  "tipoInteres": "AMORTIZADO",
+  "periodicidad": "DIARIO",
+  "fechaPrimeraCuota": "2026-01-30"
+}
+
+###
+# Test 3: Periodicidad DIARIA - Iniciar sábado (1 febrero 2026)
+# Resultado esperado: 7 cuotas
+# - Cuota 1: Domingo 2 febrero 2026 → Lunes 3 febrero (ajustado)
+# - Cuota 2: Martes 4 febrero 2026
+# - Cuota 3: Miércoles 5 febrero 2026
+# - Cuota 4: Jueves 6 febrero 2026
+# - Cuota 5: Viernes 7 febrero 2026
+# - Cuota 6: Sábado 8 febrero 2026
+# - Cuota 7: Lunes 10 febrero 2026 (salta domingo 9)
+POST {{baseUrl}}/creditos/solicitud/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 5000,
+  "plazo": 7,
+  "tasaInteres": 12,
+  "tipoInteres": "FLAT",
+  "periodicidad": "DIARIO",
+  "fechaPrimeraCuota": "2026-02-01"
+}
+
+###
+# Test 4: Periodicidad DIARIA - Validar semana completa
+# Iniciar lunes (2 febrero 2026)
+# Resultado esperado: fechas de lunes a sábado, saltando domingo
+POST {{baseUrl}}/creditos/solicitud/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 8000,
+  "plazo": 6,
+  "tasaInteres": 18,
+  "tipoInteres": "AMORTIZADO",
+  "periodicidad": "DIARIO",
+  "fechaPrimeraCuota": "2026-02-02"
+}
+
+###
+# Test 5: Periodicidad SEMANAL - NO debe saltar domingos
+# Solo debe agregar 7 días sin exclusión
+POST {{baseUrl}}/creditos/solicitud/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 10000,
+  "plazo": 4,
+  "tasaInteres": 15,
+  "tipoInteres": "FLAT",
+  "periodicidad": "SEMANAL",
+  "fechaPrimeraCuota": "2026-01-31"
+}
+
+###
+# Test 6: Periodicidad MENSUAL - NO debe saltar domingos
+# Solo debe agregar meses sin exclusión
+POST {{baseUrl}}/creditos/solicitud/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 10000,
+  "plazo": 12,
+  "tasaInteres": 15,
+  "tipoInteres": "AMORTIZADO",
+  "periodicidad": "MENSUAL",
+  "fechaPrimeraCuota": "2026-01-31"
+}
+
+###
+# Test 7: Periodicidad DIARIA - Monto grande, 30 días
+# Validar que el cálculo es correcto para múltiples semanas
+POST {{baseUrl}}/creditos/solicitud/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 50000,
+  "plazo": 30,
+  "tasaInteres": 20,
+  "tipoInteres": "FLAT",
+  "periodicidad": "DIARIO",
+  "fechaPrimeraCuota": "2026-02-01"
+}
+
+###
+# Test 8: Periodicidad DIARIA - Sin fecha de primera cuota
+# Debe usar por defecto hoy + 30 días
+POST {{baseUrl}}/creditos/solicitud/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 10000,
+  "plazo": 5,
+  "tasaInteres": 15,
+  "tipoInteres": "FLAT",
+  "periodicidad": "DIARIO"
+}

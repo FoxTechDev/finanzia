@@ -1,0 +1,160 @@
+### Variables
+@baseUrl = http://localhost:3000
+@personaId = 1
+
+###############################################
+# DEPENDENCIAS FAMILIARES
+###############################################
+
+### Crear una dependencia familiar
+POST {{baseUrl}}/personas/{{personaId}}/dependencias
+Content-Type: application/json
+
+{
+  "nombreDependiente": "María López",
+  "parentesco": "Hija",
+  "edad": 15,
+  "trabaja": false,
+  "estudia": true,
+  "observaciones": "Cursa tercer año de bachillerato"
+}
+
+### Obtener todas las dependencias de una persona
+GET {{baseUrl}}/personas/{{personaId}}/dependencias
+
+### Obtener una dependencia específica
+GET {{baseUrl}}/personas/{{personaId}}/dependencias/1
+
+### Actualizar una dependencia familiar
+PATCH {{baseUrl}}/personas/{{personaId}}/dependencias/1
+Content-Type: application/json
+
+{
+  "edad": 16,
+  "observaciones": "Ahora cursa cuarto año de bachillerato"
+}
+
+### Eliminar una dependencia familiar
+DELETE {{baseUrl}}/personas/{{personaId}}/dependencias/1
+
+###############################################
+# ACTUALIZAR DIRECCIÓN CON INFORMACIÓN DE VIVIENDA
+###############################################
+
+### Actualizar dirección con información de vivienda
+PATCH {{baseUrl}}/personas/{{personaId}}/direccion
+Content-Type: application/json
+
+{
+  "tipoVivienda": "Alquilada",
+  "tiempoResidenciaAnios": 3,
+  "tiempoResidenciaMeses": 6,
+  "montoAlquiler": 350.00
+}
+
+### Obtener dirección con información de vivienda
+GET {{baseUrl}}/personas/{{personaId}}/direccion
+
+###############################################
+# ACTUALIZAR ACTIVIDAD ECONÓMICA CON GASTOS E INGRESOS
+###############################################
+
+### Actualizar actividad económica con detalles de ingresos y gastos
+PATCH {{baseUrl}}/personas/{{personaId}}/actividad-economica
+Content-Type: application/json
+
+{
+  "ingresosAdicionales": 300.00,
+  "descripcionIngresosAdicionales": "Renta de propiedad y trabajo freelance los fines de semana",
+  "gastosVivienda": 350.00,
+  "gastosAlimentacion": 400.00,
+  "gastosTransporte": 100.00,
+  "gastosServiciosBasicos": 80.00,
+  "gastosEducacion": 150.00,
+  "gastosMedicos": 50.00,
+  "otrosGastos": 70.00,
+  "totalGastos": 1200.00
+}
+
+### Obtener actividad económica con detalles
+GET {{baseUrl}}/personas/{{personaId}}/actividad-economica
+
+###############################################
+# CREAR PERSONA COMPLETA CON TODOS LOS NUEVOS CAMPOS
+###############################################
+
+### Crear persona con todos los datos
+POST {{baseUrl}}/personas
+Content-Type: application/json
+
+{
+  "persona": {
+    "nombre": "Carlos",
+    "apellido": "Martínez",
+    "fechaNacimiento": "1985-03-15",
+    "sexo": "Masculino",
+    "nacionalidad": "Salvadoreño",
+    "estadoCivil": "Casado",
+    "telefono": "7890-1234",
+    "correoElectronico": "carlos.martinez@example.com",
+    "numeroDui": "12345678-9",
+    "fechaEmisionDui": "2010-05-20",
+    "lugarEmisionDui": "San Salvador"
+  },
+  "direccion": {
+    "departamentoId": 1,
+    "municipioId": 1,
+    "distritoId": 1,
+    "detalleDireccion": "Colonia Escalón, Calle Principal #456",
+    "tipoVivienda": "Propia",
+    "tiempoResidenciaAnios": 8,
+    "tiempoResidenciaMeses": 3,
+    "montoAlquiler": null
+  },
+  "actividadEconomica": {
+    "tipoActividad": "Empleado",
+    "nombreEmpresa": "Empresa XYZ S.A.",
+    "cargoOcupacion": "Gerente de Ventas",
+    "ingresosMensuales": 1500.00,
+    "departamentoId": 1,
+    "municipioId": 1,
+    "distritoId": 1,
+    "detalleDireccion": "Boulevard Los Héroes, Torre Central",
+    "ingresosAdicionales": 400.00,
+    "descripcionIngresosAdicionales": "Comisiones por ventas extras",
+    "gastosVivienda": 0,
+    "gastosAlimentacion": 450.00,
+    "gastosTransporte": 120.00,
+    "gastosServiciosBasicos": 90.00,
+    "gastosEducacion": 200.00,
+    "gastosMedicos": 60.00,
+    "otrosGastos": 80.00,
+    "totalGastos": 1000.00
+  },
+  "dependenciasFamiliares": [
+    {
+      "nombreDependiente": "Ana Martínez",
+      "parentesco": "Hija",
+      "edad": 12,
+      "trabaja": false,
+      "estudia": true,
+      "observaciones": "Sexto grado de primaria"
+    },
+    {
+      "nombreDependiente": "Luis Martínez",
+      "parentesco": "Hijo",
+      "edad": 8,
+      "trabaja": false,
+      "estudia": true,
+      "observaciones": "Tercer grado de primaria"
+    },
+    {
+      "nombreDependiente": "Rosa de Martínez",
+      "parentesco": "Cónyuge",
+      "edad": 38,
+      "trabaja": true,
+      "estudia": false,
+      "observaciones": "Trabaja en educación"
+    }
+  ]
+}

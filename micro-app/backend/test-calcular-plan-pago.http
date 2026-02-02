@@ -1,0 +1,128 @@
+### Calcular Plan de Pago - Mensual FLAT
+POST http://localhost:3000/solicitudes/calcular-plan
+Content-Type: application/json
+
+{
+  "monto": 10000,
+  "plazo": 12,
+  "tasaInteres": 24,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "FLAT"
+}
+
+### Calcular Plan de Pago - Mensual AMORTIZADO
+POST http://localhost:3000/solicitudes/calcular-plan
+Content-Type: application/json
+
+{
+  "monto": 10000,
+  "plazo": 12,
+  "tasaInteres": 24,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "AMORTIZADO"
+}
+
+### Calcular Plan de Pago - Quincenal FLAT con fecha específica
+### IMPORTANTE: Si fechaPrimeraCuota es 2026-02-15 (fecha de solicitud)
+### La primera cuota debe ser 2026-02-16 (día POSTERIOR)
+POST http://localhost:3000/solicitudes/calcular-plan
+Content-Type: application/json
+
+{
+  "monto": 5000,
+  "plazo": 6,
+  "tasaInteres": 18,
+  "periodicidad": "QUINCENAL",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2026-02-15"
+}
+
+### Calcular Plan de Pago - Verificar fecha inicial (caso 1)
+### Fecha solicitud: 2026-01-31
+### Primera cuota esperada: 2026-02-01
+POST http://localhost:3000/solicitudes/calcular-plan
+Content-Type: application/json
+
+{
+  "monto": 10000,
+  "plazo": 3,
+  "tasaInteres": 24,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2026-01-31"
+}
+
+### Calcular Plan de Pago - Verificar fecha inicial (caso 2)
+### Fecha solicitud: 2026-12-31
+### Primera cuota esperada: 2027-01-01 (siguiente año)
+POST http://localhost:3000/solicitudes/calcular-plan
+Content-Type: application/json
+
+{
+  "monto": 5000,
+  "plazo": 6,
+  "tasaInteres": 20,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2026-12-31"
+}
+
+### Calcular Plan de Pago - Semanal FLAT
+POST http://localhost:3000/solicitudes/calcular-plan
+Content-Type: application/json
+
+{
+  "monto": 2000,
+  "plazo": 3,
+  "tasaInteres": 30,
+  "periodicidad": "SEMANAL",
+  "tipoInteres": "FLAT"
+}
+
+### Calcular Plan de Pago - Diario FLAT
+POST http://localhost:3000/solicitudes/calcular-plan
+Content-Type: application/json
+
+{
+  "monto": 1000,
+  "plazo": 1,
+  "tasaInteres": 36,
+  "periodicidad": "DIARIO",
+  "tipoInteres": "FLAT"
+}
+
+### Calcular Plan de Pago - Error: Monto negativo
+POST http://localhost:3000/solicitudes/calcular-plan
+Content-Type: application/json
+
+{
+  "monto": -1000,
+  "plazo": 12,
+  "tasaInteres": 24,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "FLAT"
+}
+
+### Calcular Plan de Pago - Error: Plazo cero
+POST http://localhost:3000/solicitudes/calcular-plan
+Content-Type: application/json
+
+{
+  "monto": 10000,
+  "plazo": 0,
+  "tasaInteres": 24,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "FLAT"
+}
+
+### Calcular Plan de Pago - Error: Periodicidad inválida
+POST http://localhost:3000/solicitudes/calcular-plan
+Content-Type: application/json
+
+{
+  "monto": 10000,
+  "plazo": 12,
+  "tasaInteres": 24,
+  "periodicidad": "INVALIDO",
+  "tipoInteres": "FLAT"
+}

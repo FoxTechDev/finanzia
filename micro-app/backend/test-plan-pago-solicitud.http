@@ -1,0 +1,157 @@
+### Variables
+@baseUrl = http://localhost:3000/api
+@solicitudId = 1
+
+### 1. Calcular plan de pago (sin guardar) - Sin recargos
+POST {{baseUrl}}/solicitudes/calcular-plan
+Content-Type: application/json
+
+{
+  "monto": 10000,
+  "plazo": 12,
+  "tasaInteres": 18,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2025-02-01"
+}
+
+### 2. Calcular plan de pago - Con recargos
+POST {{baseUrl}}/solicitudes/calcular-plan
+Content-Type: application/json
+
+{
+  "monto": 10000,
+  "plazo": 12,
+  "tasaInteres": 18,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2025-02-01",
+  "recargos": [
+    {
+      "nombre": "Seguro de vida",
+      "tipo": "PORCENTAJE",
+      "valor": 1.5,
+      "aplicaDesde": 1,
+      "aplicaHasta": 12
+    },
+    {
+      "nombre": "Comisión administrativa",
+      "tipo": "FIJO",
+      "valor": 50,
+      "aplicaDesde": 1,
+      "aplicaHasta": 1
+    }
+  ]
+}
+
+### 3. Calcular plan de pago - Periodicidad DIARIA
+POST {{baseUrl}}/solicitudes/calcular-plan
+Content-Type: application/json
+
+{
+  "monto": 5000,
+  "plazo": 2,
+  "tasaInteres": 15,
+  "periodicidad": "DIARIO",
+  "tipoInteres": "FLAT",
+  "numeroCuotas": 45,
+  "fechaPrimeraCuota": "2025-02-01"
+}
+
+### 4. Guardar plan de pago (con recargos)
+POST {{baseUrl}}/solicitudes/{{solicitudId}}/guardar-plan-pago
+Content-Type: application/json
+
+{
+  "monto": 10000,
+  "plazo": 12,
+  "tasaInteres": 18,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2025-02-01",
+  "recargos": [
+    {
+      "nombre": "Seguro de vida",
+      "tipo": "PORCENTAJE",
+      "valor": 1.5,
+      "aplicaDesde": 1,
+      "aplicaHasta": 12
+    },
+    {
+      "nombre": "Comisión administrativa",
+      "tipo": "FIJO",
+      "valor": 100,
+      "aplicaDesde": 1,
+      "aplicaHasta": 1
+    }
+  ]
+}
+
+### 5. Obtener plan de pago guardado
+GET {{baseUrl}}/solicitudes/{{solicitudId}}/plan-pago
+
+### 6. Obtener detalle de solicitud con plan de pago
+GET {{baseUrl}}/solicitudes/{{solicitudId}}/detalle
+
+### 7. Guardar plan de pago - Sin recargos
+POST {{baseUrl}}/solicitudes/{{solicitudId}}/guardar-plan-pago
+Content-Type: application/json
+
+{
+  "monto": 10000,
+  "plazo": 12,
+  "tasaInteres": 18,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2025-02-01"
+}
+
+### 8. Calcular plan de pago - Quincenal con recargos por rango
+POST {{baseUrl}}/solicitudes/calcular-plan
+Content-Type: application/json
+
+{
+  "monto": 15000,
+  "plazo": 6,
+  "tasaInteres": 20,
+  "periodicidad": "QUINCENAL",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2025-02-01",
+  "recargos": [
+    {
+      "nombre": "Seguro primeros 6 meses",
+      "tipo": "PORCENTAJE",
+      "valor": 2,
+      "aplicaDesde": 1,
+      "aplicaHasta": 6
+    },
+    {
+      "nombre": "Seguro últimos 6 meses",
+      "tipo": "PORCENTAJE",
+      "valor": 1.5,
+      "aplicaDesde": 7,
+      "aplicaHasta": 12
+    }
+  ]
+}
+
+### 9. Calcular plan de pago - Tipo de interés FLAT
+POST {{baseUrl}}/solicitudes/calcular-plan
+Content-Type: application/json
+
+{
+  "monto": 8000,
+  "plazo": 6,
+  "tasaInteres": 12,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2025-02-01",
+  "recargos": [
+    {
+      "nombre": "Administración",
+      "tipo": "FIJO",
+      "valor": 30,
+      "aplicaDesde": 1
+    }
+  ]
+}

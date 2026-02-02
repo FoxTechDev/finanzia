@@ -66,7 +66,8 @@
       "Bash(az webapp log config:*)",
       "Bash(npm run build:prod:*)",
       "Bash(docker --version:*)",
-      "Bash(gh --version:*)"
+      "Bash(gh --version:*)",
+      "Bash(\"C:\\\\Program Files\\\\MySQL\\\\MySQL Server 8.0\\\\bin\\\\mysql.exe\" -u root -proot micro_app -e \"ALTER TABLE solicitud ADD COLUMN tipoInteres ENUM\\(''FLAT'', ''AMORTIZADO''\\) NULL AFTER periodicidadPagoId;\")"
     ]
   }
 }

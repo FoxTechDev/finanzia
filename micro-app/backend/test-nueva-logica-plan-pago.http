@@ -1,0 +1,326 @@
+### ========================================
+### PRUEBAS - NUEVA LÓGICA PLAN DE PAGOS
+### ========================================
+###
+### Cambios implementados:
+### 1. El plazo SIEMPRE se ingresa en MESES
+### 2. Para DIARIA: numeroCuotas es OBLIGATORIO
+### 3. Para otras periodicidades: numeroCuotas se calcula automáticamente
+###
+### ========================================
+
+@baseUrl = http://localhost:3000/api
+
+### ========================================
+### TEST 1: PERIODICIDAD DIARIA - FLAT
+### ========================================
+### Escenario:
+### - Plazo: 2 meses
+### - Número de cuotas: 45 (definido por usuario)
+### - Plan: 45 cuotas diarias excluyendo domingos
+### - Interés: calculado sobre 2 meses
+
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+
+{
+  "monto": 1000,
+  "plazo": 2,
+  "numeroCuotas": 45,
+  "tasaInteres": 24,
+  "periodicidad": "DIARIO",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2024-02-01"
+}
+
+### ========================================
+### TEST 2: PERIODICIDAD DIARIA - AMORTIZADO
+### ========================================
+### Escenario:
+### - Plazo: 1 mes
+### - Número de cuotas: 28 (definido por usuario)
+### - Interés amortizado sobre saldo insoluto
+
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+
+{
+  "monto": 5000,
+  "plazo": 1,
+  "numeroCuotas": 28,
+  "tasaInteres": 30,
+  "periodicidad": "DIARIO",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2024-02-05"
+}
+
+### ========================================
+### TEST 3: PERIODICIDAD DIARIA - ERROR (sin numeroCuotas)
+### ========================================
+### Escenario:
+### - Se omite el campo numeroCuotas
+### - Debe retornar error 400
+
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+
+{
+  "monto": 1000,
+  "plazo": 2,
+  "tasaInteres": 24,
+  "periodicidad": "DIARIO",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2024-02-01"
+}
+
+### ========================================
+### TEST 4: PERIODICIDAD SEMANAL
+### ========================================
+### Escenario:
+### - Plazo: 3 meses
+### - Número de cuotas: calculado automáticamente (3 × 4 = 12)
+### - El campo numeroCuotas se ignora si se envía
+
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+
+{
+  "monto": 5000,
+  "plazo": 3,
+  "tasaInteres": 18,
+  "periodicidad": "SEMANAL",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2024-02-01"
+}
+
+### ========================================
+### TEST 5: PERIODICIDAD QUINCENAL
+### ========================================
+### Escenario:
+### - Plazo: 6 meses
+### - Número de cuotas: calculado automáticamente (6 × 2 = 12)
+
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+
+{
+  "monto": 10000,
+  "plazo": 6,
+  "tasaInteres": 15,
+  "periodicidad": "QUINCENAL",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2024-02-01"
+}
+
+### ========================================
+### TEST 6: PERIODICIDAD MENSUAL
+### ========================================
+### Escenario:
+### - Plazo: 12 meses
+### - Número de cuotas: calculado automáticamente (12 × 1 = 12)
+
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+
+{
+  "monto": 20000,
+  "plazo": 12,
+  "tasaInteres": 12,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2024-02-01"
+}
+
+### ========================================
+### TEST 7: PERIODICIDAD TRIMESTRAL
+### ========================================
+### Escenario:
+### - Plazo: 12 meses
+### - Número de cuotas: calculado automáticamente (12 / 3 = 4)
+
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+
+{
+  "monto": 30000,
+  "plazo": 12,
+  "tasaInteres": 10,
+  "periodicidad": "TRIMESTRAL",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2024-02-01"
+}
+
+### ========================================
+### TEST 8: PERIODICIDAD DIARIA - Verificar exclusión de domingos
+### ========================================
+### Escenario:
+### - Primera cuota cae en viernes
+### - Debe generar fechas excluyendo domingos
+### - Verificar que después del sábado, la siguiente fecha es lunes
+
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+
+{
+  "monto": 1000,
+  "plazo": 1,
+  "numeroCuotas": 10,
+  "tasaInteres": 24,
+  "periodicidad": "DIARIO",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2024-02-09"
+}
+
+### ========================================
+### TEST 9: PERIODICIDAD DIARIA - Primera cuota en domingo
+### ========================================
+### Escenario:
+### - Primera cuota cae en domingo
+### - Debe moverse automáticamente al lunes
+
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+
+{
+  "monto": 1000,
+  "plazo": 1,
+  "numeroCuotas": 5,
+  "tasaInteres": 24,
+  "periodicidad": "DIARIO",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2024-02-10"
+}
+
+### ========================================
+### TEST 10: ERROR - Plazo menor a 1 mes
+### ========================================
+### Escenario:
+### - Plazo: 0 meses
+### - Debe retornar error 400
+
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+
+{
+  "monto": 1000,
+  "plazo": 0,
+  "numeroCuotas": 10,
+  "tasaInteres": 24,
+  "periodicidad": "DIARIO",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2024-02-01"
+}
+
+### ========================================
+### TEST 11: PERIODICIDAD DIARIA - Pocas cuotas
+### ========================================
+### Escenario:
+### - Plazo: 3 meses
+### - Número de cuotas: 15 (muy pocas para 3 meses)
+### - Debe calcular interés sobre 3 meses pero distribuir en 15 cuotas
+
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+
+{
+  "monto": 3000,
+  "plazo": 3,
+  "numeroCuotas": 15,
+  "tasaInteres": 24,
+  "periodicidad": "DIARIO",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2024-02-01"
+}
+
+### ========================================
+### TEST 12: PERIODICIDAD DIARIA - Muchas cuotas
+### ========================================
+### Escenario:
+### - Plazo: 1 mes
+### - Número de cuotas: 60 (muchas cuotas para 1 mes)
+### - Debe calcular interés sobre 1 mes pero distribuir en 60 cuotas
+
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+
+{
+  "monto": 2000,
+  "plazo": 1,
+  "numeroCuotas": 60,
+  "tasaInteres": 36,
+  "periodicidad": "DIARIO",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2024-02-01"
+}
+
+### ========================================
+### TEST 13: Comparación DIARIO vs MENSUAL (mismo plazo)
+### ========================================
+
+### DIARIO - 2 meses, 45 cuotas
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+
+{
+  "monto": 5000,
+  "plazo": 2,
+  "numeroCuotas": 45,
+  "tasaInteres": 24,
+  "periodicidad": "DIARIO",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2024-02-01"
+}
+
+###
+
+### MENSUAL - 2 meses, 2 cuotas (automático)
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+
+{
+  "monto": 5000,
+  "plazo": 2,
+  "tasaInteres": 24,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2024-02-01"
+}
+
+### ========================================
+### NOTAS DE VERIFICACIÓN
+### ========================================
+###
+### Para TEST 1 (DIARIO FLAT):
+### - Verificar: numeroCuotas = 45
+### - Verificar: interés total = $1000 × 0.24 × (2/12) = $40
+### - Verificar: cuota ≈ ($1000 + $40) / 45 ≈ $23.11
+### - Verificar: ninguna fecha cae en domingo
+###
+### Para TEST 2 (DIARIO AMORTIZADO):
+### - Verificar: numeroCuotas = 28
+### - Verificar: el interés decrece en cada cuota (amortizado)
+### - Verificar: saldo capital disminuye en cada cuota
+###
+### Para TEST 3 (ERROR):
+### - Verificar: código 400
+### - Verificar: mensaje menciona "numeroCuotas es obligatorio"
+###
+### Para TEST 4 (SEMANAL):
+### - Verificar: numeroCuotas = 12 (calculado automáticamente)
+### - Verificar: fechas separadas por 7 días
+###
+### Para TEST 8 (Exclusión domingos):
+### - Primera cuota: 2024-02-10 (viernes + 1 día = sábado)
+### - Segunda cuota: 2024-02-11 (domingo → lunes 12)
+### - Tercera cuota: 2024-02-13 (martes)
+### - Verificar: no hay fechas con día de la semana = domingo (0)
+###
+### Para TEST 9 (Primera en domingo):
+### - fechaPrimeraCuota: 2024-02-10 (sábado)
+### - Primera cuota tras +1 día: 2024-02-11 (domingo → lunes 12)
+###
+### Para TEST 11 y 12 (Pocas/Muchas cuotas):
+### - El interés siempre se calcula sobre el plazo en meses
+### - Solo cambia la distribución de las cuotas
+### - Verificar que totalInteres sea consistente con el plazo
+###

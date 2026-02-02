@@ -1,0 +1,356 @@
+================================================================================
+FINANZIA - COMANDOS RÁPIDOS DE MIGRACIÓN A DIGITAL OCEAN
+================================================================================
+
+Fecha: 2026-01-26
+Sistema: Microfinanzas
+Base de datos: micro_app (MySQL 8.0)
+
+================================================================================
+PASO 1: GENERAR SOLICITUDES COMPLETAS (OBLIGATORIO)
+================================================================================
+
+cd C:\Users\javie\OneDrive\Documentos\DESARROLLO\MICRO
+python generate_solicitudes_complete.py
+
+Resultado esperado:
+✅ Archivo generado exitosamente: 05_generate_solicitudes_mysql.sql
+📊 Total de solicitudes generadas: 170
+
+================================================================================
+PASO 2A: IMPORTACIÓN AUTOMÁTICA (RECOMENDADO)
+================================================================================
+
+# Reemplazar <DATOS_DIGITAL_OCEAN> con valores reales
+
+mysql -h shark-app-xxxxx.ondigitalocean.app ^
+      -P 25060 ^
+      -u doadmin ^
+      -p ^
+      --ssl-mode=REQUIRED ^
+      micro_app < MASTER_import_digital_ocean_mysql.sql
+
+# Tiempo estimado: 5 minutos
+# Incluye verificaciones automáticas
+
+================================================================================
+PASO 2B: IMPORTACIÓN MANUAL (CONTROL TOTAL)
+================================================================================
+
+# Ejecutar cada script en orden:
+
+# 1. Configuración base (20 seg)
+mysql -h <HOST> -P 25060 -u <USER> -p micro_app < 00_setup_base_mysql.sql
+
+# 2. Personas (10 seg)
+mysql -h <HOST> -P 25060 -u <USER> -p micro_app < 01_insert_personas_mysql.sql
+
+# 3. Direcciones (10 seg)
+mysql -h <HOST> -P 25060 -u <USER> -p micro_app < 02_insert_direcciones_mysql.sql
+
+# 4. Solicitudes (30 seg) - DESPUÉS DE GENERAR CON PYTHON
+mysql -h <HOST> -P 25060 -u <USER> -p micro_app < 05_generate_solicitudes_mysql.sql
+
+# 5. Préstamos (1 min)
+mysql -h <HOST> -P 25060 -u <USER> -p micro_app < 03_insert_prestamos_mysql.sql
+
+# 6. Vincular (5 seg)
+mysql -h <HOST> -P 25060 -u <USER> -p micro_app < 06_update_prestamos_add_solicitudes.sql
+
+# 7. Pagos (2 min)
+mysql -h <HOST> -P 25060 -u <USER> -p micro_app < 04_insert_pagos_mysql.sql
+
+================================================================================
+PASO 3: VERIFICACIÓN RÁPIDA
+================================================================================
+
+# Conectar a MySQL
+mysql -h <HOST> -P 25060 -u <USER> -p micro_app
+
+# Verificar conteos (deben coincidir con lo esperado)
+SELECT 'Personas' AS Tabla, COUNT(*) AS Registros FROM persona
+UNION ALL SELECT 'Direcciones', COUNT(*) FROM direccion
+UNION ALL SELECT 'Solicitudes', COUNT(*) FROM solicitud
+UNION ALL SELECT 'Préstamos', COUNT(*) FROM prestamo
+UNION ALL SELECT 'Pagos', COUNT(*) FROM pago;
+
+/* Resultado esperado:
+Personas:     67
+Direcciones:  67
+Solicitudes:  170
+Préstamos:    170
+Pagos:        ~969
+*/
+
+# Verificar integridad (deben devolver 0)
+SELECT 'Direcciones sin persona' AS Check, COUNT(*) AS Problemas
+FROM direccion d LEFT JOIN persona p ON d.idPersona = p.idPersona
+WHERE p.idPersona IS NULL;
+
+SELECT 'Préstamos sin solicitud' AS Check, COUNT(*) AS Problemas
+FROM prestamo WHERE solicitudId IS NULL;
+
+SELECT 'Pagos sin préstamo' AS Check, COUNT(*) AS Problemas
+FROM pago pg LEFT JOIN prestamo pr ON pg.prestamoId = pr.id
+WHERE pr.id IS NULL;
+
+/* Resultado esperado: 0 problemas en cada verificación */
+
+================================================================================
+PASO 4: CONFIGURAR SEGURIDAD
+================================================================================
+
+# 1. Generar nuevo password hash (ejecutar en Node.js)
+const bcrypt = require('bcrypt');
+const hash = await bcrypt.hash('TuPasswordSeguro123!', 10);
+console.log(hash);
+
+# 2. Actualizar password en MySQL
+UPDATE users
+SET password = '$2b$10$TU_HASH_BCRYPT_GENERADO_AQUI'
+WHERE email = 'admin@finanzia.com';
+
+# 3. Crear usuario asesor (ejemplo)
+SET @asesorRolId = (SELECT id FROM rol WHERE codigo = 'ASESOR');
+INSERT INTO users (email, password, firstName, lastName, isActive, rolId)
+VALUES ('asesor@finanzia.com', '$2b$10$HASH...', 'Asesor', 'Ejemplo', 1, @asesorRolId);
+
+================================================================================
+CONSULTAS ÚTILES POST-IMPORTACIÓN
+================================================================================
+
+# Estado de cartera
+SELECT
+    estado,
+    COUNT(*) AS Cantidad,
+    CONCAT('$', FORMAT(SUM(saldoCapital), 2)) AS 'Saldo Capital',
+    CONCAT('$', FORMAT(SUM(totalPagar), 2)) AS 'Total a Cobrar'
+FROM prestamo
+GROUP BY estado;
+
+# Clientes con préstamos activos
+SELECT
+    p.nombre,
+    p.apellido,
+    COUNT(pr.id) AS 'Total Préstamos',
+    SUM(pr.saldoCapital) AS 'Saldo Pendiente'
+FROM persona p
+INNER JOIN prestamo pr ON p.idPersona = pr.personaId
+WHERE pr.estado = 'VIGENTE'
+GROUP BY p.idPersona, p.nombre, p.apellido
+ORDER BY SUM(pr.saldoCapital) DESC;
+
+# Préstamos próximos a vencer (30 días)
+SELECT
+    pr.numeroCredito,
+    p.nombre,
+    p.apellido,
+    pr.fechaVencimiento,
+    pr.saldoCapital
+FROM prestamo pr
+INNER JOIN persona p ON pr.personaId = p.idPersona
+WHERE pr.estado = 'VIGENTE'
+  AND pr.fechaVencimiento BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)
+ORDER BY pr.fechaVencimiento;
+
+# Préstamos en mora
+SELECT
+    pr.numeroCredito,
+    p.nombre,
+    p.apellido,
+    pr.diasMora,
+    CONCAT('$', FORMAT(pr.capitalMora, 2)) AS 'Capital en Mora',
+    CONCAT('$', FORMAT(pr.interesMora, 2)) AS 'Interés Moratorio'
+FROM prestamo pr
+INNER JOIN persona p ON pr.personaId = p.idPersona
+WHERE pr.estado = 'MORA'
+ORDER BY pr.diasMora DESC;
+
+# Actividad de pagos reciente (últimos 30 días)
+SELECT
+    DATE(pg.fechaPago) AS Fecha,
+    COUNT(*) AS 'Pagos Realizados',
+    CONCAT('$', FORMAT(SUM(pg.montoPagado), 2)) AS 'Monto Total'
+FROM pago pg
+WHERE pg.fechaPago >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+GROUP BY DATE(pg.fechaPago)
+ORDER BY DATE(pg.fechaPago) DESC;
+
+# Resumen por línea de crédito
+SELECT
+    lc.nombre AS 'Línea',
+    tc.nombre AS 'Tipo Crédito',
+    COUNT(s.id) AS 'Solicitudes',
+    COUNT(pr.id) AS 'Préstamos',
+    CONCAT('$', FORMAT(SUM(pr.montoDesembolsado), 2)) AS 'Desembolsado',
+    CONCAT('$', FORMAT(SUM(pr.saldoCapital), 2)) AS 'Saldo Pendiente'
+FROM linea_credito lc
+INNER JOIN tipo_credito tc ON lc.id = tc.lineaCreditoId
+LEFT JOIN solicitud s ON tc.id = s.tipoCreditoId
+LEFT JOIN prestamo pr ON s.id = pr.solicitudId
+GROUP BY lc.id, lc.nombre, tc.id, tc.nombre
+ORDER BY COUNT(pr.id) DESC;
+
+================================================================================
+COMANDOS DE MANTENIMIENTO
+================================================================================
+
+# Backup manual de base de datos
+mysqldump -h <HOST> -P 25060 -u <USER> -p \
+    --ssl-mode=REQUIRED \
+    micro_app > backup_micro_app_$(date +%Y%m%d).sql
+
+# Optimizar tablas (ejecutar mensualmente)
+OPTIMIZE TABLE persona, direccion, solicitud, prestamo, pago;
+
+# Ver tamaño de base de datos
+SELECT
+    table_schema AS 'Database',
+    ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)'
+FROM information_schema.tables
+WHERE table_schema = 'micro_app'
+GROUP BY table_schema;
+
+# Ver uso de índices
+SELECT
+    TABLE_NAME,
+    INDEX_NAME,
+    CARDINALITY,
+    SEQ_IN_INDEX
+FROM information_schema.STATISTICS
+WHERE TABLE_SCHEMA = 'micro_app'
+ORDER BY TABLE_NAME, INDEX_NAME, SEQ_IN_INDEX;
+
+================================================================================
+SOLUCIÓN RÁPIDA DE PROBLEMAS
+================================================================================
+
+# Problema: "Table doesn't exist"
+# Solución: Ejecutar migraciones de TypeORM
+cd C:\Users\javie\OneDrive\Documentos\DESARROLLO\MICRO\micro-app\backend
+npm run migration:run
+
+# Problema: "Foreign key constraint fails"
+# Solución: Verificar orden de importación o deshabilitar checks temporalmente
+SET FOREIGN_KEY_CHECKS = 0;
+-- Ejecutar importación
+SET FOREIGN_KEY_CHECKS = 1;
+
+# Problema: "Duplicate entry"
+# Solución: Limpiar tablas en orden inverso
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE pago;
+TRUNCATE TABLE prestamo;
+TRUNCATE TABLE solicitud;
+TRUNCATE TABLE direccion;
+TRUNCATE TABLE persona;
+SET FOREIGN_KEY_CHECKS = 1;
+-- Reiniciar importación
+
+# Problema: Préstamos sin solicitud
+# Solución: Ejecutar script de vinculación
+SOURCE 06_update_prestamos_add_solicitudes.sql;
+
+# Problema: Solo 5 solicitudes importadas
+# Causa: No se generó el archivo completo con Python
+# Solución:
+python generate_solicitudes_complete.py
+# Luego reimportar: SOURCE 05_generate_solicitudes_mysql.sql;
+
+================================================================================
+CONFIGURACIÓN DE DIGITAL OCEAN
+================================================================================
+
+# Habilitar backups automáticos (desde panel de DO)
+Database → Settings → Backups → Enable Daily Backups
+
+# Configurar firewall (whitelist IP)
+Database → Settings → Trusted Sources → Add Source
+IP: [TU_IP_PUBLICA]
+Nota: "Oficina - Importación Inicial"
+
+# Configurar alertas
+Database → Settings → Alerts
+- Disk usage > 80%
+- CPU usage > 90%
+- Memory usage > 90%
+
+# Ver métricas en tiempo real
+Database → Insights → Performance
+- Queries per second
+- Active connections
+- Disk I/O
+- CPU usage
+
+================================================================================
+CHECKLIST DE VERIFICACIÓN FINAL
+================================================================================
+
+Antes de importar:
+[ ] Base de datos 'micro_app' existe
+[ ] TypeORM migraciones ejecutadas
+[ ] Firewall configurado (IP whitelisted)
+[ ] Archivo 05_generate_solicitudes_mysql.sql completo (170 solicitudes)
+
+Durante importación:
+[ ] Sin errores de foreign key
+[ ] Sin errores de duplicate entry
+[ ] Sin errores de table doesn't exist
+[ ] Progreso visible
+
+Después de importar:
+[ ] Conteo personas: 67
+[ ] Conteo direcciones: 67
+[ ] Conteo solicitudes: 170
+[ ] Conteo préstamos: 170
+[ ] Conteo pagos: ~969
+[ ] Verificaciones integridad: 0 problemas
+[ ] Todos préstamos tienen solicitud
+[ ] Password admin actualizado
+[ ] Login en aplicación funciona
+[ ] Dashboard muestra datos correctos
+
+================================================================================
+CONTACTOS Y RECURSOS
+================================================================================
+
+Documentación detallada:
+- README_MIGRACION_DIGITAL_OCEAN.md (guía completa paso a paso)
+- RESUMEN_MIGRACION.md (resumen ejecutivo)
+- INDICE_ARCHIVOS_MIGRACION.md (índice de archivos)
+
+Scripts generados:
+- 00_setup_base_mysql.sql (configuración base)
+- 05_generate_solicitudes_mysql.sql (solicitudes - generar con Python)
+- 06_update_prestamos_add_solicitudes.sql (vincular préstamo-solicitud)
+- MASTER_import_digital_ocean_mysql.sql (script maestro)
+- generate_solicitudes_complete.py (generador Python)
+
+Digital Ocean:
+- Panel: https://cloud.digitalocean.com/databases
+- Documentación: https://docs.digitalocean.com/products/databases/mysql/
+
+TypeORM:
+- Documentación: https://typeorm.io/
+- Migraciones: https://typeorm.io/migrations
+
+================================================================================
+VERSIÓN Y AUTORÍA
+================================================================================
+
+Versión: 1.0
+Fecha: 2026-01-26
+Sistema: FINANZIA - Microfinanzas
+Plataforma: Digital Ocean MySQL 8.0
+Total de datos: ~1,514 registros
+
+Archivos generados: 11
+- SQL Scripts: 7
+- Python Scripts: 1
+- Documentación: 3
+
+Estado: Listo para importación (después de generar solicitudes)
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================

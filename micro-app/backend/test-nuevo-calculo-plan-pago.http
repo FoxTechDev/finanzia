@@ -1,0 +1,236 @@
+### =====================================================
+### TEST: NUEVO CÁLCULO DE PLAN DE PAGOS
+### Validación de la regla: 1 mes = 4 semanas base
+### =====================================================
+
+@baseUrl = http://localhost:3000/api
+@token = YOUR_JWT_TOKEN_HERE
+
+### 1. DIARIO - 30 días directos (sin cambios)
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 1000,
+  "plazo": 30,
+  "tasaInteres": 24,
+  "periodicidad": "DIARIO",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2026-02-01"
+}
+
+### RESULTADO ESPERADO:
+### - Número de cuotas: 30
+### - Plan de pago con 30 fechas diarias (excluyendo domingos)
+
+###
+
+### 2. SEMANAL - 3 meses = 12 cuotas (3 × 4)
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 1000,
+  "plazo": 3,
+  "tasaInteres": 24,
+  "periodicidad": "SEMANAL",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2026-02-01"
+}
+
+### RESULTADO ESPERADO:
+### - Número de cuotas: 12 (3 meses × 4 semanas)
+### - Plan de pago con 12 fechas semanales
+### - Cada cuota con intervalo de 7 días
+
+###
+
+### 3. QUINCENAL - 3 meses = 6 cuotas (3 × 2)
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 1000,
+  "plazo": 3,
+  "tasaInteres": 24,
+  "periodicidad": "QUINCENAL",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2026-02-01"
+}
+
+### RESULTADO ESPERADO:
+### - Número de cuotas: 6 (3 meses × 2 quincenas)
+### - Plan de pago con 6 fechas quincenales
+### - Cada cuota con intervalo de 15 días
+
+###
+
+### 4. MENSUAL - 3 meses = 3 cuotas (3 × 1)
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 1000,
+  "plazo": 3,
+  "tasaInteres": 24,
+  "periodicidad": "MENSUAL",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2026-02-01"
+}
+
+### RESULTADO ESPERADO:
+### - Número de cuotas: 3 (3 meses × 1)
+### - Plan de pago con 3 fechas mensuales
+### - Cada cuota el mismo día de cada mes
+
+###
+
+### 5. TRIMESTRAL - 3 meses = 1 cuota (3 / 3)
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 1000,
+  "plazo": 3,
+  "tasaInteres": 24,
+  "periodicidad": "TRIMESTRAL",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2026-02-01"
+}
+
+### RESULTADO ESPERADO:
+### - Número de cuotas: 1 (3 meses / 3 = 1 trimestre)
+### - Plan de pago con 1 fecha (pago único)
+
+###
+
+### 6. SEMESTRAL - 6 meses = 1 cuota (6 / 6)
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 1000,
+  "plazo": 6,
+  "tasaInteres": 24,
+  "periodicidad": "SEMESTRAL",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2026-02-01"
+}
+
+### RESULTADO ESPERADO:
+### - Número de cuotas: 1 (6 meses / 6 = 1 semestre)
+### - Plan de pago con 1 fecha (pago único)
+
+###
+
+### 7. ANUAL - 12 meses = 1 cuota (12 / 12)
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 1000,
+  "plazo": 12,
+  "tasaInteres": 24,
+  "periodicidad": "ANUAL",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2026-02-01"
+}
+
+### RESULTADO ESPERADO:
+### - Número de cuotas: 1 (12 meses / 12 = 1 año)
+### - Plan de pago con 1 fecha (pago único anual)
+
+###
+
+### =====================================================
+### PRUEBAS DE VALIDACIÓN DE BORDE
+### =====================================================
+
+### 8. SEMANAL - 1 mes = 4 cuotas (1 × 4)
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 500,
+  "plazo": 1,
+  "tasaInteres": 24,
+  "periodicidad": "SEMANAL",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2026-02-01"
+}
+
+### RESULTADO ESPERADO:
+### - Número de cuotas: 4 (1 mes × 4 semanas)
+
+###
+
+### 9. SEMANAL - 6 meses = 24 cuotas (6 × 4)
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 2000,
+  "plazo": 6,
+  "tasaInteres": 24,
+  "periodicidad": "SEMANAL",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2026-02-01"
+}
+
+### RESULTADO ESPERADO:
+### - Número de cuotas: 24 (6 meses × 4 semanas)
+
+###
+
+### 10. QUINCENAL - 6 meses = 12 cuotas (6 × 2)
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 2000,
+  "plazo": 6,
+  "tasaInteres": 24,
+  "periodicidad": "QUINCENAL",
+  "tipoInteres": "AMORTIZADO",
+  "fechaPrimeraCuota": "2026-02-01"
+}
+
+### RESULTADO ESPERADO:
+### - Número de cuotas: 12 (6 meses × 2 quincenas)
+
+###
+
+### =====================================================
+### PRUEBA CON INTERÉS FLAT (microcréditos)
+### =====================================================
+
+### 11. SEMANAL FLAT - 3 meses = 12 cuotas
+POST {{baseUrl}}/solicitudes/calcular-plan-pago
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "monto": 1000,
+  "plazo": 3,
+  "tasaInteres": 24,
+  "periodicidad": "SEMANAL",
+  "tipoInteres": "FLAT",
+  "fechaPrimeraCuota": "2026-02-01"
+}
+
+### RESULTADO ESPERADO:
+### - Número de cuotas: 12 (3 meses × 4 semanas)
+### - Interés distribuido uniformemente en todas las cuotas
+### - Cuota constante = (Capital + Interés Total) / 12
+
+###
