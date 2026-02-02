@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, In } from 'typeorm';
 import { Prestamo, EstadoPrestamo, CategoriaNCB022 } from '../entities/prestamo.entity';
 import { PlanPago, EstadoCuota } from '../entities/plan-pago.entity';
 import { DeduccionPrestamo } from '../entities/deduccion-prestamo.entity';
@@ -13,6 +13,7 @@ import { TipoDeduccion, TipoCalculo } from '../entities/tipo-deduccion.entity';
 import { TipoRecargo } from '../entities/tipo-recargo.entity';
 import { Solicitud } from '../../solicitud/entities/solicitud.entity';
 import { SolicitudHistorial } from '../../solicitud/entities/solicitud-historial.entity';
+import { Pago, TipoPago, EstadoPago } from '../../pagos/entities/pago.entity';
 import { EstadoSolicitudService } from '../../../catalogos/estado-solicitud/estado-solicitud.service';
 import {
   PreviewDesembolsoDto,
@@ -35,6 +36,8 @@ export interface DeduccionCalculada {
   tipoCalculo: TipoCalculo;
   valor: number;
   monto: number;
+  prestamoACancelarId?: number;
+  cancelacionPrestamo?: boolean;
 }
 
 export interface PreviewResponse {
@@ -113,6 +116,7 @@ export class DesembolsoService {
       .leftJoinAndSelect('solicitud.tipoCredito', 'tipoCredito')
       .leftJoinAndSelect('solicitud.lineaCredito', 'lineaCredito')
       .leftJoinAndSelect('solicitud.estado', 'estado')
+      .leftJoinAndSelect('solicitud.periodicidadPago', 'periodicidadPago')
       .where('estado.codigo = :estadoCodigo', { estadoCodigo: 'APROBADA' })
       .orderBy('solicitud.fechaDecisionComite', 'ASC')
       .getMany();
@@ -155,19 +159,6 @@ export class DesembolsoService {
       'tasa de interés',
     );
 
-    // Validar valores antes de calcular
-    console.log('🔍 PREVIEW - Valores de entrada (convertidos):', {
-      montoAutorizado,
-      plazoAutorizado,
-      tasaInteres,
-      tipoInteres: dto.tipoInteres,
-      periodicidadPago: dto.periodicidadPago,
-      tiposOriginales: {
-        montoAprobado: typeof solicitud.montoAprobado,
-        montoSolicitado: typeof solicitud.montoSolicitado,
-      },
-    });
-
     if (montoAutorizado <= 0) {
       throw new BadRequestException(
         `Monto autorizado debe ser mayor a 0: ${montoAutorizado}. ` +
@@ -201,20 +192,23 @@ export class DesembolsoService {
     const montoDesembolsado = this.redondear(montoAutorizado - totalDeducciones);
 
     // Calcular interés y cuotas
-    const resultadoCalculo = this.calculoInteresService.calcular(
-      montoAutorizado,
-      tasaInteres,
-      plazoAutorizado,
-      dto.tipoInteres,
-      dto.periodicidadPago,
-    );
-
-    console.log('📊 PREVIEW - Resultado del cálculo:', {
-      cuotaNormal: resultadoCalculo.cuotaNormal,
-      numeroCuotas: resultadoCalculo.numeroCuotas,
-      totalInteres: resultadoCalculo.totalInteres,
-      totalPagar: resultadoCalculo.totalPagar,
-    });
+    // Si se especifica numeroCuotas en el DTO, usar ese valor; sino, calcular automáticamente
+    const resultadoCalculo = dto.numeroCuotas
+      ? this.calculoInteresService.calcularConCuotasPersonalizadas(
+          montoAutorizado,
+          tasaInteres,
+          plazoAutorizado,
+          dto.numeroCuotas,
+          dto.tipoInteres,
+          dto.periodicidadPago,
+        )
+      : this.calculoInteresService.calcular(
+          montoAutorizado,
+          tasaInteres,
+          plazoAutorizado,
+          dto.tipoInteres,
+          dto.periodicidadPago,
+        );
 
     // Calcular recargos
     const recargosCalculados = await this.calcularRecargos(
@@ -398,7 +392,9 @@ export class DesembolsoService {
         await queryRunner.manager.save(planPagoEntity);
       }
 
-      // Crear las deducciones
+      // Crear las deducciones y procesar refinanciamientos
+      const prestamosACancelar: number[] = [];
+
       for (const deduccion of preview.deducciones) {
         const deduccionEntity = this.deduccionRepository.create({
           prestamoId: prestamo.id,
@@ -407,8 +403,33 @@ export class DesembolsoService {
           tipoCalculo: deduccion.tipoCalculo,
           valor: deduccion.valor,
           montoCalculado: deduccion.monto,
+          prestamoACancelarId: deduccion.prestamoACancelarId,
         });
         await queryRunner.manager.save(deduccionEntity);
+
+        // Si es una deducción de cancelación de préstamo, agregar a la lista
+        if (deduccion.cancelacionPrestamo && deduccion.prestamoACancelarId) {
+          prestamosACancelar.push(deduccion.prestamoACancelarId);
+        }
+      }
+
+      // Procesar cancelaciones de préstamos (refinanciamiento)
+      if (prestamosACancelar.length > 0) {
+        // Marcar el nuevo préstamo como refinanciamiento
+        await queryRunner.manager.update(Prestamo, prestamo.id, {
+          refinanciamiento: true,
+        });
+
+        // Cancelar cada préstamo
+        for (const prestamoACancelarId of prestamosACancelar) {
+          await this.cancelarPrestamoRefinanciamiento(
+            queryRunner,
+            prestamoACancelarId,
+            prestamo.id,
+            dto.usuarioDesembolsoId,
+            dto.nombreUsuarioDesembolso,
+          );
+        }
       }
 
       // Crear los recargos
@@ -529,6 +550,8 @@ export class DesembolsoService {
 
     for (const deduccion of deducciones) {
       let nombre = deduccion.nombre || 'Deducción';
+      let cancelacionPrestamo = false;
+      let monto: number;
 
       // Si tiene tipoDeduccionId, obtener el nombre del catálogo
       if (deduccion.tipoDeduccionId) {
@@ -537,15 +560,43 @@ export class DesembolsoService {
         });
         if (tipo) {
           nombre = tipo.nombre;
+          cancelacionPrestamo = tipo.cancelacionPrestamo;
         }
       }
 
-      // Calcular monto según tipo de cálculo
-      let monto: number;
-      if (deduccion.tipoCalculo === TipoCalculo.PORCENTAJE) {
-        monto = this.redondear(montoBase * (deduccion.valor / 100));
+      // Si es una deducción de cancelación de préstamo, obtener el saldo total
+      if (cancelacionPrestamo && deduccion.prestamoACancelarId) {
+        const prestamoACancelar = await this.prestamoRepository.findOne({
+          where: { id: deduccion.prestamoACancelarId },
+        });
+
+        if (!prestamoACancelar) {
+          throw new BadRequestException(
+            `Préstamo a cancelar con ID ${deduccion.prestamoACancelarId} no encontrado`,
+          );
+        }
+
+        // Validar que el préstamo esté activo
+        if (!['VIGENTE', 'MORA'].includes(prestamoACancelar.estado)) {
+          throw new BadRequestException(
+            `El préstamo ${prestamoACancelar.numeroCredito} no está activo (estado: ${prestamoACancelar.estado})`,
+          );
+        }
+
+        // Calcular saldo total: saldoCapital + saldoInteres + capitalMora + interesMora
+        monto = this.redondear(
+          Number(prestamoACancelar.saldoCapital) +
+          Number(prestamoACancelar.saldoInteres) +
+          Number(prestamoACancelar.capitalMora) +
+          Number(prestamoACancelar.interesMora),
+        );
       } else {
-        monto = this.redondear(deduccion.valor);
+        // Calcular monto según tipo de cálculo (comportamiento original)
+        if (deduccion.tipoCalculo === TipoCalculo.PORCENTAJE) {
+          monto = this.redondear(montoBase * (deduccion.valor / 100));
+        } else {
+          monto = this.redondear(deduccion.valor);
+        }
       }
 
       resultado.push({
@@ -554,6 +605,8 @@ export class DesembolsoService {
         tipoCalculo: deduccion.tipoCalculo,
         valor: deduccion.valor,
         monto,
+        prestamoACancelarId: deduccion.prestamoACancelarId,
+        cancelacionPrestamo,
       });
     }
 
@@ -598,6 +651,118 @@ export class DesembolsoService {
     }
 
     return resultado;
+  }
+
+  /**
+   * Cancela un préstamo como parte del refinanciamiento
+   * - Crea un pago tipo CANCELACION_TOTAL por el saldo total
+   * - Actualiza el préstamo antiguo a estado CANCELADO
+   * - Pone en cero todos los saldos
+   * - Marca todas las cuotas pendientes como PAGADA
+   */
+  private async cancelarPrestamoRefinanciamiento(
+    queryRunner: any,
+    prestamoACancelarId: number,
+    prestamoNuevoId: number,
+    usuarioId: number | undefined,
+    nombreUsuario: string | undefined,
+  ): Promise<void> {
+    // Obtener el préstamo a cancelar
+    const prestamoACancelar = await queryRunner.manager.findOne(Prestamo, {
+      where: { id: prestamoACancelarId },
+    });
+
+    if (!prestamoACancelar) {
+      throw new BadRequestException(
+        `Préstamo a cancelar con ID ${prestamoACancelarId} no encontrado`,
+      );
+    }
+
+    // Calcular saldo total
+    const saldoTotal = this.redondear(
+      Number(prestamoACancelar.saldoCapital) +
+      Number(prestamoACancelar.saldoInteres) +
+      Number(prestamoACancelar.capitalMora) +
+      Number(prestamoACancelar.interesMora),
+    );
+
+    // Generar número de pago
+    const numeroPago = await this.generarNumeroPago(queryRunner);
+
+    // Crear el pago de cancelación total
+    const pago = queryRunner.manager.create(Pago, {
+      prestamoId: prestamoACancelarId,
+      numeroPago,
+      fechaPago: new Date(),
+      fechaRegistro: new Date(),
+      montoPagado: saldoTotal,
+      capitalAplicado: Number(prestamoACancelar.saldoCapital),
+      interesAplicado: Number(prestamoACancelar.saldoInteres),
+      recargosAplicado: 0,
+      interesMoratorioAplicado: Number(prestamoACancelar.capitalMora) + Number(prestamoACancelar.interesMora),
+      recargoManualAplicado: 0,
+      saldoCapitalAnterior: Number(prestamoACancelar.saldoCapital),
+      saldoInteresAnterior: Number(prestamoACancelar.saldoInteres),
+      capitalMoraAnterior: Number(prestamoACancelar.capitalMora),
+      interesMoraAnterior: Number(prestamoACancelar.interesMora),
+      diasMoraAnterior: prestamoACancelar.diasMora,
+      saldoCapitalPosterior: 0,
+      saldoInteresPosterior: 0,
+      tipoPago: TipoPago.CANCELACION_TOTAL,
+      estado: EstadoPago.APLICADO,
+      usuarioId,
+      nombreUsuario,
+      observaciones: `Cancelación por refinanciamiento. Nuevo préstamo ID: ${prestamoNuevoId}`,
+    });
+
+    await queryRunner.manager.save(Pago, pago);
+
+    // Actualizar el préstamo a CANCELADO y poner saldos en cero
+    await queryRunner.manager.update(Prestamo, prestamoACancelarId, {
+      estado: EstadoPrestamo.CANCELADO,
+      saldoCapital: 0,
+      saldoInteres: 0,
+      capitalMora: 0,
+      interesMora: 0,
+      diasMora: 0,
+      fechaCancelacion: new Date(),
+    });
+
+    // Marcar todas las cuotas pendientes como PAGADA
+    await queryRunner.manager.update(
+      PlanPago,
+      {
+        prestamoId: prestamoACancelarId,
+        estado: In([EstadoCuota.PENDIENTE, EstadoCuota.PARCIAL, EstadoCuota.MORA]),
+      },
+      {
+        estado: EstadoCuota.PAGADA,
+        fechaPago: new Date(),
+      },
+    );
+  }
+
+  /**
+   * Genera un número de pago único
+   */
+  private async generarNumeroPago(queryRunner: any): Promise<string> {
+    const year = new Date().getFullYear();
+    const prefix = `PAG${year}`;
+
+    // Buscar el último número de pago del año
+    const ultimoPago = await queryRunner.manager
+      .createQueryBuilder(Pago, 'pago')
+      .where('pago.numeroPago LIKE :prefix', { prefix: `${prefix}%` })
+      .orderBy('pago.id', 'DESC')
+      .getOne();
+
+    let secuencia = 1;
+    if (ultimoPago) {
+      const ultimoNumero = ultimoPago.numeroPago.replace(prefix, '');
+      secuencia = parseInt(ultimoNumero, 10) + 1;
+    }
+
+    return `${prefix}${secuencia.toString().padStart(6, '0')}`;
   }
 
   /**
@@ -690,21 +855,6 @@ export class DesembolsoService {
    * Lanza una excepción si encuentra valores inválidos
    */
   private validarValoresNumericos(preview: PreviewResponse): void {
-    console.log('✅ VALIDACIÓN - Preview completo:', {
-      montoAutorizado: preview.montoAutorizado,
-      montoDesembolsado: preview.montoDesembolsado,
-      cuotaNormal: preview.cuotaNormal,
-      cuotaTotal: preview.cuotaTotal,
-      totalInteres: preview.totalInteres,
-      totalAPagar: preview.totalAPagar,
-      numeroCuotas: preview.numeroCuotas,
-      tipos: {
-        montoAutorizado: typeof preview.montoAutorizado,
-        cuotaNormal: typeof preview.cuotaNormal,
-        cuotaTotal: typeof preview.cuotaTotal,
-      }
-    });
-
     const errores: string[] = [];
 
     // Validar campos críticos

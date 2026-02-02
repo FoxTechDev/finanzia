@@ -23,11 +23,9 @@ import { PagoService } from '../../services/pago.service';
 import { RegistrarPagoDialogComponent } from '../pagos/registrar-pago-dialog/registrar-pago-dialog.component';
 import { CatalogosService } from '@features/catalogos/services/catalogos.service';
 import { EstadoPrestamoModel } from '@core/models/catalogo.model';
-import { ClasificacionPrestamoService } from '../../services/clasificacion-prestamo.service';
 import {
   Prestamo,
   EstadoPrestamo,
-  ClasificacionPrestamo,
   ESTADO_PRESTAMO_LABELS,
 } from '@core/models/credito.model';
 
@@ -92,20 +90,10 @@ import {
 
             <mat-form-field appearance="outline">
               <mat-label>Estado</mat-label>
-              <mat-select [(ngModel)]="filters.estado" (selectionChange)="loadData()">
+              <mat-select [(ngModel)]="filters.estado">
                 <mat-option [value]="undefined">Todos</mat-option>
                 @for (estado of estados(); track estado.id) {
                   <mat-option [value]="estado.codigo">{{ estado.nombre }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Categoría NCB-022</mat-label>
-              <mat-select [(ngModel)]="filters.clasificacionPrestamoId" (selectionChange)="loadData()">
-                <mat-option [value]="undefined">Todas</mat-option>
-                @for (categoria of clasificaciones(); track categoria.id) {
-                  <mat-option [value]="categoria.id">{{ categoria.codigo }} - {{ categoria.nombre }}</mat-option>
                 }
               </mat-select>
             </mat-form-field>
@@ -156,6 +144,17 @@ import {
           <mat-spinner diameter="40"></mat-spinner>
           <p>Cargando préstamos...</p>
         </div>
+      } @else if (!hasSearched()) {
+        <mat-card>
+          <mat-card-content>
+            <div class="initial-state">
+              <mat-icon>search</mat-icon>
+              <h3>Buscar Préstamos</h3>
+              <p>Utilice los filtros de arriba para buscar préstamos.</p>
+              <p class="hint">Puede buscar por nombre de cliente, número de crédito o estado.</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
       } @else {
         <mat-card>
           <mat-card-content>
@@ -185,9 +184,9 @@ import {
 
                 <!-- Monto -->
                 <ng-container matColumnDef="monto">
-                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Monto Desembolsado</th>
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Monto de Crédito</th>
                   <td mat-cell *matCellDef="let item">
-                    {{ item.montoDesembolsado | currency:'USD':'symbol':'1.2-2' }}
+                    {{ item.montoAutorizado | currency:'USD':'symbol':'1.2-2' }}
                   </td>
                 </ng-container>
 
@@ -208,18 +207,6 @@ import {
                     <mat-chip-set>
                       <mat-chip [style.background-color]="getEstadoColor(item.estado)" [style.color]="'white'">
                         {{ getEstadoLabel(item.estado) }}
-                      </mat-chip>
-                    </mat-chip-set>
-                  </td>
-                </ng-container>
-
-                <!-- Categoría NCB-022 -->
-                <ng-container matColumnDef="categoria">
-                  <th mat-header-cell *matHeaderCellDef>Categoría</th>
-                  <td mat-cell *matCellDef="let item">
-                    <mat-chip-set>
-                      <mat-chip [ngClass]="getCategoriaClass(item.categoriaNCB022)">
-                        {{ item.categoriaNCB022 }}
                       </mat-chip>
                     </mat-chip-set>
                   </td>
@@ -334,7 +321,8 @@ import {
         </mat-card>
       }
 
-      <!-- Resumen de cartera -->
+      <!-- Resumen de cartera (solo visible después de buscar) -->
+      @if (hasSearched() && prestamos().length > 0) {
       <mat-card class="summary-card">
         <mat-card-content>
           <div class="summary">
@@ -369,6 +357,7 @@ import {
           </div>
         </mat-card-content>
       </mat-card>
+      }
     </div>
   `,
   styles: [`
@@ -491,12 +480,12 @@ import {
       align-items: center;
     }
 
-    .empty {
+    .empty, .initial-state {
       text-align: center;
       padding: 64px 16px;
     }
 
-    .empty mat-icon {
+    .empty mat-icon, .initial-state mat-icon {
       font-size: 64px;
       width: 64px;
       height: 64px;
@@ -504,10 +493,25 @@ import {
       margin-bottom: 16px;
     }
 
-    .empty p {
+    .initial-state mat-icon {
+      color: #1976d2;
+    }
+
+    .initial-state h3 {
+      margin: 16px 0 8px 0;
+      color: #333;
+      font-size: 20px;
+    }
+
+    .empty p, .initial-state p {
       color: #666;
-      margin: 16px 0;
+      margin: 8px 0;
       font-size: 16px;
+    }
+
+    .initial-state .hint {
+      font-size: 14px;
+      color: #999;
     }
 
     .summary-card {
@@ -625,7 +629,6 @@ export class PrestamosListComponent implements OnInit {
   private service = inject(PrestamoService);
   private pagoService = inject(PagoService);
   private catalogosService = inject(CatalogosService);
-  private clasificacionService = inject(ClasificacionPrestamoService);
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
   private dialog = inject(MatDialog);
@@ -633,12 +636,12 @@ export class PrestamosListComponent implements OnInit {
   prestamos = signal<Prestamo[]>([]);
   sortedData = signal<Prestamo[]>([]);
   paginatedData = signal<Prestamo[]>([]);
-  isLoading = signal(true);
+  isLoading = signal(false);
+  hasSearched = signal(false);
   downloadingPdfId = signal<number | null>(null);
 
   filters: PrestamoFilters = {};
   estados = signal<EstadoPrestamoModel[]>([]);
-  clasificaciones = signal<ClasificacionPrestamo[]>([]);
 
   displayedColumns = [
     'numeroCredito',
@@ -646,7 +649,6 @@ export class PrestamosListComponent implements OnInit {
     'monto',
     'saldoCapital',
     'estado',
-    'categoria',
     'diasMora',
     'fechaOtorgamiento',
     'acciones',
@@ -658,8 +660,6 @@ export class PrestamosListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadEstados();
-    this.loadClasificaciones();
-    this.loadData();
   }
 
   loadEstados(): void {
@@ -678,30 +678,14 @@ export class PrestamosListComponent implements OnInit {
     });
   }
 
-  loadClasificaciones(): void {
-    this.clasificacionService.getActivas().subscribe({
-      next: (data) => {
-        this.clasificaciones.set(data);
-      },
-      error: (err) => {
-        console.error('Error al cargar clasificaciones de préstamo:', err);
-        this.snackBar.open(
-          'Error al cargar las clasificaciones NCB-022',
-          'Cerrar',
-          { duration: 3000 }
-        );
-      },
-    });
-  }
-
   loadData(): void {
     this.isLoading.set(true);
+    this.hasSearched.set(true);
 
     const cleanFilters: PrestamoFilters = {};
     if (this.filters.estado) cleanFilters.estado = this.filters.estado;
     if (this.filters.numeroCredito) cleanFilters.numeroCredito = this.filters.numeroCredito;
     if (this.filters.nombreCliente) cleanFilters.nombreCliente = this.filters.nombreCliente;
-    if (this.filters.clasificacionPrestamoId) cleanFilters.clasificacionPrestamoId = this.filters.clasificacionPrestamoId;
     if (this.filters.conMora !== undefined) cleanFilters.conMora = this.filters.conMora;
 
     this.service.getAll(cleanFilters).subscribe({
@@ -763,7 +747,7 @@ export class PrestamosListComponent implements OnInit {
         case 'numeroCredito':
           return this.compare(a.numeroCredito, b.numeroCredito, isAsc);
         case 'monto':
-          return this.compare(a.montoDesembolsado, b.montoDesembolsado, isAsc);
+          return this.compare(a.montoAutorizado, b.montoAutorizado, isAsc);
         case 'saldoCapital':
           return this.compare(a.saldoCapital, b.saldoCapital, isAsc);
         case 'diasMora':
@@ -807,18 +791,6 @@ export class PrestamosListComponent implements OnInit {
   getEstadoColor(estado: EstadoPrestamo): string {
     const estadoCatalogo = this.estados().find(e => e.codigo === estado);
     return estadoCatalogo?.color || '#666666';
-  }
-
-  getCategoriaLabel(categoria: string): string {
-    // Si hay un código de clasificación, buscar en las clasificaciones cargadas
-    const clasificacion = this.clasificaciones().find(c => c.codigo === categoria);
-    return clasificacion ? `${clasificacion.codigo} - ${clasificacion.nombre}` : categoria;
-  }
-
-  getCategoriaClass(categoria: string): string {
-    // Extraer la primera letra para la clase CSS (A, B, C, D, E)
-    const letra = categoria.charAt(0).toLowerCase();
-    return 'categoria-' + letra;
   }
 
   getTotalCartera(): number {
@@ -875,6 +847,13 @@ export class PrestamosListComponent implements OnInit {
     });
   }
 
+  /**
+   * Detecta si el dispositivo es móvil
+   */
+  private isMobileDevice(): boolean {
+    return window.innerWidth <= 768;
+  }
+
   imprimirEstadoCuenta(id: number): void {
     // Buscar el préstamo para obtener el número de crédito
     const prestamo = this.prestamos().find(p => p.id === id);
@@ -883,7 +862,13 @@ export class PrestamosListComponent implements OnInit {
       return;
     }
 
-    // Marcar que estamos descargando este préstamo
+    // Si es móvil, navegar a la vista móvil del estado de cuenta
+    if (this.isMobileDevice()) {
+      this.router.navigate(['/creditos/prestamos', id, 'estado-cuenta-movil']);
+      return;
+    }
+
+    // En escritorio, descargar el PDF
     this.downloadingPdfId.set(id);
     this.snackBar.open('Generando estado de cuenta...', 'Cerrar', { duration: 2000 });
 

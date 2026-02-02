@@ -52,6 +52,19 @@ export class ComiteController {
     return this.comiteService.getEstadisticasPendientes();
   }
 
+  /**
+   * Obtener información completa de solicitud para revisión del comité
+   * Retorna toda la información necesaria para que el comité de crédito evalúe una solicitud:
+   * datos de la solicitud, información del cliente, actividad económica, ingresos, gastos
+   * y análisis financiero (capacidad de pago, ratio de endeudamiento).
+   */
+  @Get(':solicitudId/revision')
+  findSolicitudParaComite(
+    @Param('solicitudId', ParseIntPipe) solicitudId: number,
+  ) {
+    return this.comiteService.findSolicitudParaComite(solicitudId);
+  }
+
   @Get(':solicitudId/decisiones')
   findDecisionesBySolicitud(
     @Param('solicitudId', ParseIntPipe) solicitudId: number,

@@ -89,6 +89,10 @@ export enum DestinoCredito {
 }
 
 import { Garantia, RecomendacionAsesor } from './garantia.model';
+import { CatalogoBase } from './catalogo.model';
+
+// Interface para Periodicidad de Pago del catálogo
+export interface PeriodicidadPagoCatalogo extends CatalogoBase {}
 
 export interface Solicitud {
   id: number;
@@ -107,6 +111,11 @@ export interface Solicitud {
   montoSolicitado: number;
   plazoSolicitado: number;
   tasaInteresPropuesta: number;
+  periodicidadPagoId?: number;
+  periodicidadPago?: PeriodicidadPagoCatalogo;
+  tipoInteres?: TipoInteres; // Tipo de interés para el plan de pago
+  fechaDesdePago?: string | null;
+  fechaHastaPago?: string | null;
   destinoCredito: DestinoCredito;
   descripcionDestino: string | null;
   estadoId: number;
@@ -150,6 +159,10 @@ export interface CreateSolicitudRequest {
   montoSolicitado: number;
   plazoSolicitado: number;
   tasaInteresPropuesta: number;
+  periodicidadPagoId?: number;
+  tipoInteres?: TipoInteres; // Tipo de interés para el plan de pago
+  fechaDesdePago?: string;
+  fechaHastaPago?: string;
   destinoCredito: DestinoCredito;
   descripcionDestino?: string;
   fechaSolicitud: string;
@@ -362,6 +375,7 @@ export interface TipoDeduccion {
   tipoCalculoDefault: TipoCalculo;
   valorDefault: number;
   activo: boolean;
+  cancelacionPrestamo: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -385,6 +399,7 @@ export interface CreateTipoDeduccionRequest {
   tipoCalculoDefault: TipoCalculo;
   valorDefault: number;
   activo?: boolean;
+  cancelacionPrestamo?: boolean;
 }
 
 export interface CreateTipoRecargoRequest {
@@ -436,6 +451,7 @@ export interface Prestamo {
   fechaCancelacion: string | null;
   categoriaNCB022: CategoriaNCB022;
   estado: EstadoPrestamo;
+  refinanciamiento: boolean;
   usuarioDesembolsoId: number | null;
   nombreUsuarioDesembolso: string | null;
   createdAt: Date;
@@ -443,6 +459,35 @@ export interface Prestamo {
   planPago?: PlanPago[];
   deducciones?: DeduccionPrestamo[];
   recargos?: RecargoPrestamo[];
+}
+
+// Interface para préstamos activos (con saldo total para refinanciamiento)
+export interface PrestamoActivo {
+  id: number;
+  numeroCredito: string;
+  estado: EstadoPrestamo;
+  categoriaNCB022: CategoriaNCB022;
+  cliente: {
+    id: number;
+    nombreCompleto: string;
+    numeroDui: string;
+  };
+  tipoCredito: {
+    id: number;
+    nombre: string;
+  };
+  montoAutorizado: number;
+  montoDesembolsado: number;
+  saldoCapital: number;
+  diasMora: number;
+  fechaOtorgamiento: string;
+  fechaVencimiento: string;
+  proximaCuota: {
+    numeroCuota: number;
+    fechaVencimiento: string;
+    cuotaTotal: number;
+  } | null;
+  saldoTotal: number;
 }
 
 export interface PlanPago {
@@ -476,6 +521,7 @@ export interface DeduccionPrestamo {
   tipoCalculo: TipoCalculo;
   valor: number;
   montoCalculado: number;
+  prestamoACancelarId?: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -501,6 +547,7 @@ export interface DeduccionDesembolsoDto {
   nombre?: string;
   tipoCalculo: TipoCalculo;
   valor: number;
+  prestamoACancelarId?: number;
 }
 
 export interface RecargoDesembolsoDto {
@@ -517,6 +564,7 @@ export interface PreviewDesembolsoRequest {
   periodicidadPago: PeriodicidadPago;
   tipoInteres: TipoInteres;
   fechaPrimeraCuota: string;
+  numeroCuotas?: number;
   deducciones: DeduccionDesembolsoDto[];
   recargos: RecargoDesembolsoDto[];
 }
@@ -683,6 +731,7 @@ export interface Pago {
   interesAplicado: number;
   recargosAplicado: number;
   interesMoratorioAplicado: number;
+  recargoManualAplicado: number;
   saldoCapitalAnterior: number;
   saldoInteresAnterior: number;
   capitalMoraAnterior: number;
@@ -750,6 +799,12 @@ export interface ResumenAdeudo {
   cuotasVencidas: number;
   cuotasParciales: number;
   proximaCuota: CuotaPendiente | null;
+  // Información de recargo manual
+  recargoManual: {
+    aplica: boolean;           // true si el tipo de crédito usa recargo manual
+    montoSugerido: number;     // monto por defecto del tipo de crédito
+    tieneAtraso: boolean;      // true si hay cuotas vencidas
+  };
 }
 
 export interface DistribucionPago {
@@ -757,6 +812,7 @@ export interface DistribucionPago {
   interesAplicado: number;
   recargosAplicado: number;
   interesMoratorioAplicado: number;
+  recargoManualAplicado: number;  // Recargo manual cuando aplica
   excedente: number;
   cuotasAfectadas: {
     planPagoId: number;
@@ -784,6 +840,7 @@ export interface PreviewPagoRequest {
   prestamoId: number;
   montoPagar: number;
   fechaPago: string;
+  recargoManual?: number;  // Recargo manual editable (solo cuando el tipo de crédito lo requiere)
 }
 
 export interface CrearPagoRequest {
@@ -793,6 +850,7 @@ export interface CrearPagoRequest {
   observaciones?: string;
   usuarioId?: number;
   nombreUsuario?: string;
+  recargoManual?: number;  // Recargo manual editable (solo cuando el tipo de crédito lo requiere)
 }
 
 export interface AnularPagoRequest {
@@ -881,4 +939,106 @@ export interface ReciboData {
 
   // Información del usuario
   nombreUsuario: string;
+}
+
+// ============================================
+// DATOS DEL ESTADO DE CUENTA MÓVIL
+// ============================================
+
+export interface EstadoCuentaDatos {
+  institucion: {
+    nombre: string;
+    direccion: string;
+  };
+  cliente: {
+    nombre: string;
+    apellido: string;
+    nombreCompleto: string;
+    numeroDui: string;
+    telefono: string;
+    correoElectronico: string;
+    direccion: string;
+  };
+  prestamo: {
+    numeroCredito: string;
+    tipoCredito: string;
+    montoDesembolsado: number;
+    plazoMeses: number;
+    tasaInteres: number;
+    tasaInteresMoratorio: number;
+    fechaOtorgamiento: string;
+    fechaVencimiento: string;
+    estado: string;
+    periodicidadPago: string;
+  };
+  saldos: {
+    saldoCapital: number;
+    saldoInteres: number;
+    capitalMora: number;
+    interesMora: number;
+    diasMora: number;
+    saldoTotal: number;
+  };
+  resumenPagos: {
+    totalPagado: number;
+    capitalPagado: number;
+    interesPagado: number;
+    recargosPagado: number;
+    moratorioPagado: number;
+    recargoManualPagado: number;
+    numeroPagos: number;
+  };
+  pagos: {
+    numero: number;
+    fechaPago: string;
+    montoPagado: number;
+    capitalAplicado: number;
+    interesAplicado: number;
+    recargosAplicado: number;
+    moratorioAplicado: number;
+    recargoManualAplicado: number;
+    numeroPago: string;
+  }[];
+  fechaEmision: string;
+}
+
+// ============================================
+// CÁLCULO DE PLAN DE PAGO PARA SOLICITUD
+// ============================================
+
+export interface RecargoSolicitudDto {
+  nombre: string;
+  tipo: 'FIJO' | 'PORCENTAJE';
+  valor: number;
+  aplicaDesde?: number;
+  aplicaHasta?: number;
+}
+
+export interface CalcularPlanPagoRequest {
+  monto: number;
+  plazo: number;
+  tasaInteres: number;
+  periodicidad: string;
+  tipoInteres: string;
+  fechaPrimeraCuota?: string;
+  numeroCuotas?: number; // Número de cuotas (obligatorio para DIARIA, opcional para otras)
+  recargos?: RecargoSolicitudDto[];
+}
+
+export interface CuotaPlanPagoPreview {
+  numeroCuota: number;
+  fechaVencimiento: string;
+  capital: number;
+  interes: number;
+  recargos: number;
+  cuotaTotal: number;
+  saldoCapital: number;
+}
+
+export interface PlanPagoCalculado {
+  cuotaNormal: number;
+  totalInteres: number;
+  totalPagar: number;
+  numeroCuotas: number;
+  planPago: CuotaPlanPagoPreview[];
 }

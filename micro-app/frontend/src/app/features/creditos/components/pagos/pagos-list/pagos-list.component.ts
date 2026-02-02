@@ -604,6 +604,7 @@ export class PagosListComponent implements OnInit {
 
   loading = signal(false);
   pagos = signal<Pago[]>([]);
+  todosPagos = signal<Pago[]>([]); // Todos los pagos para estadísticas
   dataSource = new MatTableDataSource<Pago>([]);
 
   totalRegistros = 0;
@@ -623,21 +624,21 @@ export class PagosListComponent implements OnInit {
     'acciones',
   ];
 
-  // Computed signals para estadísticas
+  // Computed signals para estadísticas (basados en TODOS los pagos)
   totalPagos = computed(() => this.totalRegistros);
 
   pagosAplicados = computed(() =>
-    this.pagos().filter(p => p.estado === EstadoPago.APLICADO).length
+    this.todosPagos().filter(p => p.estado === EstadoPago.APLICADO).length
   );
 
   pagosAnulados = computed(() =>
-    this.pagos().filter(p => p.estado === EstadoPago.ANULADO).length
+    this.todosPagos().filter(p => p.estado === EstadoPago.ANULADO).length
   );
 
   totalMontoAplicado = computed(() =>
-    this.pagos()
+    this.todosPagos()
       .filter(p => p.estado === EstadoPago.APLICADO)
-      .reduce((sum, p) => sum + Number(p.montoPagado), 0)
+      .reduce((sum, p) => sum + Number(p.montoPagado || 0), 0)
   );
 
   constructor() {
@@ -660,7 +661,9 @@ export class PagosListComponent implements OnInit {
     this.loading.set(true);
 
     const filtros = this.construirFiltros();
+    const filtrosEstadisticas = this.construirFiltrosEstadisticas();
 
+    // Cargar datos paginados para la tabla
     this.pagoService.getAll(filtros).subscribe({
       next: (response) => {
         this.pagos.set(response.data);
@@ -672,6 +675,16 @@ export class PagosListComponent implements OnInit {
         console.error('Error cargando pagos:', err);
         this.snackBar.open('Error al cargar pagos', 'Cerrar', { duration: 5000 });
         this.loading.set(false);
+      },
+    });
+
+    // Cargar todos los pagos para estadísticas (sin paginación)
+    this.pagoService.getAll(filtrosEstadisticas).subscribe({
+      next: (response) => {
+        this.todosPagos.set(response.data);
+      },
+      error: (err) => {
+        console.error('Error cargando estadísticas:', err);
       },
     });
   }
@@ -703,6 +716,31 @@ export class PagosListComponent implements OnInit {
     // if (formValues.cliente) {
     //   filtros.cliente = formValues.cliente;
     // }
+
+    return filtros;
+  }
+
+  /**
+   * Construye filtros para obtener todos los registros (para estadísticas)
+   */
+  private construirFiltrosEstadisticas(): FiltrosPago {
+    const formValues = this.filtrosForm.value;
+    const filtros: FiltrosPago = {
+      page: 1,
+      limit: 10000, // Obtener todos para estadísticas
+    };
+
+    if (formValues.estado) {
+      filtros.estado = formValues.estado;
+    }
+
+    if (formValues.fechaDesde) {
+      filtros.fechaDesde = this.formatearFecha(formValues.fechaDesde);
+    }
+
+    if (formValues.fechaHasta) {
+      filtros.fechaHasta = this.formatearFecha(formValues.fechaHasta);
+    }
 
     return filtros;
   }

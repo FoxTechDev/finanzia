@@ -221,6 +221,250 @@ mat-divider {
   }
 }
 
+// Resumen financiero
+.financial-summary {
+  margin: 24px 0;
+
+  .summary-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-top: 16px;
+
+    @media (min-width: 600px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .summary-card {
+      mat-card-header {
+        mat-card-title {
+          font-size: 14px;
+          font-weight: 500;
+          color: rgba(0, 0, 0, 0.7);
+        }
+      }
+
+      mat-card-content {
+        padding-top: 8px;
+
+        .amount {
+          font-size: 28px;
+          font-weight: 600;
+          margin-bottom: 4px;
+
+          &.total-ingresos {
+            color: #4caf50;
+          }
+
+          &.total-gastos {
+            color: #f44336;
+          }
+
+          &.positive {
+            color: #4caf50;
+          }
+
+          &.negative {
+            color: #f44336;
+          }
+        }
+
+        .formula {
+          font-size: 12px;
+          color: rgba(0, 0, 0, 0.54);
+          font-style: italic;
+        }
+      }
+
+      &.full-width-card {
+        @media (min-width: 600px) {
+          grid-column: 1 / -1;
+        }
+      }
+    }
+  }
+}
+
+// Secciones de ingresos, gastos y dependencias
+.ingresos-section,
+.gastos-section,
+.dependencias-section {
+  margin: 24px 0;
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 500;
+    }
+  }
+}
+
+// Tablas de ingresos y gastos
+.ingresos-gastos-table {
+  width: 100%;
+
+  .table-field {
+    width: 100%;
+    margin: 0;
+
+    ::ng-deep {
+      .mat-mdc-form-field-subscript-wrapper {
+        display: none;
+      }
+    }
+  }
+
+  th {
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  td {
+    padding: 8px 4px;
+  }
+}
+
+// Cards de ingresos y gastos en mobile
+.ingreso-gasto-card-mobile {
+  margin-bottom: 12px;
+
+  mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    mat-card-title {
+      font-size: 16px;
+    }
+  }
+
+  mat-card-content {
+    padding-top: 16px;
+
+    .form-grid-mobile {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+  }
+}
+
+// Dependencias familiares
+.dependencias-section {
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 500;
+    }
+  }
+
+  .dependientes-table {
+    width: 100%;
+
+    .table-field {
+      width: 100%;
+      margin: 0;
+
+      ::ng-deep {
+        .mat-mdc-form-field-subscript-wrapper {
+          display: none;
+        }
+      }
+    }
+
+    th {
+      font-weight: 600;
+      color: rgba(0, 0, 0, 0.87);
+    }
+
+    td {
+      padding: 8px 4px;
+    }
+  }
+
+  .dependiente-card-mobile {
+    margin-bottom: 12px;
+
+    mat-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      mat-card-title {
+        font-size: 16px;
+      }
+    }
+
+    mat-card-content {
+      padding-top: 16px;
+
+      .form-grid-mobile {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .checkboxes-row {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+      }
+    }
+  }
+}
+
+// Mensajes informativos y de error
+.info-message,
+.error-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 24px;
+
+  mat-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+.info-message {
+  background-color: #e3f2fd;
+  color: #1976d2;
+
+  mat-icon {
+    color: #1976d2;
+  }
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+
+  mat-icon {
+    color: #c62828;
+  }
+}
+
 // Stepper responsive
 ::ng-deep {
   .mat-vertical-stepper-header {

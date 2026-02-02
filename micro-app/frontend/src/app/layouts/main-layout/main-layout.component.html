@@ -3,206 +3,302 @@
     #sidenav
     [mode]="isMobile() ? 'over' : 'side'"
     [opened]="sidenavOpened()"
-    (closed)="sidenavOpened.set(false)"
+    (closed)="onSidenavClosed()"
     class="sidenav"
   >
-    <mat-nav-list>
-      <a mat-list-item routerLink="/home" routerLinkActive="active">
-        <mat-icon matListItemIcon>home</mat-icon>
-        <span matListItemTitle>Inicio</span>
-      </a>
+    <div class="sidenav-content">
+      <!-- Inicio -->
+      <mat-nav-list class="nav-home">
+        <a mat-list-item routerLink="/home" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+          <mat-icon matListItemIcon>home</mat-icon>
+          <span matListItemTitle>Inicio</span>
+        </a>
+      </mat-nav-list>
 
-      <!-- Sección Clientes: ADMIN, ASESOR, COMITE -->
-      <ng-container *appHasRole="[RoleCodes.ADMIN, RoleCodes.ASESOR, RoleCodes.COMITE]">
-        <div class="nav-section">
-          <span class="nav-section-title">Clientes</span>
-        </div>
-        <a mat-list-item routerLink="/clientes" routerLinkActive="active">
-          <mat-icon matListItemIcon>people</mat-icon>
-          <span matListItemTitle>Lista de Clientes</span>
-        </a>
-        <a mat-list-item routerLink="/clientes/nuevo" routerLinkActive="active">
-          <mat-icon matListItemIcon>person_add</mat-icon>
-          <span matListItemTitle>Nuevo Cliente</span>
-        </a>
-      </ng-container>
+      <mat-accordion displayMode="flat" multi>
+        <!-- Módulo Clientes -->
+        <ng-container *appHasRole="[RoleCodes.ADMIN, RoleCodes.ASESOR, RoleCodes.COMITE]">
+          <mat-expansion-panel class="menu-panel">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon>people</mat-icon>
+                <span>Clientes</span>
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <mat-nav-list>
+              <a mat-list-item routerLink="/clientes" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                <mat-icon matListItemIcon>list</mat-icon>
+                <span matListItemTitle>Lista de Clientes</span>
+              </a>
+              <a mat-list-item routerLink="/clientes/nuevo" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                <mat-icon matListItemIcon>person_add</mat-icon>
+                <span matListItemTitle>Nuevo Cliente</span>
+              </a>
+            </mat-nav-list>
+          </mat-expansion-panel>
+        </ng-container>
 
-      <!-- Sección Créditos -->
-      <div class="nav-section">
-        <span class="nav-section-title">Créditos</span>
-      </div>
+        <!-- Módulo Créditos (Proceso completo) -->
+        <mat-expansion-panel class="menu-panel">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>account_balance</mat-icon>
+              <span>Créditos</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <mat-nav-list>
+            <!-- Solicitudes: todos -->
+            <a mat-list-item routerLink="/creditos/solicitudes" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+              <mat-icon matListItemIcon>description</mat-icon>
+              <span matListItemTitle>Solicitudes</span>
+            </a>
+            <!-- Comité: ADMIN, COMITE -->
+            <ng-container *appHasRole="[RoleCodes.ADMIN, RoleCodes.COMITE]">
+              <a mat-list-item routerLink="/creditos/comite" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                <mat-icon matListItemIcon>groups</mat-icon>
+                <span matListItemTitle>Comité de Crédito</span>
+              </a>
+            </ng-container>
+            <!-- Desembolsos: ADMIN, COMITE -->
+            <ng-container *appHasRole="[RoleCodes.ADMIN, RoleCodes.COMITE]">
+              <a mat-list-item routerLink="/creditos/desembolso" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                <mat-icon matListItemIcon>payments</mat-icon>
+                <span matListItemTitle>Desembolsos</span>
+              </a>
+            </ng-container>
+            <!-- Préstamos y Pagos -->
+            <ng-container *appHasRole="[RoleCodes.ADMIN, RoleCodes.ASESOR, RoleCodes.COMITE]">
+              <a mat-list-item routerLink="/creditos/prestamos" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                <mat-icon matListItemIcon>account_balance_wallet</mat-icon>
+                <span matListItemTitle>Préstamos</span>
+              </a>
+              <a mat-list-item routerLink="/creditos/pagos" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                <mat-icon matListItemIcon>receipt_long</mat-icon>
+                <span matListItemTitle>Consulta de Pagos</span>
+              </a>
+            </ng-container>
+          </mat-nav-list>
+        </mat-expansion-panel>
 
-      <!-- Solicitudes: ADMIN, ASESOR, COMITE (solo lectura) -->
-      <a mat-list-item routerLink="/creditos/solicitudes" routerLinkActive="active">
-        <mat-icon matListItemIcon>description</mat-icon>
-        <span matListItemTitle>Solicitudes</span>
-      </a>
+        <!-- Módulo Reportes -->
+        <ng-container *appHasRole="[RoleCodes.ADMIN, RoleCodes.COMITE]">
+          <mat-expansion-panel class="menu-panel">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon>assessment</mat-icon>
+                <span>Reportes</span>
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <mat-nav-list>
+              <a mat-list-item routerLink="/creditos/reportes/colocacion" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                <mat-icon matListItemIcon>trending_up</mat-icon>
+                <span matListItemTitle>Colocación de Créditos</span>
+              </a>
+              <a mat-list-item routerLink="/creditos/reportes/pagos" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                <mat-icon matListItemIcon>receipt_long</mat-icon>
+                <span matListItemTitle>Reporte de Pagos</span>
+              </a>
+            </mat-nav-list>
+          </mat-expansion-panel>
+        </ng-container>
 
-      <!-- Comité de Crédito: ADMIN, COMITE -->
-      <ng-container *appHasRole="[RoleCodes.ADMIN, RoleCodes.COMITE]">
-        <a mat-list-item routerLink="/creditos/comite" routerLinkActive="active">
-          <mat-icon matListItemIcon>groups</mat-icon>
-          <span matListItemTitle>Comité de Crédito</span>
-        </a>
-      </ng-container>
+        <!-- Módulo Administración -->
+        <ng-container *appHasRole="[RoleCodes.ADMIN]">
+          <mat-expansion-panel class="menu-panel">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon>settings</mat-icon>
+                <span>Administración</span>
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <mat-nav-list>
+              <a mat-list-item routerLink="/usuarios" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                <mat-icon matListItemIcon>manage_accounts</mat-icon>
+                <span matListItemTitle>Usuarios</span>
+              </a>
+            </mat-nav-list>
+          </mat-expansion-panel>
+        </ng-container>
 
-      <!-- Desembolsos: ADMIN y COMITE -->
-      <ng-container *appHasRole="[RoleCodes.ADMIN, RoleCodes.COMITE]">
-        <a mat-list-item routerLink="/creditos/desembolso" routerLinkActive="active">
-          <mat-icon matListItemIcon>payments</mat-icon>
-          <span matListItemTitle>Desembolsos</span>
-        </a>
-      </ng-container>
+        <!-- Módulo Catálogos -->
+        <ng-container *appHasRole="[RoleCodes.ADMIN]">
+          <mat-expansion-panel class="menu-panel">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon>folder</mat-icon>
+                <span>Catálogos</span>
+              </mat-panel-title>
+            </mat-expansion-panel-header>
 
-      <!-- Préstamos y Pagos: ADMIN, ASESOR y COMITE -->
-      <ng-container *appHasRole="[RoleCodes.ADMIN, RoleCodes.ASESOR, RoleCodes.COMITE]">
-        <a mat-list-item routerLink="/creditos/prestamos" routerLinkActive="active">
-          <mat-icon matListItemIcon>account_balance_wallet</mat-icon>
-          <span matListItemTitle>Préstamos</span>
-        </a>
-        <a mat-list-item routerLink="/creditos/pagos" routerLinkActive="active">
-          <mat-icon matListItemIcon>receipt_long</mat-icon>
-          <span matListItemTitle>Consulta de Pagos</span>
-        </a>
-      </ng-container>
+            <mat-accordion displayMode="flat" class="sub-accordion">
+              <!-- Sub-sección: Configuración de Créditos -->
+              <mat-expansion-panel class="sub-panel">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-icon>credit_card</mat-icon>
+                    <span>Configuración de Créditos</span>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <mat-nav-list>
+                  <a mat-list-item routerLink="/creditos/lineas" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>account_balance</mat-icon>
+                    <span matListItemTitle>Líneas de Crédito</span>
+                  </a>
+                  <a mat-list-item routerLink="/creditos/tipos" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>credit_card</mat-icon>
+                    <span matListItemTitle>Tipos de Crédito</span>
+                  </a>
+                  <a mat-list-item routerLink="/catalogos/tipo-interes" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>percent</mat-icon>
+                    <span matListItemTitle>Tipos de Interés</span>
+                  </a>
+                  <a mat-list-item routerLink="/catalogos/periodicidad-pago" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>calendar_month</mat-icon>
+                    <span matListItemTitle>Periodicidad de Pago</span>
+                  </a>
+                  <a mat-list-item routerLink="/catalogos/destino-credito" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>trending_up</mat-icon>
+                    <span matListItemTitle>Destinos de Crédito</span>
+                  </a>
+                  <a mat-list-item routerLink="/creditos/clasificacion-prestamos" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>category</mat-icon>
+                    <span matListItemTitle>Clasificación NCB-022</span>
+                  </a>
+                </mat-nav-list>
+              </mat-expansion-panel>
 
-      <!-- Sección Reportes: ADMIN y COMITE -->
-      <ng-container *appHasRole="[RoleCodes.ADMIN, RoleCodes.COMITE]">
-        <div class="nav-section">
-          <span class="nav-section-title">Reportes</span>
-        </div>
-        <a mat-list-item routerLink="/creditos/reportes/colocacion" routerLinkActive="active">
-          <mat-icon matListItemIcon>assessment</mat-icon>
-          <span matListItemTitle>Colocación de Créditos</span>
-        </a>
-        <a mat-list-item routerLink="/creditos/reportes/pagos" routerLinkActive="active">
-          <mat-icon matListItemIcon>receipt_long</mat-icon>
-          <span matListItemTitle>Reporte de Pagos</span>
-        </a>
-      </ng-container>
+              <!-- Sub-sección: Deducciones y Recargos -->
+              <mat-expansion-panel class="sub-panel">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-icon>calculate</mat-icon>
+                    <span>Deducciones y Recargos</span>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <mat-nav-list>
+                  <a mat-list-item routerLink="/catalogos/tipos-deduccion" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>remove_circle_outline</mat-icon>
+                    <span matListItemTitle>Tipos de Deducción</span>
+                  </a>
+                  <a mat-list-item routerLink="/catalogos/tipos-recargo" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>add_shopping_cart</mat-icon>
+                    <span matListItemTitle>Tipos de Recargo</span>
+                  </a>
+                  <a mat-list-item routerLink="/catalogos/tipo-calculo" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>functions</mat-icon>
+                    <span matListItemTitle>Tipos de Cálculo</span>
+                  </a>
+                </mat-nav-list>
+              </mat-expansion-panel>
 
-      <!-- Sección Administración: Solo ADMIN -->
-      <ng-container *appHasRole="[RoleCodes.ADMIN]">
-        <div class="nav-section">
-          <span class="nav-section-title">Administración</span>
-        </div>
-        <a mat-list-item routerLink="/usuarios" routerLinkActive="active">
-          <mat-icon matListItemIcon>manage_accounts</mat-icon>
-          <span matListItemTitle>Usuarios</span>
-        </a>
-      </ng-container>
+              <!-- Sub-sección: Estados del Proceso -->
+              <mat-expansion-panel class="sub-panel">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-icon>flag</mat-icon>
+                    <span>Estados del Proceso</span>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <mat-nav-list>
+                  <a mat-list-item routerLink="/catalogos/estado-solicitud" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>assignment</mat-icon>
+                    <span matListItemTitle>Estados de Solicitud</span>
+                  </a>
+                  <a mat-list-item routerLink="/catalogos/estado-prestamo" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>account_balance_wallet</mat-icon>
+                    <span matListItemTitle>Estados de Préstamo</span>
+                  </a>
+                  <a mat-list-item routerLink="/catalogos/estado-cuota" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>event_note</mat-icon>
+                    <span matListItemTitle>Estados de Cuota</span>
+                  </a>
+                  <a mat-list-item routerLink="/catalogos/tipo-pago" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>payment</mat-icon>
+                    <span matListItemTitle>Tipos de Pago</span>
+                  </a>
+                  <a mat-list-item routerLink="/catalogos/estado-pago" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>receipt</mat-icon>
+                    <span matListItemTitle>Estados de Pago</span>
+                  </a>
+                  <a mat-list-item routerLink="/catalogos/recomendacion-asesor" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>recommend</mat-icon>
+                    <span matListItemTitle>Recomendaciones Asesor</span>
+                  </a>
+                  <a mat-list-item routerLink="/catalogos/tipo-decision-comite" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>gavel</mat-icon>
+                    <span matListItemTitle>Decisiones Comité</span>
+                  </a>
+                </mat-nav-list>
+              </mat-expansion-panel>
 
-      <!-- Sección Catálogos: Solo ADMIN -->
-      <ng-container *appHasRole="[RoleCodes.ADMIN]">
-        <div class="nav-section">
-          <span class="nav-section-title">Catálogos</span>
-        </div>
+              <!-- Sub-sección: Garantías -->
+              <mat-expansion-panel class="sub-panel">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-icon>security</mat-icon>
+                    <span>Garantías</span>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <mat-nav-list>
+                  <a mat-list-item routerLink="/creditos/catalogos-garantia" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>security</mat-icon>
+                    <span matListItemTitle>Catálogos de Garantías</span>
+                  </a>
+                  <a mat-list-item routerLink="/catalogos/estado-garantia" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>shield</mat-icon>
+                    <span matListItemTitle>Estados de Garantía</span>
+                  </a>
+                </mat-nav-list>
+              </mat-expansion-panel>
 
-        <!-- Catálogos de Créditos -->
-        <div class="nav-subsection">
-          <span class="nav-subsection-title">Créditos</span>
-        </div>
-        <a mat-list-item routerLink="/creditos/lineas" routerLinkActive="active">
-          <mat-icon matListItemIcon>account_balance</mat-icon>
-          <span matListItemTitle>Líneas de Crédito</span>
-        </a>
-        <a mat-list-item routerLink="/creditos/tipos" routerLinkActive="active">
-          <mat-icon matListItemIcon>credit_card</mat-icon>
-          <span matListItemTitle>Tipos de Crédito</span>
-        </a>
-        <a mat-list-item routerLink="/creditos/catalogos-garantia" routerLinkActive="active">
-          <mat-icon matListItemIcon>security</mat-icon>
-          <span matListItemTitle>Catálogos de Garantías</span>
-        </a>
-        <a mat-list-item routerLink="/creditos/clasificacion-prestamos" routerLinkActive="active">
-          <mat-icon matListItemIcon>category</mat-icon>
-          <span matListItemTitle>Clasificación NCB-022</span>
-        </a>
-        <a mat-list-item routerLink="/catalogos/estado-solicitud" routerLinkActive="active">
-          <mat-icon matListItemIcon>assignment</mat-icon>
-          <span matListItemTitle>Estados de Solicitud</span>
-        </a>
-        <a mat-list-item routerLink="/catalogos/recomendacion-asesor" routerLinkActive="active">
-          <mat-icon matListItemIcon>recommend</mat-icon>
-          <span matListItemTitle>Recomendaciones Asesor</span>
-        </a>
-        <a mat-list-item routerLink="/catalogos/tipo-decision-comite" routerLinkActive="active">
-          <mat-icon matListItemIcon>gavel</mat-icon>
-          <span matListItemTitle>Decisiones Comité</span>
-        </a>
-        <a mat-list-item routerLink="/catalogos/destino-credito" routerLinkActive="active">
-          <mat-icon matListItemIcon>trending_up</mat-icon>
-          <span matListItemTitle>Destinos de Crédito</span>
-        </a>
-        <a mat-list-item routerLink="/catalogos/estado-prestamo" routerLinkActive="active">
-          <mat-icon matListItemIcon>account_balance_wallet</mat-icon>
-          <span matListItemTitle>Estados de Préstamo</span>
-        </a>
-        <a mat-list-item routerLink="/catalogos/tipo-interes" routerLinkActive="active">
-          <mat-icon matListItemIcon>percent</mat-icon>
-          <span matListItemTitle>Tipos de Interés</span>
-        </a>
-        <a mat-list-item routerLink="/catalogos/tipo-calculo" routerLinkActive="active">
-          <mat-icon matListItemIcon>calculate</mat-icon>
-          <span matListItemTitle>Tipos de Cálculo</span>
-        </a>
+              <!-- Sub-sección: Ubicaciones -->
+              <mat-expansion-panel class="sub-panel">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-icon>place</mat-icon>
+                    <span>Ubicaciones</span>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <mat-nav-list>
+                  <a mat-list-item routerLink="/catalogos/departamentos" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>map</mat-icon>
+                    <span matListItemTitle>Departamentos</span>
+                  </a>
+                  <a mat-list-item routerLink="/catalogos/municipios" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>location_city</mat-icon>
+                    <span matListItemTitle>Municipios</span>
+                  </a>
+                  <a mat-list-item routerLink="/catalogos/distritos" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>location_on</mat-icon>
+                    <span matListItemTitle>Distritos</span>
+                  </a>
+                </mat-nav-list>
+              </mat-expansion-panel>
 
-        <!-- Catálogos de Pagos -->
-        <div class="nav-subsection">
-          <span class="nav-subsection-title">Pagos y Cuotas</span>
-        </div>
-        <a mat-list-item routerLink="/catalogos/tipo-pago" routerLinkActive="active">
-          <mat-icon matListItemIcon>payment</mat-icon>
-          <span matListItemTitle>Tipos de Pago</span>
-        </a>
-        <a mat-list-item routerLink="/catalogos/estado-pago" routerLinkActive="active">
-          <mat-icon matListItemIcon>receipt</mat-icon>
-          <span matListItemTitle>Estados de Pago</span>
-        </a>
-        <a mat-list-item routerLink="/catalogos/estado-cuota" routerLinkActive="active">
-          <mat-icon matListItemIcon>event_note</mat-icon>
-          <span matListItemTitle>Estados de Cuota</span>
-        </a>
-        <a mat-list-item routerLink="/catalogos/periodicidad-pago" routerLinkActive="active">
-          <mat-icon matListItemIcon>calendar_month</mat-icon>
-          <span matListItemTitle>Periodicidad de Pago</span>
-        </a>
-
-        <!-- Catálogos Geográficos -->
-        <div class="nav-subsection">
-          <span class="nav-subsection-title">Ubicaciones</span>
-        </div>
-        <a mat-list-item routerLink="/catalogos/departamentos" routerLinkActive="active">
-          <mat-icon matListItemIcon>map</mat-icon>
-          <span matListItemTitle>Departamentos</span>
-        </a>
-        <a mat-list-item routerLink="/catalogos/municipios" routerLinkActive="active">
-          <mat-icon matListItemIcon>location_city</mat-icon>
-          <span matListItemTitle>Municipios</span>
-        </a>
-        <a mat-list-item routerLink="/catalogos/distritos" routerLinkActive="active">
-          <mat-icon matListItemIcon>place</mat-icon>
-          <span matListItemTitle>Distritos</span>
-        </a>
-
-        <!-- Catálogos Generales -->
-        <div class="nav-subsection">
-          <span class="nav-subsection-title">Generales</span>
-        </div>
-        <a mat-list-item routerLink="/catalogos/estado-garantia" routerLinkActive="active">
-          <mat-icon matListItemIcon>shield</mat-icon>
-          <span matListItemTitle>Estados de Garantía</span>
-        </a>
-        <a mat-list-item routerLink="/catalogos/categoria-ncb022" routerLinkActive="active">
-          <mat-icon matListItemIcon>category</mat-icon>
-          <span matListItemTitle>Categorías NCB-022</span>
-        </a>
-        <a mat-list-item routerLink="/catalogos/sexo" routerLinkActive="active">
-          <mat-icon matListItemIcon>wc</mat-icon>
-          <span matListItemTitle>Género/Sexo</span>
-        </a>
-      </ng-container>
-    </mat-nav-list>
+              <!-- Sub-sección: Generales -->
+              <mat-expansion-panel class="sub-panel">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-icon>settings_applications</mat-icon>
+                    <span>Generales</span>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <mat-nav-list>
+                  <a mat-list-item routerLink="/catalogos/sexo" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>wc</mat-icon>
+                    <span matListItemTitle>Género/Sexo</span>
+                  </a>
+                  <a mat-list-item routerLink="/catalogos/categoria-ncb022" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>category</mat-icon>
+                    <span matListItemTitle>Categorías NCB-022</span>
+                  </a>
+                </mat-nav-list>
+              </mat-expansion-panel>
+            </mat-accordion>
+          </mat-expansion-panel>
+        </ng-container>
+      </mat-accordion>
+    </div>
   </mat-sidenav>
 
   <mat-sidenav-content>

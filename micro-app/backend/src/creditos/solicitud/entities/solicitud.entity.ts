@@ -16,6 +16,14 @@ import { SolicitudHistorial } from './solicitud-historial.entity';
 import { Garantia } from '../../garantia/entities/garantia.entity';
 import { RecomendacionAsesor } from '../../garantia/enums/tipo-garantia.enum';
 import { EstadoSolicitud } from '../../../catalogos/estado-solicitud/entities/estado-solicitud.entity';
+import { PeriodicidadPago } from '../../../catalogos/periodicidad-pago/entities/periodicidad-pago.entity';
+import { PlanPagoSolicitud } from './plan-pago-solicitud.entity';
+import { RecargoSolicitud } from './recargo-solicitud.entity';
+
+export enum TipoInteresSolicitud {
+  FLAT = 'FLAT',
+  AMORTIZADO = 'AMORTIZADO',
+}
 
 export enum DestinoCredito {
   CAPITAL_TRABAJO = 'CAPITAL_TRABAJO',
@@ -192,4 +200,38 @@ export class Solicitud {
 
   @Column({ type: 'text', nullable: true })
   observacionesComite: string;
+
+  // Periodicidad de pago
+  @Column({ nullable: true })
+  periodicidadPagoId: number;
+
+  @ManyToOne(() => PeriodicidadPago)
+  @JoinColumn({ name: 'periodicidadPagoId' })
+  periodicidadPago: PeriodicidadPago;
+
+  // Tipo de interés para el plan de pago
+  @Column({
+    type: 'enum',
+    enum: TipoInteresSolicitud,
+    nullable: true,
+  })
+  tipoInteres: TipoInteresSolicitud;
+
+  // Campos para pago diario
+  @Column({ type: 'date', nullable: true })
+  fechaDesdePago: Date;
+
+  @Column({ type: 'date', nullable: true })
+  fechaHastaPago: Date;
+
+  @Column({ nullable: true })
+  diasCalculados: number; // Días calculados excluyendo domingos
+
+  // Relación con plan de pago de solicitud
+  @OneToMany(() => PlanPagoSolicitud, (planPago) => planPago.solicitud)
+  planPago: PlanPagoSolicitud[];
+
+  // Relación con recargos de solicitud
+  @OneToMany(() => RecargoSolicitud, (recargo) => recargo.solicitud)
+  recargos: RecargoSolicitud[];
 }

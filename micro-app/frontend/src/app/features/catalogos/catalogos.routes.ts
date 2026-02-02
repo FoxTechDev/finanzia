@@ -139,6 +139,27 @@ export const CATALOGOS_ROUTES: Routes = [
             (m) => m.RolesComponent
           ),
       },
+      {
+        path: 'tipos-vivienda',
+        loadComponent: () =>
+          import('./components/tipos-vivienda/tipos-vivienda.component').then(
+            (m) => m.TiposViviendaComponent
+          ),
+      },
+      {
+        path: 'tipos-recargo',
+        loadComponent: () =>
+          import('./components/tipos-recargo/tipos-recargo.component').then(
+            (m) => m.TiposRecargoComponent
+          ),
+      },
+      {
+        path: 'tipos-deduccion',
+        loadComponent: () =>
+          import('./components/tipos-deduccion/tipos-deduccion.component').then(
+            (m) => m.TiposDeduccionComponent
+          ),
+      },
     ],
   },
 ];

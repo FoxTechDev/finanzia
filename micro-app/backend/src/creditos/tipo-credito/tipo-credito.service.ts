@@ -113,11 +113,13 @@ export class TipoCreditoService {
   }
 
   // Validar que los parámetros de la solicitud estén dentro de los rangos permitidos
+  // IMPORTANTE: El plazo SIEMPRE se valida en meses, independientemente de la periodicidad
   async validarParametros(
     tipoCreditoId: number,
     monto: number,
     plazo: number,
     tasaInteres: number,
+    periodicidadCodigo?: string,
   ): Promise<{ valid: boolean; errors: string[] }> {
     const tipoCredito = await this.findOne(tipoCreditoId);
     const errors: string[] = [];
@@ -128,12 +130,20 @@ export class TipoCreditoService {
     if (monto > tipoCredito.montoMaximo) {
       errors.push(`El monto máximo permitido es $${tipoCredito.montoMaximo}`);
     }
-    if (plazo < tipoCredito.plazoMinimo) {
-      errors.push(`El plazo mínimo permitido es ${tipoCredito.plazoMinimo} meses`);
+
+    // NUEVA LÓGICA: El plazo SIEMPRE se valida en meses
+    // El plazo mínimo es 1 mes para cualquier periodicidad
+    const plazoMinimo = Math.max(1, tipoCredito.plazoMinimo);
+    const plazoMaximo = tipoCredito.plazoMaximo;
+    const unidad = 'meses';
+
+    if (plazo < plazoMinimo) {
+      errors.push(`El plazo mínimo permitido es ${plazoMinimo} ${unidad}`);
     }
-    if (plazo > tipoCredito.plazoMaximo) {
-      errors.push(`El plazo máximo permitido es ${tipoCredito.plazoMaximo} meses`);
+    if (plazo > plazoMaximo) {
+      errors.push(`El plazo máximo permitido es ${plazoMaximo} ${unidad}`);
     }
+
     if (tasaInteres < tipoCredito.tasaInteresMinima) {
       errors.push(`La tasa de interés mínima permitida es ${tipoCredito.tasaInteresMinima}%`);
     }

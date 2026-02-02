@@ -3,60 +3,190 @@
 }
 
 .sidenav {
-  width: 250px;
+  width: 280px;
 
   @media (max-width: 599px) {
-    width: 80vw;
-    max-width: 280px;
+    width: 85vw;
+    max-width: 300px;
+  }
+
+  .sidenav-content {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
+  }
+
+  .nav-home {
+    padding-bottom: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    margin-bottom: 8px;
   }
 
   .active {
-    background-color: rgba(5, 17, 242, 0.1); // Primary color con transparencia
+    background-color: rgba(25, 118, 210, 0.12);
 
     mat-icon {
-      color: var(--primary-color);
+      color: #1976d2;
     }
-  }
 
-  .nav-section {
-    padding: 16px 16px 8px;
-    margin-top: 8px;
-
-    .nav-section-title {
-      font-size: 12px;
-      font-weight: 600;
-      color: rgba(0, 0, 0, 0.54);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-  }
-
-  .nav-subsection {
-    padding: 12px 16px 4px 24px;
-    margin-top: 4px;
-
-    .nav-subsection-title {
-      font-size: 11px;
+    span {
+      color: #1976d2;
       font-weight: 500;
-      color: rgba(0, 0, 0, 0.45);
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
     }
   }
 
-  // Ajuste de indentación para items bajo subsecciones
-  .nav-subsection + a[mat-list-item] {
-    padding-left: 32px;
+  // Estilos para los paneles principales
+  .menu-panel {
+    box-shadow: none !important;
+    background: transparent;
 
-    mat-icon[matListItemIcon] {
-      margin-left: -8px;
+    &::ng-deep {
+      .mat-expansion-panel-body {
+        padding: 0 0 8px 0;
+      }
+    }
+
+    .mat-expansion-panel-header {
+      padding: 0 16px;
+      height: 48px;
+      font-size: 14px;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+      }
+    }
+
+    mat-panel-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.87);
+
+      mat-icon {
+        color: rgba(0, 0, 0, 0.54);
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+      }
+    }
+
+    mat-nav-list {
+      padding-top: 0;
+
+      a[mat-list-item] {
+        height: 40px;
+        padding-left: 48px;
+
+        mat-icon[matListItemIcon] {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+          color: rgba(0, 0, 0, 0.54);
+          margin-right: 12px;
+        }
+
+        span[matListItemTitle] {
+          font-size: 13px;
+        }
+      }
     }
   }
 
-  // Continuar con la indentación para items subsiguientes
-  a[mat-list-item] + a[mat-list-item]:not(.nav-section + a) {
-    &:not(.nav-subsection + a) {
-      padding-left: 32px;
+  // Estilos para el acordeón de sub-secciones (dentro de Catálogos)
+  .sub-accordion {
+    padding: 0 8px;
+
+    .sub-panel {
+      box-shadow: none !important;
+      background: rgba(0, 0, 0, 0.02);
+      border-radius: 8px !important;
+      margin-bottom: 4px;
+
+      &::ng-deep {
+        .mat-expansion-panel-body {
+          padding: 0 0 4px 0;
+        }
+      }
+
+      .mat-expansion-panel-header {
+        padding: 0 12px;
+        height: 40px;
+        font-size: 13px;
+
+        &:hover {
+          background-color: rgba(0, 0, 0, 0.04);
+        }
+      }
+
+      mat-panel-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.7);
+
+        mat-icon {
+          color: rgba(0, 0, 0, 0.45);
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+
+      mat-nav-list {
+        padding-top: 0;
+
+        a[mat-list-item] {
+          height: 36px;
+          padding-left: 36px;
+
+          mat-icon[matListItemIcon] {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+            color: rgba(0, 0, 0, 0.45);
+            margin-right: 10px;
+          }
+
+          span[matListItemTitle] {
+            font-size: 12px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Remover bordes del accordion
+::ng-deep {
+  .mat-accordion {
+    .mat-expansion-panel {
+      &:first-of-type,
+      &:last-of-type {
+        border-radius: 0;
+      }
+
+      &::before {
+        display: none;
+      }
+    }
+  }
+
+  .menu-panel {
+    .mat-expansion-panel-header {
+      border-radius: 0 !important;
+    }
+
+    &.mat-expanded {
+      background-color: rgba(0, 0, 0, 0.02);
+    }
+  }
+
+  .sub-panel {
+    .mat-expansion-panel-header {
+      border-radius: 8px !important;
     }
   }
 }

@@ -11,6 +11,12 @@ import { PersonaModule } from './persona/persona.module';
 import { CreditosModule } from './creditos/creditos.module';
 import { CatalogosModule } from './catalogos/catalogos.module';
 import { HealthModule } from './health/health.module';
+import { DependenciaFamiliarModule } from './dependencia-familiar/dependencia-familiar.module';
+import { TipoGastoModule } from './tipo-gasto/tipo-gasto.module';
+import { TipoIngresoModule } from './tipo-ingreso/tipo-ingreso.module';
+import { TipoViviendaModule } from './tipo-vivienda/tipo-vivienda.module';
+import { GastoClienteModule } from './gasto-cliente/gasto-cliente.module';
+import { IngresoClienteModule } from './ingreso-cliente/ingreso-cliente.module';
 
 @Module({
   imports: [
@@ -30,6 +36,12 @@ import { HealthModule } from './health/health.module';
     PersonaModule,
     CreditosModule,
     CatalogosModule,
+    DependenciaFamiliarModule,
+    TipoGastoModule,
+    TipoIngresoModule,
+    TipoViviendaModule,
+    GastoClienteModule,
+    IngresoClienteModule,
   ],
   controllers: [],
   providers: [],

@@ -209,6 +209,10 @@ export class Prestamo {
   })
   estado: EstadoPrestamo;
 
+  // Indica si este préstamo es un refinanciamiento (canceló otro préstamo)
+  @Column({ default: false })
+  refinanciamiento: boolean;
+
   // Auditoría
   @Column({ nullable: true })
   usuarioDesembolsoId: number;

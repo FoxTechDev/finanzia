@@ -72,10 +72,21 @@ export class PagoService {
       throw new BadRequestException('El monto a pagar debe ser mayor a 0');
     }
 
-    // Calcular distribución
+    // Determinar el recargo manual a aplicar:
+    // Si el tipo de crédito aplica recargo manual y hay atraso, usar el valor enviado o el sugerido
+    let recargoManual = 0;
+    if (resumenAdeudo.recargoManual.aplica && resumenAdeudo.recargoManual.tieneAtraso) {
+      // Si se envió un valor de recargo manual, usarlo; sino, usar el sugerido
+      recargoManual = dto.recargoManual !== undefined
+        ? dto.recargoManual
+        : resumenAdeudo.recargoManual.montoSugerido;
+    }
+
+    // Calcular distribución (pasando el recargo manual)
     const distribucion = this.pagoCalculoService.calcularDistribucion(
       dto.montoPagar,
       resumenAdeudo.cuotasPendientes,
+      recargoManual,
     );
 
     // Calcular saldos posteriores
@@ -132,17 +143,27 @@ export class PagoService {
         fechaPago,
       );
 
+      // Determinar el recargo manual a aplicar
+      let recargoManual = 0;
+      if (resumenAdeudo.recargoManual.aplica && resumenAdeudo.recargoManual.tieneAtraso) {
+        recargoManual = dto.recargoManual !== undefined
+          ? dto.recargoManual
+          : resumenAdeudo.recargoManual.montoSugerido;
+      }
+
       const distribucion = this.pagoCalculoService.calcularDistribucion(
         dto.montoPagar,
         resumenAdeudo.cuotasPendientes,
+        recargoManual,
       );
 
-      // Validar que hay algo que aplicar
+      // Validar que hay algo que aplicar (incluyendo recargo manual)
       const totalAplicado =
         distribucion.capitalAplicado +
         distribucion.interesAplicado +
         distribucion.recargosAplicado +
-        distribucion.interesMoratorioAplicado;
+        distribucion.interesMoratorioAplicado +
+        distribucion.recargoManualAplicado;
 
       if (totalAplicado <= 0) {
         throw new BadRequestException(
@@ -172,6 +193,7 @@ export class PagoService {
         interesAplicado: distribucion.interesAplicado,
         recargosAplicado: distribucion.recargosAplicado,
         interesMoratorioAplicado: distribucion.interesMoratorioAplicado,
+        recargoManualAplicado: distribucion.recargoManualAplicado,
         // Saldos anteriores para reversa
         saldoCapitalAnterior: Number(prestamo.saldoCapital),
         saldoInteresAnterior: Number(prestamo.saldoInteres),

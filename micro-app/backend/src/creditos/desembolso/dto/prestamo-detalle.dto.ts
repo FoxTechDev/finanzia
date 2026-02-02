@@ -167,6 +167,7 @@ export class PrestamoResumenDto {
   };
 
   montoAutorizado: number;
+  montoDesembolsado: number;
   saldoCapital: number;
   diasMora: number;
 

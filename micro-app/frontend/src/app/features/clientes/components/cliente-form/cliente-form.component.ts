@@ -1,11 +1,15 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import {
   FormBuilder,
   FormGroup,
+  FormArray,
   ReactiveFormsModule,
   Validators,
+  AbstractControl,
+  ValidationErrors,
 } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatStepperModule } from '@angular/material/stepper';
@@ -19,11 +23,13 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableModule, MatTable } from '@angular/material/table';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
 import { PersonaService } from '../../services/persona.service';
 import { UbicacionService } from '../../services/ubicacion.service';
+import { CatalogosService } from '@features/catalogos/services/catalogos.service';
 import {
   Departamento,
   Municipio,
@@ -31,7 +37,12 @@ import {
   CreatePersonaRequest,
   ReferenciaPersonal,
   ReferenciaFamiliar,
+  TipoIngreso,
+  TipoGasto,
+  IngresoCliente,
+  GastoCliente,
 } from '@core/models/cliente.model';
+import { CatalogoBase } from '@core/models/catalogo.model';
 import { ReferenciaPersonalDialogComponent } from './referencia-personal-dialog.component';
 import { ReferenciaFamiliarDialogComponent } from './referencia-familiar-dialog.component';
 
@@ -55,6 +66,7 @@ import { ReferenciaFamiliarDialogComponent } from './referencia-familiar-dialog.
     MatDividerModule,
     MatTableModule,
     MatDialogModule,
+    MatCheckboxModule,
   ],
   providers: [
     {
@@ -71,8 +83,15 @@ export class ClienteFormComponent implements OnInit {
   private router = inject(Router);
   private personaService = inject(PersonaService);
   private ubicacionService = inject(UbicacionService);
+  private catalogosService = inject(CatalogosService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private cdr = inject(ChangeDetectorRef);
+
+  // Referencias a las tablas para forzar actualización
+  @ViewChild('ingresosTable') ingresosTable?: MatTable<any>;
+  @ViewChild('gastosTable') gastosTable?: MatTable<any>;
+  @ViewChild('dependenciasTable') dependenciasTable?: MatTable<any>;
 
   isEditMode = signal(false);
   isLoading = signal(false);
@@ -86,6 +105,11 @@ export class ClienteFormComponent implements OnInit {
   municipiosActividad = signal<Municipio[]>([]);
   distritosActividad = signal<Distrito[]>([]);
 
+  // Catálogos de ingresos y gastos
+  tiposIngreso = signal<CatalogoBase[]>([]);
+  tiposGasto = signal<CatalogoBase[]>([]);
+  tiposVivienda = signal<CatalogoBase[]>([]);
+
   // Referencias
   referenciasPersonales = signal<ReferenciaPersonal[]>([]);
   referenciasFamiliares = signal<ReferenciaFamiliar[]>([]);
@@ -98,22 +122,48 @@ export class ClienteFormComponent implements OnInit {
   tipoActividadOptions = ['Empleado', 'Independiente', 'Empresario', 'Jubilado', 'Estudiante', 'Otro'];
   relacionOptions = ['Amigo', 'Vecino', 'Compañero de trabajo', 'Conocido', 'Otro'];
   parentescoOptions = ['Padre', 'Madre', 'Hermano/a', 'Hijo/a', 'Cónyuge', 'Tío/a', 'Primo/a', 'Abuelo/a', 'Otro'];
+  parentescoDependienteOptions = ['Hijo', 'Hija', 'Cónyuge', 'Padre', 'Madre', 'Hermano', 'Hermana', 'Abuelo', 'Abuela', 'Otro'];
 
   // Formularios
   datosPersonalesForm!: FormGroup;
   direccionForm!: FormGroup;
   actividadEconomicaForm!: FormGroup;
+  ingresosGastosForm!: FormGroup;
+
+  // Columnas para tablas
+  displayedColumnsDependientes = ['nombreDependiente', 'parentesco', 'edad', 'trabaja', 'estudia', 'acciones'];
+  displayedColumnsIngresos = ['tipo', 'monto', 'descripcion', 'acciones'];
+  displayedColumnsGastos = ['tipo', 'monto', 'descripcion', 'acciones'];
 
   ngOnInit(): void {
     this.initForms();
-    this.loadDepartamentos();
 
     const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.clienteId = +id;
-      this.isEditMode.set(true);
-      this.loadCliente(+id);
-    }
+
+    // Cargar catálogos base primero
+    forkJoin({
+      departamentos: this.ubicacionService.getDepartamentos(),
+      tiposIngreso: this.catalogosService.getTiposIngreso(),
+      tiposGasto: this.catalogosService.getTiposGasto(),
+      tiposVivienda: this.catalogosService.getTiposVivienda(),
+    }).subscribe({
+      next: (data) => {
+        this.departamentos.set(data.departamentos);
+        this.tiposIngreso.set(data.tiposIngreso);
+        this.tiposGasto.set(data.tiposGasto);
+        this.tiposVivienda.set(data.tiposVivienda);
+
+        // Una vez cargados los catálogos, cargar el cliente si estamos en modo edición
+        if (id) {
+          this.clienteId = +id;
+          this.isEditMode.set(true);
+          this.loadCliente(+id);
+        }
+      },
+      error: () => {
+        this.snackBar.open('Error al cargar catálogos', 'Cerrar', { duration: 3000 });
+      },
+    });
   }
 
   private initForms(): void {
@@ -136,6 +186,8 @@ export class ClienteFormComponent implements OnInit {
       municipioId: ['', Validators.required],
       distritoId: ['', Validators.required],
       detalleDireccion: ['', Validators.maxLength(200)],
+      tipoViviendaId: ['', Validators.required],
+      tiempoResidenciaAnios: ['', [Validators.min(0)]],
     });
 
     this.actividadEconomicaForm = this.fb.group({
@@ -150,6 +202,237 @@ export class ClienteFormComponent implements OnInit {
       latitud: [''],
       longitud: [''],
     });
+
+    // Formulario de ingresos y gastos con validador personalizado
+    this.ingresosGastosForm = this.fb.group({
+      ingresos: this.fb.array([]),
+      gastos: this.fb.array([]),
+      dependenciasFamiliares: this.fb.array([]),
+    }, { validators: this.ingresosGastosValidator });
+  }
+
+  /**
+   * Validador personalizado para el formulario de ingresos y gastos.
+   * Permite avanzar en el stepper si los arrays están vacíos (datos opcionales).
+   * Si hay elementos en los arrays, valida que estén completos.
+   */
+  private ingresosGastosValidator = (control: AbstractControl): ValidationErrors | null => {
+    const ingresosArray = control.get('ingresos') as FormArray;
+    const gastosArray = control.get('gastos') as FormArray;
+    const dependenciasArray = control.get('dependenciasFamiliares') as FormArray;
+
+    // Si todos los arrays están vacíos, el formulario es válido
+    if (ingresosArray.length === 0 && gastosArray.length === 0 && dependenciasArray.length === 0) {
+      return null;
+    }
+
+    // Si hay elementos, validar que cada uno esté completo
+    let hasErrors = false;
+
+    // Validar ingresos
+    if (ingresosArray.length > 0) {
+      for (let i = 0; i < ingresosArray.length; i++) {
+        const ingresoGroup = ingresosArray.at(i);
+        if (ingresoGroup.invalid) {
+          hasErrors = true;
+          ingresoGroup.markAllAsTouched();
+        }
+      }
+    }
+
+    // Validar gastos
+    if (gastosArray.length > 0) {
+      for (let i = 0; i < gastosArray.length; i++) {
+        const gastoGroup = gastosArray.at(i);
+        if (gastoGroup.invalid) {
+          hasErrors = true;
+          gastoGroup.markAllAsTouched();
+        }
+      }
+    }
+
+    // Validar dependencias familiares
+    if (dependenciasArray.length > 0) {
+      for (let i = 0; i < dependenciasArray.length; i++) {
+        const depGroup = dependenciasArray.at(i);
+        if (depGroup.invalid) {
+          hasErrors = true;
+          depGroup.markAllAsTouched();
+        }
+      }
+    }
+
+    return hasErrors ? { incompleteItems: true } : null;
+  };
+
+  private loadCatalogos(): void {
+    this.catalogosService.getTiposIngreso().subscribe({
+      next: (data) => this.tiposIngreso.set(data),
+      error: () => this.snackBar.open('Error al cargar tipos de ingreso', 'Cerrar', { duration: 3000 }),
+    });
+
+    this.catalogosService.getTiposGasto().subscribe({
+      next: (data) => this.tiposGasto.set(data),
+      error: () => this.snackBar.open('Error al cargar tipos de gasto', 'Cerrar', { duration: 3000 }),
+    });
+
+    this.catalogosService.getTiposVivienda().subscribe({
+      next: (data) => this.tiposVivienda.set(data),
+      error: () => this.snackBar.open('Error al cargar tipos de vivienda', 'Cerrar', { duration: 3000 }),
+    });
+  }
+
+  // Getters para FormArrays
+  get ingresos(): FormArray {
+    return this.ingresosGastosForm.get('ingresos') as FormArray;
+  }
+
+  get gastos(): FormArray {
+    return this.ingresosGastosForm.get('gastos') as FormArray;
+  }
+
+  get dependenciasFamiliares(): FormArray {
+    return this.ingresosGastosForm.get('dependenciasFamiliares') as FormArray;
+  }
+
+  // Cálculos automáticos
+  totalIngresos = computed(() => {
+    if (!this.ingresosGastosForm) return 0;
+    const ingresosArray = this.ingresos;
+    let total = 0;
+    for (let i = 0; i < ingresosArray.length; i++) {
+      const monto = parseFloat(ingresosArray.at(i).get('monto')?.value) || 0;
+      total += monto;
+    }
+    return total;
+  });
+
+  totalGastos = computed(() => {
+    if (!this.ingresosGastosForm) return 0;
+    const gastosArray = this.gastos;
+    let total = 0;
+    for (let i = 0; i < gastosArray.length; i++) {
+      const monto = parseFloat(gastosArray.at(i).get('monto')?.value) || 0;
+      total += monto;
+    }
+    return total;
+  });
+
+  ingresoDisponible = computed(() => {
+    return this.totalIngresos() - this.totalGastos();
+  });
+
+  // Métodos para manejar ingresos
+  createIngreso(): FormGroup {
+    return this.fb.group({
+      tipoIngresoId: [null, Validators.required],
+      monto: [null, [Validators.required, Validators.min(0)]],
+      descripcion: ['', Validators.maxLength(200)],
+    });
+  }
+
+  agregarIngreso(): void {
+    this.ingresos.push(this.createIngreso());
+    this.ingresosGastosForm.updateValueAndValidity();
+    this.refreshIngresosTable();
+  }
+
+  eliminarIngreso(index: number): void {
+    this.ingresos.removeAt(index);
+    this.ingresosGastosForm.updateValueAndValidity();
+    this.refreshIngresosTable();
+  }
+
+  private refreshIngresosTable(): void {
+    this.cdr.detectChanges();
+    this.ingresosTable?.renderRows();
+  }
+
+  // Métodos para manejar gastos
+  createGasto(): FormGroup {
+    return this.fb.group({
+      tipoGastoId: [null, Validators.required],
+      monto: [null, [Validators.required, Validators.min(0)]],
+      descripcion: ['', Validators.maxLength(200)],
+    });
+  }
+
+  agregarGasto(): void {
+    this.gastos.push(this.createGasto());
+    this.ingresosGastosForm.updateValueAndValidity();
+    this.refreshGastosTable();
+  }
+
+  eliminarGasto(index: number): void {
+    this.gastos.removeAt(index);
+    this.ingresosGastosForm.updateValueAndValidity();
+    this.refreshGastosTable();
+  }
+
+  private refreshGastosTable(): void {
+    this.cdr.detectChanges();
+    this.gastosTable?.renderRows();
+  }
+
+  // Métodos para manejar dependientes
+  createDependiente(): FormGroup {
+    return this.fb.group({
+      nombreDependiente: ['', [Validators.required, Validators.maxLength(150)]],
+      parentesco: ['', Validators.required],
+      edad: [null, [Validators.min(0), Validators.max(120)]],
+      trabaja: [false],
+      estudia: [false],
+      observaciones: ['', Validators.maxLength(200)],
+    });
+  }
+
+  agregarDependiente(): void {
+    this.dependenciasFamiliares.push(this.createDependiente());
+    this.ingresosGastosForm.updateValueAndValidity();
+    this.refreshDependenciasTable();
+  }
+
+  eliminarDependiente(index: number): void {
+    this.dependenciasFamiliares.removeAt(index);
+    this.ingresosGastosForm.updateValueAndValidity();
+    this.refreshDependenciasTable();
+  }
+
+  private refreshDependenciasTable(): void {
+    this.cdr.detectChanges();
+    this.dependenciasTable?.renderRows();
+  }
+
+  // Obtener nombre de tipo de ingreso
+  getNombreTipoIngreso(id: number): string {
+    const tipo = this.tiposIngreso().find(t => t.id === id);
+    return tipo?.nombre || '';
+  }
+
+  // Obtener nombre de tipo de gasto
+  getNombreTipoGasto(id: number): string {
+    const tipo = this.tiposGasto().find(t => t.id === id);
+    return tipo?.nombre || '';
+  }
+
+  /**
+   * Verifica si el formulario de ingresos/gastos tiene errores para mostrar en la UI.
+   */
+  hasIngresosGastosErrors(): boolean {
+    return this.ingresosGastosForm.invalid && this.ingresosGastosForm.touched;
+  }
+
+  /**
+   * Obtiene el mensaje de error para el formulario de ingresos/gastos.
+   */
+  getIngresosGastosErrorMessage(): string {
+    if (!this.ingresosGastosForm.errors) {
+      return '';
+    }
+    if (this.ingresosGastosForm.errors['incompleteItems']) {
+      return 'Complete todos los campos de los ingresos, gastos o dependientes agregados';
+    }
+    return '';
   }
 
   // Obtener ubicación GPS
@@ -336,19 +619,41 @@ export class ClienteFormComponent implements OnInit {
         });
 
         if (cliente.direccion) {
-          this.onDepartamentoDireccionChange(cliente.direccion.departamentoId);
-          setTimeout(() => {
-            this.onMunicipioDireccionChange(cliente.direccion!.municipioId);
-            this.direccionForm.patchValue(cliente.direccion!);
-          }, 300);
+          // Cargar municipios por departamento, luego distritos por municipio, luego patchValue
+          this.ubicacionService.getMunicipios(cliente.direccion.departamentoId).subscribe({
+            next: (municipios) => {
+              this.municipiosDireccion.set(municipios);
+              if (cliente.direccion!.municipioId) {
+                this.ubicacionService.getDistritos(cliente.direccion!.municipioId).subscribe({
+                  next: (distritos) => {
+                    this.distritosDireccion.set(distritos);
+                    this.direccionForm.patchValue(cliente.direccion!);
+                  },
+                });
+              } else {
+                this.direccionForm.patchValue(cliente.direccion!);
+              }
+            },
+          });
         }
 
         if (cliente.actividadEconomica) {
-          this.onDepartamentoActividadChange(cliente.actividadEconomica.departamentoId);
-          setTimeout(() => {
-            this.onMunicipioActividadChange(cliente.actividadEconomica!.municipioId);
-            this.actividadEconomicaForm.patchValue(cliente.actividadEconomica!);
-          }, 300);
+          // Cargar municipios por departamento, luego distritos por municipio, luego patchValue
+          this.ubicacionService.getMunicipios(cliente.actividadEconomica.departamentoId).subscribe({
+            next: (municipios) => {
+              this.municipiosActividad.set(municipios);
+              if (cliente.actividadEconomica!.municipioId) {
+                this.ubicacionService.getDistritos(cliente.actividadEconomica!.municipioId).subscribe({
+                  next: (distritos) => {
+                    this.distritosActividad.set(distritos);
+                    this.actividadEconomicaForm.patchValue(cliente.actividadEconomica!);
+                  },
+                });
+              } else {
+                this.actividadEconomicaForm.patchValue(cliente.actividadEconomica!);
+              }
+            },
+          });
         }
 
         // Cargar referencias
@@ -358,6 +663,41 @@ export class ClienteFormComponent implements OnInit {
 
         if (cliente.referenciasFamiliares && cliente.referenciasFamiliares.length > 0) {
           this.referenciasFamiliares.set(cliente.referenciasFamiliares);
+        }
+
+        // Cargar ingresos
+        if (cliente.ingresos && cliente.ingresos.length > 0) {
+          cliente.ingresos.forEach(ingreso => {
+            const ingresoGroup = this.createIngreso();
+            ingresoGroup.patchValue({
+              tipoIngresoId: ingreso.tipoIngresoId ?? ingreso.tipoIngreso?.id,
+              monto: ingreso.monto,
+              descripcion: ingreso.descripcion,
+            });
+            this.ingresos.push(ingresoGroup);
+          });
+        }
+
+        // Cargar gastos
+        if (cliente.gastos && cliente.gastos.length > 0) {
+          cliente.gastos.forEach(gasto => {
+            const gastoGroup = this.createGasto();
+            gastoGroup.patchValue({
+              tipoGastoId: gasto.tipoGastoId ?? gasto.tipoGasto?.id,
+              monto: gasto.monto,
+              descripcion: gasto.descripcion,
+            });
+            this.gastos.push(gastoGroup);
+          });
+        }
+
+        // Cargar dependencias familiares
+        if (cliente.dependenciasFamiliares && cliente.dependenciasFamiliares.length > 0) {
+          cliente.dependenciasFamiliares.forEach(dep => {
+            const depGroup = this.createDependiente();
+            depGroup.patchValue(dep);
+            this.dependenciasFamiliares.push(depGroup);
+          });
         }
 
         this.isLoading.set(false);
@@ -394,11 +734,17 @@ export class ClienteFormComponent implements OnInit {
     if (
       this.datosPersonalesForm.invalid ||
       this.direccionForm.invalid ||
-      this.actividadEconomicaForm.invalid
+      this.actividadEconomicaForm.invalid ||
+      this.ingresosGastosForm.invalid
     ) {
       this.snackBar.open('Complete todos los campos requeridos', 'Cerrar', {
         duration: 3000,
       });
+      // Marcar todos los campos como touched para mostrar errores
+      this.datosPersonalesForm.markAllAsTouched();
+      this.direccionForm.markAllAsTouched();
+      this.actividadEconomicaForm.markAllAsTouched();
+      this.ingresosGastosForm.markAllAsTouched();
       return;
     }
 
@@ -416,7 +762,22 @@ export class ClienteFormComponent implements OnInit {
 
     const direccion = this.cleanEmptyValues(
       this.direccionForm.value,
-      ['departamentoId', 'municipioId', 'distritoId']
+      ['departamentoId', 'municipioId', 'distritoId', 'tipoViviendaId', 'tiempoResidenciaAnios']
+    );
+
+    // Preparar ingresos
+    const ingresos = this.ingresos.value.map((ingreso: any) =>
+      this.cleanEmptyValues(ingreso, ['tipoIngresoId', 'monto'])
+    );
+
+    // Preparar gastos
+    const gastosData = this.gastos.value.map((gasto: any) =>
+      this.cleanEmptyValues(gasto, ['tipoGastoId', 'monto'])
+    );
+
+    // Preparar dependientes
+    const dependientes = this.dependenciasFamiliares.value.map((dep: any) =>
+      this.cleanEmptyValues(dep, ['edad'])
     );
 
     const persona: CreatePersonaRequest = {
@@ -427,7 +788,10 @@ export class ClienteFormComponent implements OnInit {
       actividadEconomica,
       referenciasPersonales: refPersonales,
       referenciasFamiliares: refFamiliares,
-    } as CreatePersonaRequest;
+      ingresos,
+      gastos: gastosData,
+      dependenciasFamiliares: dependientes,
+    } as any;
 
     const request$ = this.isEditMode()
       ? this.personaService.update(this.clienteId!, persona)

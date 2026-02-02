@@ -91,6 +91,10 @@ export class ReporteService {
       params = params.set('tipoCreditoId', filtros.tipoCreditoId.toString());
     }
 
+    // Solicitar todos los registros sin paginación (limit alto para reportes)
+    params = params.set('limit', '10000');
+    params = params.set('page', '1');
+
     // Endpoint para obtener préstamos desembolsados en el rango de fechas
     return this.http.get<any[]>(this.apiUrl, { params }).pipe(
       map(response => {
@@ -117,11 +121,11 @@ export class ReporteService {
         (prestamo.cliente?.nombreCompleto || 'N/A'),
       lineaCredito: prestamo.tipoCredito?.lineaCredito?.nombre || 'N/A',
       tipoCredito: prestamo.tipoCredito?.nombre || 'N/A',
-      montoDesembolsado: prestamo.montoDesembolsado || 0,
-      tasaInteres: prestamo.tasaInteres || 0,
-      plazo: prestamo.numeroCuotas || 0,
+      montoDesembolsado: Number(prestamo.montoDesembolsado) || 0,
+      tasaInteres: Number(prestamo.tasaInteres) || 0,
+      plazo: Number(prestamo.numeroCuotas) || 0,
       periodicidadPago: prestamo.periodicidadPago || 'N/A',
-      saldoCapital: prestamo.saldoCapital || 0,
+      saldoCapital: Number(prestamo.saldoCapital) || 0,
       fechaOtorgamiento: prestamo.fechaOtorgamiento,
       fechaVencimiento: prestamo.fechaVencimiento
     };
@@ -142,6 +146,10 @@ export class ReporteService {
     if (filtros.estado) {
       params = params.set('estado', filtros.estado);
     }
+
+    // Solicitar todos los registros sin paginación (limit alto para reportes)
+    params = params.set('limit', '10000');
+    params = params.set('page', '1');
 
     // Endpoint para obtener pagos en el rango de fechas
     return this.http.get<any>(`${environment.apiUrl}/pagos`, { params }).pipe(
@@ -170,13 +178,13 @@ export class ReporteService {
         'N/A',
       lineaCredito: pago.prestamo?.tipoCredito?.lineaCredito?.nombre || 'N/A',
       tipoCredito: pago.prestamo?.tipoCredito?.nombre || 'N/A',
-      montoPagado: pago.montoPagado || 0,
-      capitalAplicado: pago.capitalAplicado || 0,
-      interesAplicado: pago.interesAplicado || 0,
-      recargosAplicado: pago.recargosAplicado || 0,
-      interesMoratorioAplicado: pago.interesMoratorioAplicado || 0,
-      saldoAnterior: pago.saldoCapitalAnterior || 0,
-      saldoNuevo: pago.saldoCapitalPosterior || 0,
+      montoPagado: Number(pago.montoPagado) || 0,
+      capitalAplicado: Number(pago.capitalAplicado) || 0,
+      interesAplicado: Number(pago.interesAplicado) || 0,
+      recargosAplicado: Number(pago.recargosAplicado) || 0,
+      interesMoratorioAplicado: Number(pago.interesMoratorioAplicado) || 0,
+      saldoAnterior: Number(pago.saldoCapitalAnterior) || 0,
+      saldoNuevo: Number(pago.saldoCapitalPosterior) || 0,
       estado: pago.estado || 'N/A'
     };
   }

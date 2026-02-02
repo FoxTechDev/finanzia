@@ -29,4 +29,14 @@ export class CrearPagoDto {
   @IsOptional()
   @IsString()
   nombreUsuario?: string;
+
+  /**
+   * Recargo manual aplicado cuando el tipo de crédito tiene aplicaRecargoManual = true
+   * Este campo es opcional y editable por el usuario
+   */
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0, { message: 'El recargo no puede ser negativo' })
+  recargoManual?: number;
 }

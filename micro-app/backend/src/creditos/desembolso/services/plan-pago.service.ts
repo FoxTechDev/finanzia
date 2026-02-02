@@ -73,6 +73,7 @@ export class PlanPagoService {
 
   /**
    * Calcula la fecha de vencimiento según la periodicidad
+   * IMPORTANTE: Para periodicidad DIARIA, excluye los domingos
    */
   calcularFechaVencimiento(
     fechaPrimeraCuota: Date,
@@ -80,29 +81,37 @@ export class PlanPagoService {
     numeroCuota: number,
   ): Date {
     const fecha = new Date(fechaPrimeraCuota);
-    const cuotasAdicionales = numeroCuota - 1;
 
     switch (periodicidad) {
       case PeriodicidadPago.DIARIO:
-        fecha.setDate(fecha.getDate() + cuotasAdicionales);
+        // Para la primera cuota, ajustar si cae en domingo
+        if (numeroCuota === 1) {
+          if (fecha.getDay() === 0) {
+            fecha.setDate(fecha.getDate() + 1);
+          }
+        } else {
+          // Para las siguientes cuotas, agregar días excluyendo domingos
+          const cuotasAdicionales = numeroCuota - 1;
+          this.agregarDiasHabilesExcluyendoDomingos(fecha, cuotasAdicionales);
+        }
         break;
       case PeriodicidadPago.SEMANAL:
-        fecha.setDate(fecha.getDate() + cuotasAdicionales * 7);
+        fecha.setDate(fecha.getDate() + (numeroCuota - 1) * 7);
         break;
       case PeriodicidadPago.QUINCENAL:
-        fecha.setDate(fecha.getDate() + cuotasAdicionales * 15);
+        fecha.setDate(fecha.getDate() + (numeroCuota - 1) * 15);
         break;
       case PeriodicidadPago.MENSUAL:
-        fecha.setMonth(fecha.getMonth() + cuotasAdicionales);
+        fecha.setMonth(fecha.getMonth() + (numeroCuota - 1));
         break;
       case PeriodicidadPago.TRIMESTRAL:
-        fecha.setMonth(fecha.getMonth() + cuotasAdicionales * 3);
+        fecha.setMonth(fecha.getMonth() + (numeroCuota - 1) * 3);
         break;
       case PeriodicidadPago.SEMESTRAL:
-        fecha.setMonth(fecha.getMonth() + cuotasAdicionales * 6);
+        fecha.setMonth(fecha.getMonth() + (numeroCuota - 1) * 6);
         break;
       case PeriodicidadPago.ANUAL:
-        fecha.setFullYear(fecha.getFullYear() + cuotasAdicionales);
+        fecha.setFullYear(fecha.getFullYear() + (numeroCuota - 1));
         break;
       case PeriodicidadPago.AL_VENCIMIENTO:
         // No se modifica la fecha
@@ -198,6 +207,35 @@ export class PlanPagoService {
     }
 
     return this.redondear(totalRecargos);
+  }
+
+  /**
+   * Agrega días hábiles a una fecha, excluyendo domingos
+   * Si una fecha cae en domingo (getDay() === 0), se mueve al lunes siguiente
+   *
+   * IMPORTANTE: Esta función asume que la fecha inicial ya ha sido validada
+   * y no es domingo (el ajuste de la fecha inicial debe hacerse antes de llamar
+   * a este método)
+   *
+   * @param fecha - Fecha base a modificar (se modifica in-place)
+   * @param diasAgregar - Número de días hábiles a agregar desde la fecha base
+   */
+  private agregarDiasHabilesExcluyendoDomingos(fecha: Date, diasAgregar: number): void {
+    // Ajustar la fecha inicial si es domingo antes de empezar a agregar días
+    if (fecha.getDay() === 0) {
+      fecha.setDate(fecha.getDate() + 1);
+    }
+
+    // Agregar los días adicionales, saltando domingos
+    for (let i = 0; i < diasAgregar; i++) {
+      // Agregar 1 día
+      fecha.setDate(fecha.getDate() + 1);
+
+      // Si cae en domingo (0), avanzar al lunes
+      if (fecha.getDay() === 0) {
+        fecha.setDate(fecha.getDate() + 1);
+      }
+    }
   }
 
   /**

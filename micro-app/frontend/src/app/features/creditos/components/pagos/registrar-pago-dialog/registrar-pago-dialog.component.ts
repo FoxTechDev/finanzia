@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule, MatDialog } from '@angular/material/dialog';
@@ -102,6 +102,20 @@ import {
           </mat-form-field>
         </div>
 
+        <!-- Campo de Recargo Manual (solo visible cuando aplica y hay atraso) -->
+        @if (mostrarRecargoManual()) {
+          <div class="recargo-manual-section">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Recargo por Atraso ($)</mat-label>
+              <input matInput type="number" formControlName="recargoManual" step="0.01" min="0">
+              <mat-hint>Este tipo de crédito usa recargo manual en lugar de interés moratorio</mat-hint>
+              @if (pagoForm.get('recargoManual')?.invalid && pagoForm.get('recargoManual')?.touched) {
+                <mat-error>El recargo no puede ser negativo</mat-error>
+              }
+            </mat-form-field>
+          </div>
+        }
+
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Observaciones (opcional)</mat-label>
           <textarea matInput formControlName="observaciones" rows="2"></textarea>
@@ -196,6 +210,12 @@ import {
             </mat-expansion-panel-header>
 
             <div class="distribucion-grid">
+              @if (preview()!.distribucion.recargoManualAplicado > 0) {
+                <div class="dist-item recargo-manual">
+                  <span class="label">Recargo Manual:</span>
+                  <span class="valor">{{ preview()!.distribucion.recargoManualAplicado | currency:'USD' }}</span>
+                </div>
+              }
               <div class="dist-item">
                 <span class="label">Interés Moratorio:</span>
                 <span class="valor">{{ preview()!.distribucion.interesMoratorioAplicado | currency:'USD' }}</span>
@@ -447,6 +467,20 @@ import {
       color: #e65100;
     }
 
+    .dist-item.recargo-manual {
+      background: #fce4ec;
+      color: #c2185b;
+      border-left: 3px solid #c2185b;
+    }
+
+    .recargo-manual-section {
+      margin-top: 8px;
+      padding: 12px;
+      background: #fce4ec;
+      border-radius: 8px;
+      border-left: 4px solid #c2185b;
+    }
+
     .valor.mora {
       color: #d32f2f;
     }
@@ -487,11 +521,19 @@ export class RegistrarPagoDialogComponent implements OnInit {
 
   pagoForm: FormGroup;
 
+  // Computed signal para determinar si mostrar el campo de recargo manual
+  mostrarRecargoManual = computed(() => {
+    const prev = this.preview();
+    if (!prev) return false;
+    return prev.resumenAdeudo.recargoManual?.aplica && prev.resumenAdeudo.recargoManual?.tieneAtraso;
+  });
+
   constructor() {
     this.pagoForm = this.fb.group({
       fechaPago: [new Date(), Validators.required],
       montoPagar: [null, [Validators.required, Validators.min(0.01)]],
       observaciones: [''],
+      recargoManual: [0, [Validators.min(0)]],
     });
   }
 
@@ -516,14 +558,29 @@ export class RegistrarPagoDialogComponent implements OnInit {
     this.loadingPreview.set(true);
     const fechaPago = this.pagoForm.get('fechaPago')?.value;
     const fechaStr = this.formatDate(fechaPago);
+    const recargoManualValue = this.pagoForm.get('recargoManual')?.value;
 
     this.pagoService.preview({
       prestamoId: this.data.prestamo.id,
       montoPagar: Number(this.pagoForm.get('montoPagar')?.value),
       fechaPago: fechaStr,
+      recargoManual: recargoManualValue !== null && recargoManualValue !== undefined
+        ? Number(recargoManualValue)
+        : undefined,
     }).subscribe({
       next: (data) => {
         this.preview.set(data);
+        // Si aplica recargo manual y hay atraso, establecer el valor sugerido si no hay valor
+        if (data.resumenAdeudo.recargoManual?.aplica &&
+            data.resumenAdeudo.recargoManual?.tieneAtraso) {
+          const currentValue = this.pagoForm.get('recargoManual')?.value;
+          // Solo establecer el valor sugerido si el campo está vacío o es 0
+          if (!currentValue || currentValue === 0) {
+            this.pagoForm.patchValue({
+              recargoManual: data.resumenAdeudo.recargoManual.montoSugerido
+            });
+          }
+        }
         this.loadingPreview.set(false);
       },
       error: (err) => {
@@ -542,12 +599,16 @@ export class RegistrarPagoDialogComponent implements OnInit {
     this.procesando.set(true);
     const fechaPago = this.pagoForm.get('fechaPago')?.value;
     const fechaStr = this.formatDate(fechaPago);
+    const recargoManualValue = this.pagoForm.get('recargoManual')?.value;
 
     this.pagoService.crear({
       prestamoId: this.data.prestamo.id,
       montoPagar: Number(this.pagoForm.get('montoPagar')?.value),
       fechaPago: fechaStr,
       observaciones: this.pagoForm.get('observaciones')?.value || undefined,
+      recargoManual: recargoManualValue !== null && recargoManualValue !== undefined
+        ? Number(recargoManualValue)
+        : undefined,
     }).subscribe({
       next: (pago) => {
         this.procesando.set(false);

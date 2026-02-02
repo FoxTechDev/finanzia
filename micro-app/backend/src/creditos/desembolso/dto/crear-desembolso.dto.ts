@@ -6,6 +6,7 @@ import {
   IsArray,
   ValidateNested,
   IsOptional,
+  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PeriodicidadPago, TipoInteres } from '../entities/prestamo.entity';
@@ -25,6 +26,12 @@ export class CrearDesembolsoDto {
 
   @IsDateString()
   fechaPrimeraCuota: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Type(() => Number)
+  numeroCuotas?: number;
 
   @IsArray()
   @ValidateNested({ each: true })

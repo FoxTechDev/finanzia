@@ -10,6 +10,7 @@ import {
   AnularPagoRequest,
   ResumenAdeudo,
   EstadoCuenta,
+  EstadoCuentaDatos,
   FiltrosPago,
   PaginatedPagos,
   ReciboData,
@@ -118,5 +119,14 @@ export class PagoService {
     return this.http.get(`${this.apiUrl}/prestamo/${prestamoId}/estado-cuenta-pdf`, {
       responseType: 'blob'
     });
+  }
+
+  /**
+   * Obtiene los datos del estado de cuenta para visualización móvil
+   * @param prestamoId ID del préstamo
+   * @returns Observable con los datos del estado de cuenta
+   */
+  getEstadoCuentaDatos(prestamoId: number): Observable<EstadoCuentaDatos> {
+    return this.http.get<EstadoCuentaDatos>(`${this.apiUrl}/prestamo/${prestamoId}/estado-cuenta-datos`);
   }
 }

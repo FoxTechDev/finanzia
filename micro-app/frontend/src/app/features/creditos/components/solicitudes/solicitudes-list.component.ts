@@ -296,7 +296,9 @@ export class SolicitudesListComponent implements OnInit {
   }
 
   puedeTrasladarComite(codigoEstado?: string): boolean {
-    return codigoEstado === CODIGO_ESTADO_SOLICITUD.ANALIZADA;
+    // Permite trasladar desde ANALIZADA u OBSERVADA (re-envío después de correcciones)
+    return codigoEstado === CODIGO_ESTADO_SOLICITUD.ANALIZADA ||
+           codigoEstado === CODIGO_ESTADO_SOLICITUD.OBSERVADA;
   }
 
   nuevaSolicitud(): void {

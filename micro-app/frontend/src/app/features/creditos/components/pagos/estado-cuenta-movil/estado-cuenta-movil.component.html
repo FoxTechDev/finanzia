@@ -1,0 +1,186 @@
+<!-- Spinner de carga -->
+@if (cargando()) {
+  <div class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando estado de cuenta...</p>
+  </div>
+}
+
+<!-- Mensaje de error -->
+@if (error() && !cargando()) {
+  <div class="error-container">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error() }}</p>
+  </div>
+}
+
+<!-- Botones de acción (solo en pantalla, no se imprimen) -->
+@if (estadoCuenta() && !cargando()) {
+  <div class="acciones-estado no-print">
+    <button mat-raised-button color="primary" (click)="imprimir()">
+      <mat-icon>print</mat-icon>
+      Imprimir
+    </button>
+  </div>
+
+  <!-- Estado de Cuenta estilo térmico -->
+  <div class="estado-cuenta-termica">
+    <div class="header">
+      <div class="empresa-nombre">{{ estadoCuenta()!.institucion.nombre }}</div>
+      <div class="empresa-direccion">{{ estadoCuenta()!.institucion.direccion }}</div>
+      <div class="separador-doble">================================</div>
+    </div>
+
+    <div class="titulo">ESTADO DE CUENTA</div>
+    <div class="info-credito">Crédito: {{ estadoCuenta()!.prestamo.numeroCredito }}</div>
+    <div class="info-fecha">Fecha: {{ formatearFecha(estadoCuenta()!.fechaEmision) }}</div>
+
+    <div class="separador">--------------------------------</div>
+
+    <!-- Datos del Cliente -->
+    <div class="seccion-titulo">CLIENTE</div>
+    <div class="datos-linea">
+      <span class="label">Nombre:</span>
+      <span class="valor">{{ estadoCuenta()!.cliente.nombreCompleto }}</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">DUI:</span>
+      <span class="valor">{{ estadoCuenta()!.cliente.numeroDui }}</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">Teléfono:</span>
+      <span class="valor">{{ estadoCuenta()!.cliente.telefono }}</span>
+    </div>
+
+    <div class="separador">--------------------------------</div>
+
+    <!-- Datos del Préstamo -->
+    <div class="seccion-titulo">PRÉSTAMO</div>
+    <div class="datos-linea">
+      <span class="label">Tipo:</span>
+      <span class="valor">{{ estadoCuenta()!.prestamo.tipoCredito }}</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">Monto:</span>
+      <span class="valor">{{ estadoCuenta()!.prestamo.montoDesembolsado | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">Plazo:</span>
+      <span class="valor">{{ estadoCuenta()!.prestamo.plazoMeses }} meses</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">Tasa:</span>
+      <span class="valor">{{ formatearPorcentaje(estadoCuenta()!.prestamo.tasaInteres) }}</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">Estado:</span>
+      <span class="valor estado-credito" [class.mora]="estadoCuenta()!.saldos.diasMora > 0">
+        {{ estadoCuenta()!.prestamo.estado }}
+      </span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">F. Otorg.:</span>
+      <span class="valor">{{ formatearFecha(estadoCuenta()!.prestamo.fechaOtorgamiento) }}</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">F. Venc.:</span>
+      <span class="valor">{{ formatearFecha(estadoCuenta()!.prestamo.fechaVencimiento) }}</span>
+    </div>
+
+    <div class="separador">--------------------------------</div>
+
+    <!-- Saldos Actuales -->
+    <div class="seccion-titulo">SALDOS ACTUALES</div>
+    <div class="datos-linea">
+      <span class="label">Capital:</span>
+      <span class="valor">{{ estadoCuenta()!.saldos.saldoCapital | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">Interés:</span>
+      <span class="valor">{{ estadoCuenta()!.saldos.saldoInteres | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+    @if (estadoCuenta()!.saldos.capitalMora > 0 || estadoCuenta()!.saldos.interesMora > 0) {
+      <div class="datos-linea mora">
+        <span class="label">Cap. Mora:</span>
+        <span class="valor">{{ estadoCuenta()!.saldos.capitalMora | currency:'USD':'symbol':'1.2-2' }}</span>
+      </div>
+      <div class="datos-linea mora">
+        <span class="label">Int. Mora:</span>
+        <span class="valor">{{ estadoCuenta()!.saldos.interesMora | currency:'USD':'symbol':'1.2-2' }}</span>
+      </div>
+      <div class="datos-linea mora">
+        <span class="label">Días Mora:</span>
+        <span class="valor">{{ estadoCuenta()!.saldos.diasMora }}</span>
+      </div>
+    }
+    <div class="saldo-total">
+      <span class="label">SALDO TOTAL:</span>
+      <span class="valor-destacado">{{ estadoCuenta()!.saldos.saldoTotal | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+
+    <div class="separador">--------------------------------</div>
+
+    <!-- Resumen de Pagos -->
+    <div class="seccion-titulo">RESUMEN DE PAGOS</div>
+    <div class="datos-linea">
+      <span class="label">N° Pagos:</span>
+      <span class="valor">{{ estadoCuenta()!.resumenPagos.numeroPagos }}</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">Capital:</span>
+      <span class="valor">{{ estadoCuenta()!.resumenPagos.capitalPagado | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">Interés:</span>
+      <span class="valor">{{ estadoCuenta()!.resumenPagos.interesPagado | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+    @if (estadoCuenta()!.resumenPagos.recargosPagado > 0) {
+      <div class="datos-linea">
+        <span class="label">Recargos:</span>
+        <span class="valor">{{ estadoCuenta()!.resumenPagos.recargosPagado | currency:'USD':'symbol':'1.2-2' }}</span>
+      </div>
+    }
+    @if (estadoCuenta()!.resumenPagos.moratorioPagado > 0) {
+      <div class="datos-linea">
+        <span class="label">Mora:</span>
+        <span class="valor">{{ estadoCuenta()!.resumenPagos.moratorioPagado | currency:'USD':'symbol':'1.2-2' }}</span>
+      </div>
+    }
+    <div class="total-pagado">
+      <span class="label">TOTAL PAGADO:</span>
+      <span class="valor-destacado">{{ estadoCuenta()!.resumenPagos.totalPagado | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+
+    <div class="separador">--------------------------------</div>
+
+    <!-- Detalle de Pagos -->
+    <div class="seccion-titulo">DETALLE DE PAGOS</div>
+    @if (estadoCuenta()!.pagos.length === 0) {
+      <div class="sin-pagos">Sin pagos registrados</div>
+    } @else {
+      <div class="tabla-header">
+        <span class="col-no">N°</span>
+        <span class="col-fecha">Fecha</span>
+        <span class="col-monto">Monto</span>
+      </div>
+      @for (pago of estadoCuenta()!.pagos; track pago.numero) {
+        <div class="tabla-row">
+          <span class="col-no">{{ pago.numero }}</span>
+          <span class="col-fecha">{{ formatearFecha(pago.fechaPago) }}</span>
+          <span class="col-monto">{{ pago.montoPagado | currency:'USD':'symbol':'1.2-2' }}</span>
+        </div>
+      }
+    }
+
+    <div class="separador-doble">================================</div>
+
+    <!-- Leyenda -->
+    <div class="leyenda">
+      Documento informativo
+      <br>
+      generado el {{ formatearFecha(estadoCuenta()!.fechaEmision) }}
+    </div>
+
+    <div class="separador-doble">================================</div>
+  </div>
+}

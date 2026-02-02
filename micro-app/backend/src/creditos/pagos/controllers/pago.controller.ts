@@ -93,6 +93,17 @@ export class PagoController {
   }
 
   /**
+   * Obtener datos del estado de cuenta para visualización móvil
+   * GET /api/pagos/prestamo/:prestamoId/estado-cuenta-datos
+   */
+  @Get('prestamo/:prestamoId/estado-cuenta-datos')
+  async getEstadoCuentaDatos(
+    @Param('prestamoId', ParseIntPipe) prestamoId: number,
+  ) {
+    return this.estadoCuentaPdfService.obtenerDatosEstadoCuenta(prestamoId);
+  }
+
+  /**
    * Generar PDF del estado de cuenta de un préstamo
    * GET /api/pagos/prestamo/:prestamoId/estado-cuenta-pdf
    */

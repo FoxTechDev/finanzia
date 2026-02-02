@@ -38,6 +38,9 @@ export class TipoDeduccion {
   @Column({ default: true })
   activo: boolean;
 
+  @Column({ default: false })
+  cancelacionPrestamo: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

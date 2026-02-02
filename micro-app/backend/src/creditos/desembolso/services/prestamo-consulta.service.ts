@@ -202,6 +202,44 @@ export class PrestamoConsultaService {
   }
 
   /**
+   * Obtiene los préstamos activos (VIGENTE o MORA) de un cliente específico
+   * Usado para la funcionalidad de refinanciamiento
+   */
+  async obtenerPrestamosActivosPorCliente(personaId: number): Promise<PrestamoResumenDto[]> {
+    const prestamos = await this.prestamoRepository
+      .createQueryBuilder('prestamo')
+      .leftJoinAndSelect('prestamo.persona', 'persona')
+      .leftJoinAndSelect('prestamo.tipoCredito', 'tipoCredito')
+      .leftJoinAndSelect('prestamo.clasificacionPrestamo', 'clasificacion')
+      .leftJoinAndSelect('prestamo.estadoPrestamoRelacion', 'estadoRelacion')
+      .where('prestamo.personaId = :personaId', { personaId })
+      .andWhere('prestamo.estado IN (:...estados)', { estados: ['VIGENTE', 'MORA'] })
+      .orderBy('prestamo.fechaOtorgamiento', 'DESC')
+      .getMany();
+
+    return Promise.all(prestamos.map((p) => this.transformarAResumenConSaldoTotal(p)));
+  }
+
+  /**
+   * Transforma una entidad Prestamo a DTO de resumen con saldo total (para refinanciamiento)
+   */
+  private async transformarAResumenConSaldoTotal(prestamo: Prestamo): Promise<PrestamoResumenDto & { saldoTotal: number }> {
+    const resumen = await this.transformarAResumen(prestamo);
+
+    // Calcular saldo total: saldoCapital + saldoInteres + capitalMora + interesMora
+    const saldoTotal =
+      Number(prestamo.saldoCapital) +
+      Number(prestamo.saldoInteres) +
+      Number(prestamo.capitalMora) +
+      Number(prestamo.interesMora);
+
+    return {
+      ...resumen,
+      saldoTotal,
+    };
+  }
+
+  /**
    * Construye las condiciones de filtrado
    */
   private construirFiltros(filtros: FiltrosPrestamoDto): FindOptionsWhere<Prestamo> {
@@ -281,6 +319,7 @@ export class PrestamoConsultaService {
         nombre: prestamo.tipoCredito?.nombre || '',
       },
       montoAutorizado: Number(prestamo.montoAutorizado),
+      montoDesembolsado: Number(prestamo.montoDesembolsado),
       saldoCapital: Number(prestamo.saldoCapital),
       diasMora: prestamo.diasMora,
       fechaOtorgamiento: prestamo.fechaOtorgamiento,

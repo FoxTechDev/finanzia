@@ -18,6 +18,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 
 import { DesembolsoService } from '../../../services/desembolso.service';
+import { SolicitudService } from '../../../services/solicitud.service';
 import {
   Solicitud,
   TipoDeduccion,
@@ -33,6 +34,8 @@ import {
   CrearDesembolsoRequest,
   DeduccionDesembolsoDto,
   RecargoDesembolsoDto,
+  PlanPagoCalculado,
+  PrestamoActivo,
 } from '@core/models/credito.model';
 
 @Component({
@@ -104,6 +107,36 @@ import {
           <ng-template matStepLabel>Configuración</ng-template>
 
           <form [formGroup]="configForm" class="step-content">
+            <!-- Datos del Plan de la Solicitud (solo lectura) -->
+            @if (planSolicitud()) {
+              <div class="plan-solicitud-info">
+                <h4><mat-icon>info</mat-icon> Configuración del Plan de Pago (de la Solicitud)</h4>
+                <div class="plan-info-grid">
+                  <div class="plan-info-item">
+                    <span class="label">Periodicidad:</span>
+                    <span class="value highlight">{{ getPeriodicidadNombre() }}</span>
+                  </div>
+                  <div class="plan-info-item">
+                    <span class="label">Tipo de Interés:</span>
+                    <span class="value">{{ getTipoInteresNombre() }}</span>
+                  </div>
+                  <div class="plan-info-item">
+                    <span class="label">Número de Cuotas:</span>
+                    <span class="value">{{ planSolicitud()!.numeroCuotas }}</span>
+                  </div>
+                  <div class="plan-info-item">
+                    <span class="label">Cuota Estimada:</span>
+                    <span class="value amount">{{ planSolicitud()!.cuotaNormal | currency:'USD' }}</span>
+                  </div>
+                </div>
+              </div>
+            } @else if (loadingPlanSolicitud()) {
+              <div class="loading-plan">
+                <mat-spinner diameter="24"></mat-spinner>
+                <span>Cargando plan de la solicitud...</span>
+              </div>
+            }
+
             <div class="form-row">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Periodicidad de Pago</mat-label>
@@ -131,13 +164,73 @@ import {
               </mat-form-field>
             </div>
 
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Fecha Primera Cuota</mat-label>
-              <input matInput [matDatepicker]="picker" formControlName="fechaPrimeraCuota">
-              <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-              <mat-datepicker #picker></mat-datepicker>
-            </mat-form-field>
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Número de Cuotas</mat-label>
+                <input matInput type="number" formControlName="numeroCuotas" min="1">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Fecha Primera Cuota</mat-label>
+                <input matInput [matDatepicker]="picker" formControlName="fechaPrimeraCuota">
+                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+              </mat-form-field>
+            </div>
           </form>
+
+          <!-- Mostrar Plan de Pago de la Solicitud -->
+          @if (planSolicitud() && planSolicitud()!.planPago.length > 0) {
+            <div class="plan-solicitud-preview">
+              <h4><mat-icon>table_chart</mat-icon> Plan de Pago Proyectado (de la Solicitud)</h4>
+              <div class="plan-totales">
+                <div class="total-item">
+                  <span class="label">Total Interés:</span>
+                  <span class="value">{{ planSolicitud()!.totalInteres | currency:'USD' }}</span>
+                </div>
+                <div class="total-item">
+                  <span class="label">Total a Pagar:</span>
+                  <span class="value amount">{{ planSolicitud()!.totalPagar | currency:'USD' }}</span>
+                </div>
+              </div>
+              <div class="table-container">
+                <table mat-table [dataSource]="planSolicitud()!.planPago" class="plan-pago-table">
+                  <ng-container matColumnDef="numeroCuota">
+                    <th mat-header-cell *matHeaderCellDef>N°</th>
+                    <td mat-cell *matCellDef="let row">{{ row.numeroCuota }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="fechaVencimiento">
+                    <th mat-header-cell *matHeaderCellDef>Vencimiento</th>
+                    <td mat-cell *matCellDef="let row">{{ row.fechaVencimiento | date:'dd/MM/yyyy' }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="capital">
+                    <th mat-header-cell *matHeaderCellDef>Capital</th>
+                    <td mat-cell *matCellDef="let row">{{ row.capital | currency:'USD' }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="interes">
+                    <th mat-header-cell *matHeaderCellDef>Interés</th>
+                    <td mat-cell *matCellDef="let row">{{ row.interes | currency:'USD' }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="cuotaTotal">
+                    <th mat-header-cell *matHeaderCellDef>Total</th>
+                    <td mat-cell *matCellDef="let row"><strong>{{ row.cuotaTotal | currency:'USD' }}</strong></td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="saldoCapital">
+                    <th mat-header-cell *matHeaderCellDef>Saldo</th>
+                    <td mat-cell *matCellDef="let row">{{ row.saldoCapital | currency:'USD' }}</td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="planSolicitudColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: planSolicitudColumns;"></tr>
+                </table>
+              </div>
+            </div>
+          }
 
           <div class="step-actions">
             <button mat-button matStepperNext>
@@ -188,11 +281,30 @@ import {
                     </mat-select>
                   </mat-form-field>
 
+                  @if (esTipoCancelacionPrestamo(deduccion.get('tipoDeduccionId')?.value)) {
+                    <mat-form-field appearance="outline" class="prestamo-select">
+                      <mat-label>Préstamo a Cancelar</mat-label>
+                      <mat-select formControlName="prestamoACancelarId" (selectionChange)="onPrestamoACancelarChange(i)">
+                        <mat-option [value]="null">-- Seleccione --</mat-option>
+                        @for (prestamo of prestamosActivos(); track prestamo.id) {
+                          <mat-option [value]="prestamo.id">
+                            {{ prestamo.numeroCredito }} - {{ prestamo.estado }} - Saldo: {{ prestamo.saldoTotal | currency:'USD' }}
+                          </mat-option>
+                        }
+                      </mat-select>
+                      @if (prestamosActivos().length === 0 && !loadingPrestamosActivos()) {
+                        <mat-hint>El cliente no tiene préstamos activos</mat-hint>
+                      }
+                    </mat-form-field>
+                  }
+
                   <mat-form-field appearance="outline">
                     <mat-label>
                       {{ deduccion.get('tipoCalculo')?.value === 'PORCENTAJE' ? 'Porcentaje (%)' : 'Monto ($)' }}
                     </mat-label>
-                    <input matInput type="number" formControlName="valor" step="0.01" min="0" [max]="deduccion.get('tipoCalculo')?.value === 'PORCENTAJE' ? 100 : null">
+                    <input matInput type="number" formControlName="valor" step="0.01" min="0"
+                      [max]="deduccion.get('tipoCalculo')?.value === 'PORCENTAJE' ? 100 : null"
+                      [readonly]="esTipoCancelacionPrestamo(deduccion.get('tipoDeduccionId')?.value) && deduccion.get('prestamoACancelarId')?.value">
                     @if (deduccion.get('valor')?.invalid && deduccion.get('valor')?.touched) {
                       <mat-error>
                         @if (deduccion.get('valor')?.hasError('required')) {
@@ -205,6 +317,9 @@ import {
                           El porcentaje no puede ser mayor a 100%
                         }
                       </mat-error>
+                    }
+                    @if (esTipoCancelacionPrestamo(deduccion.get('tipoDeduccionId')?.value)) {
+                      <mat-hint>Monto calculado del saldo total</mat-hint>
                     }
                   </mat-form-field>
 
@@ -588,6 +703,15 @@ import {
       max-width: 100px;
     }
 
+    .prestamo-select {
+      min-width: 280px;
+    }
+
+    .deduccion-row.cancelacion-prestamo {
+      background: #fff3e0;
+      border: 1px solid #ff9800;
+    }
+
     .step-actions {
       display: flex;
       justify-content: space-between;
@@ -697,6 +821,107 @@ import {
     mat-dialog-actions {
       padding: 16px 24px;
     }
+
+    .plan-solicitud-info {
+      background: #e8f5e9;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .plan-solicitud-info h4 {
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #2e7d32;
+      font-size: 14px;
+    }
+
+    .plan-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .plan-info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .plan-info-item .label {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .plan-info-item .value {
+      font-weight: 500;
+    }
+
+    .plan-info-item .value.highlight {
+      color: #1976d2;
+    }
+
+    .plan-info-item .value.amount {
+      color: #2e7d32;
+    }
+
+    .loading-plan {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .plan-solicitud-preview {
+      margin-top: 20px;
+      padding: 16px;
+      background: #fafafa;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .plan-solicitud-preview h4 {
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .plan-totales {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #e3f2fd;
+      border-radius: 6px;
+    }
+
+    .total-item {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .total-item .label {
+      color: #666;
+      font-size: 13px;
+    }
+
+    .total-item .value {
+      font-weight: 600;
+    }
+
+    .total-item .value.amount {
+      color: #1976d2;
+      font-size: 16px;
+    }
   `],
 })
 export class CrearDesembolsoDialogComponent implements OnInit {
@@ -704,6 +929,7 @@ export class CrearDesembolsoDialogComponent implements OnInit {
 
   private fb = inject(FormBuilder);
   private desembolsoService = inject(DesembolsoService);
+  private solicitudService = inject(SolicitudService);
   private snackBar = inject(MatSnackBar);
   dialogRef = inject(MatDialogRef<CrearDesembolsoDialogComponent>);
   data = inject<{ solicitud: Solicitud }>(MAT_DIALOG_DATA);
@@ -714,7 +940,16 @@ export class CrearDesembolsoDialogComponent implements OnInit {
   loadingPreview = signal(false);
   procesando = signal(false);
 
+  // Plan de pago de la solicitud
+  planSolicitud = signal<PlanPagoCalculado | null>(null);
+  loadingPlanSolicitud = signal(false);
+
+  // Préstamos activos del cliente (para refinanciamiento)
+  prestamosActivos = signal<PrestamoActivo[]>([]);
+  loadingPrestamosActivos = signal(false);
+
   planPagoColumns = ['numeroCuota', 'fechaVencimiento', 'capital', 'interes', 'recargos', 'cuotaTotal', 'saldoCapital'];
+  planSolicitudColumns = ['numeroCuota', 'fechaVencimiento', 'capital', 'interes', 'cuotaTotal', 'saldoCapital'];
 
   tipoInteresOptions = Object.entries(TIPO_INTERES_LABELS).map(([value, label]) => ({ value, label }));
   periodicidadOptions = Object.entries(PERIODICIDAD_PAGO_LABELS).map(([value, label]) => ({ value, label }));
@@ -731,6 +966,7 @@ export class CrearDesembolsoDialogComponent implements OnInit {
     this.configForm = this.fb.group({
       periodicidadPago: [PeriodicidadPago.MENSUAL, Validators.required],
       tipoInteres: [TipoInteres.FLAT, Validators.required],
+      numeroCuotas: [12, [Validators.required, Validators.min(1)]],
       fechaPrimeraCuota: [fechaDefault, Validators.required],
     });
 
@@ -745,6 +981,134 @@ export class CrearDesembolsoDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarCatalogos();
+    this.cargarPlanSolicitud();
+    this.cargarPrestamosActivos();
+  }
+
+  /**
+   * Carga los préstamos activos del cliente (para refinanciamiento)
+   */
+  cargarPrestamosActivos(): void {
+    const personaId = this.data.solicitud.personaId;
+    if (!personaId) return;
+
+    this.loadingPrestamosActivos.set(true);
+    this.desembolsoService.getPrestamosActivosCliente(personaId).subscribe({
+      next: (prestamos) => {
+        this.prestamosActivos.set(prestamos);
+        this.loadingPrestamosActivos.set(false);
+      },
+      error: (err) => {
+        console.error('Error cargando préstamos activos:', err);
+        this.loadingPrestamosActivos.set(false);
+      },
+    });
+  }
+
+  /**
+   * Carga el plan de pago guardado de la solicitud
+   */
+  cargarPlanSolicitud(): void {
+    this.loadingPlanSolicitud.set(true);
+
+    this.solicitudService.obtenerPlanPago(this.data.solicitud.id).subscribe({
+      next: (planGuardado: any) => {
+        if (planGuardado.planPago && planGuardado.planPago.length > 0) {
+          const totales = planGuardado.totales || {};
+          const numeroCuotas = planGuardado.planPago.length;
+
+          const plan: PlanPagoCalculado = {
+            cuotaNormal: Number(totales.cuotaNormal) || Number(planGuardado.planPago[0]?.cuotaTotal) || 0,
+            numeroCuotas,
+            totalInteres: Number(totales.totalInteres) || 0,
+            totalPagar: Number(totales.totalPagar) || 0,
+            planPago: planGuardado.planPago.map((cuota: any) => ({
+              numeroCuota: cuota.numeroCuota,
+              fechaVencimiento: cuota.fechaVencimiento,
+              capital: Number(cuota.capital),
+              interes: Number(cuota.interes),
+              recargos: Number(cuota.recargos) || 0,
+              cuotaTotal: Number(cuota.cuotaTotal),
+              saldoCapital: Number(cuota.saldoCapital),
+            })),
+          };
+
+          this.planSolicitud.set(plan);
+
+          // Configurar el formulario con los datos del plan
+          this.configurarFormularioConPlan(plan, planGuardado);
+        }
+        this.loadingPlanSolicitud.set(false);
+      },
+      error: () => {
+        this.loadingPlanSolicitud.set(false);
+        // Usar valores por defecto de la solicitud
+        this.configurarFormularioConSolicitud();
+      },
+    });
+  }
+
+  /**
+   * Configura el formulario con los datos del plan guardado
+   */
+  private configurarFormularioConPlan(plan: PlanPagoCalculado, planGuardado: any): void {
+    // Obtener periodicidad del plan
+    const periodicidad = this.data.solicitud.periodicidadPago?.codigo ||
+                         this.data.solicitud.tipoCredito?.periodicidadPago ||
+                         'MENSUAL';
+
+    // Obtener tipo de interés de la solicitud, o del tipo de crédito como fallback
+    const tipoInteres = this.data.solicitud.tipoInteres ||
+                        this.data.solicitud.tipoCredito?.tipoCuota ||
+                        'FLAT';
+
+    // Fecha de primera cuota del plan
+    const fechaPrimeraCuota = plan.planPago[0]?.fechaVencimiento
+      ? new Date(plan.planPago[0].fechaVencimiento)
+      : new Date();
+
+    this.configForm.patchValue({
+      periodicidadPago: periodicidad,
+      tipoInteres: tipoInteres,
+      numeroCuotas: plan.numeroCuotas,
+      fechaPrimeraCuota: fechaPrimeraCuota,
+    });
+  }
+
+  /**
+   * Configura el formulario con los datos de la solicitud (cuando no hay plan guardado)
+   */
+  private configurarFormularioConSolicitud(): void {
+    const periodicidad = this.data.solicitud.periodicidadPago?.codigo ||
+                         this.data.solicitud.tipoCredito?.periodicidadPago ||
+                         'MENSUAL';
+    // Obtener tipo de interés de la solicitud, o del tipo de crédito como fallback
+    const tipoInteres = this.data.solicitud.tipoInteres ||
+                        this.data.solicitud.tipoCredito?.tipoCuota ||
+                        'FLAT';
+    const plazo = this.data.solicitud.plazoAprobado || this.data.solicitud.plazoSolicitado;
+
+    this.configForm.patchValue({
+      periodicidadPago: periodicidad,
+      tipoInteres: tipoInteres,
+      numeroCuotas: plazo, // Por defecto, el número de cuotas es igual al plazo en meses
+    });
+  }
+
+  /**
+   * Obtiene el nombre de la periodicidad de pago
+   */
+  getPeriodicidadNombre(): string {
+    const codigo = this.configForm.get('periodicidadPago')?.value;
+    return PERIODICIDAD_PAGO_LABELS[codigo as keyof typeof PERIODICIDAD_PAGO_LABELS] || codigo;
+  }
+
+  /**
+   * Obtiene el nombre del tipo de interés
+   */
+  getTipoInteresNombre(): string {
+    const codigo = this.configForm.get('tipoInteres')?.value;
+    return TIPO_INTERES_LABELS[codigo as keyof typeof TIPO_INTERES_LABELS] || codigo;
   }
 
   get deduccionesArray(): FormArray {
@@ -770,6 +1134,7 @@ export class CrearDesembolsoDialogComponent implements OnInit {
       nombre: [''],
       tipoCalculo: [TipoCalculo.PORCENTAJE, Validators.required],
       valor: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
+      prestamoACancelarId: [null],
     });
 
     // Agregar validador condicional: si no tiene tipoDeduccionId, nombre es requerido
@@ -781,6 +1146,18 @@ export class CrearDesembolsoDialogComponent implements OnInit {
         nombreControl?.clearValidators();
       }
       nombreControl?.updateValueAndValidity();
+    });
+
+    // Actualizar validadores de valor según el tipo de cálculo
+    deduccionGroup.get('tipoCalculo')?.valueChanges.subscribe(tipoCalculo => {
+      const valorControl = deduccionGroup.get('valor');
+      if (tipoCalculo === TipoCalculo.PORCENTAJE) {
+        valorControl?.setValidators([Validators.required, Validators.min(0), Validators.max(100)]);
+      } else {
+        // Para FIJO, no hay límite máximo
+        valorControl?.setValidators([Validators.required, Validators.min(0)]);
+      }
+      valorControl?.updateValueAndValidity();
     });
 
     this.deduccionesArray.push(deduccionGroup);
@@ -797,11 +1174,58 @@ export class CrearDesembolsoDialogComponent implements OnInit {
     if (tipoId) {
       const tipo = this.tiposDeduccion().find(t => t.id === tipoId);
       if (tipo) {
+        // Si es tipo de cancelación de préstamo, forzar FIJO y resetear valor
+        if (tipo.cancelacionPrestamo) {
+          control.patchValue({
+            tipoCalculo: TipoCalculo.FIJO,
+            valor: 0,
+            prestamoACancelarId: null,
+          });
+        } else {
+          control.patchValue({
+            tipoCalculo: tipo.tipoCalculoDefault,
+            valor: tipo.valorDefault,
+            prestamoACancelarId: null,
+          });
+        }
+      }
+    } else {
+      // Si se deselecciona el tipo, limpiar el préstamo a cancelar
+      control.patchValue({
+        prestamoACancelarId: null,
+      });
+    }
+  }
+
+  /**
+   * Verifica si una deducción es de tipo cancelación de préstamo
+   */
+  esTipoCancelacionPrestamo(tipoDeduccionId: number | null): boolean {
+    if (!tipoDeduccionId) return false;
+    const tipo = this.tiposDeduccion().find(t => t.id === tipoDeduccionId);
+    return tipo?.cancelacionPrestamo || false;
+  }
+
+  /**
+   * Maneja el cambio de selección de préstamo a cancelar
+   */
+  onPrestamoACancelarChange(index: number): void {
+    const control = this.deduccionesArray.at(index);
+    const prestamoACancelarId = control.get('prestamoACancelarId')?.value;
+
+    if (prestamoACancelarId) {
+      const prestamo = this.prestamosActivos().find(p => p.id === prestamoACancelarId);
+      if (prestamo) {
+        // Auto-completar el valor con el saldo total del préstamo
         control.patchValue({
-          tipoCalculo: tipo.tipoCalculoDefault,
-          valor: tipo.valorDefault,
+          valor: prestamo.saldoTotal,
+          tipoCalculo: TipoCalculo.FIJO,
         });
       }
+    } else {
+      control.patchValue({
+        valor: 0,
+      });
     }
   }
 
@@ -878,6 +1302,7 @@ export class CrearDesembolsoDialogComponent implements OnInit {
       periodicidadPago: this.configForm.get('periodicidadPago')?.value,
       tipoInteres: this.configForm.get('tipoInteres')?.value,
       fechaPrimeraCuota: fechaStr,
+      numeroCuotas: this.configForm.get('numeroCuotas')?.value,
       deducciones: this.transformarDeducciones(),
       recargos: this.transformarRecargos(),
     };
@@ -917,6 +1342,7 @@ export class CrearDesembolsoDialogComponent implements OnInit {
       periodicidadPago: this.configForm.get('periodicidadPago')?.value,
       tipoInteres: this.configForm.get('tipoInteres')?.value,
       fechaPrimeraCuota: fechaStr,
+      numeroCuotas: this.configForm.get('numeroCuotas')?.value,
       deducciones: this.transformarDeducciones(),
       recargos: this.transformarRecargos(),
     };
@@ -945,6 +1371,16 @@ export class CrearDesembolsoDialogComponent implements OnInit {
       if (!deduccion.tipoDeduccionId && (!deduccion.nombre || deduccion.nombre.trim() === '')) {
         this.snackBar.open(
           `Deducción ${i + 1}: debe seleccionar un tipo o ingresar un nombre`,
+          'Cerrar',
+          { duration: 4000 }
+        );
+        return false;
+      }
+
+      // Si es tipo de cancelación de préstamo, debe seleccionar un préstamo
+      if (this.esTipoCancelacionPrestamo(deduccion.tipoDeduccionId) && !deduccion.prestamoACancelarId) {
+        this.snackBar.open(
+          `Deducción ${i + 1}: debe seleccionar el préstamo a cancelar`,
           'Cerrar',
           { duration: 4000 }
         );
@@ -1052,6 +1488,11 @@ export class CrearDesembolsoDialogComponent implements OnInit {
       } else {
         // Si no tiene tipo, debe tener nombre
         dto.nombre = deduccion.nombre.trim();
+      }
+
+      // Incluir prestamoACancelarId si existe (para refinanciamiento)
+      if (deduccion.prestamoACancelarId) {
+        dto.prestamoACancelarId = deduccion.prestamoACancelarId;
       }
 
       return dto;

@@ -75,6 +75,15 @@ export class TipoCredito {
   @Column({ default: false })
   requiereGarantia: boolean;
 
+  // Recargo manual (no aplica interés moratorio automático)
+  // Si es true, en lugar de calcular interés moratorio, se aplica un recargo fijo editable
+  @Column({ default: false })
+  aplicaRecargoManual: boolean;
+
+  // Monto del recargo manual que se aplica cuando hay atraso
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
+  montoRecargo: number;
+
   // Vigencia del producto
   @Column({ type: 'date' })
   fechaVigenciaDesde: Date;

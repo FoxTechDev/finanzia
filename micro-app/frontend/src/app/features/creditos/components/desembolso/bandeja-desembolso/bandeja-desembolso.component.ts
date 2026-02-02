@@ -284,7 +284,8 @@ export class BandejaDesembolsoComponent implements OnInit {
 
   montoTotal = computed(() => {
     return this.solicitudes().reduce((sum, s) => {
-      return sum + (s.montoAprobado || s.montoSolicitado);
+      const monto = Number(s.montoAprobado) || Number(s.montoSolicitado) || 0;
+      return sum + monto;
     }, 0);
   });
 

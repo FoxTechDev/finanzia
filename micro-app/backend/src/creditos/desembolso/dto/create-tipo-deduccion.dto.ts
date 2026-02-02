@@ -35,6 +35,10 @@ export class CreateTipoDeduccionDto {
   @IsOptional()
   @IsBoolean()
   activo?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  cancelacionPrestamo?: boolean;
 }
 
 export class UpdateTipoDeduccionDto {
@@ -64,4 +68,8 @@ export class UpdateTipoDeduccionDto {
   @IsOptional()
   @IsBoolean()
   activo?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  cancelacionPrestamo?: boolean;
 }

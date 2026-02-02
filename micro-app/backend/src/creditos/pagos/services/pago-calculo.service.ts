@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { PlanPago, EstadoCuota } from '../../desembolso/entities/plan-pago.entity';
 import { Prestamo, EstadoPrestamo } from '../../desembolso/entities/prestamo.entity';
 import { CalculoInteresService } from '../../desembolso/services/calculo-interes.service';
@@ -53,6 +53,12 @@ export interface ResumenAdeudo {
   cuotasVencidas: number;
   cuotasParciales: number;
   proximaCuota: CuotaPendiente | null;
+  // Información de recargo manual
+  recargoManual: {
+    aplica: boolean;           // true si el tipo de crédito usa recargo manual
+    montoSugerido: number;     // monto por defecto del tipo de crédito
+    tieneAtraso: boolean;      // true si hay cuotas vencidas
+  };
 }
 
 export interface DistribucionPago {
@@ -60,6 +66,7 @@ export interface DistribucionPago {
   interesAplicado: number;
   recargosAplicado: number;
   interesMoratorioAplicado: number;
+  recargoManualAplicado: number;  // Recargo manual cuando aplica
   excedente: number;
   cuotasAfectadas: CuotaAplicacion[];
   tipoPago: TipoPago;
@@ -92,6 +99,16 @@ export class PagoCalculoService {
   ) {}
 
   /**
+   * Normaliza una fecha a medianoche (00:00:00) para comparaciones de solo fecha
+   * Esto evita problemas donde la hora del día afecta la comparación
+   */
+  private normalizarFecha(fecha: Date): Date {
+    const normalizada = new Date(fecha);
+    normalizada.setHours(0, 0, 0, 0);
+    return normalizada;
+  }
+
+  /**
    * Obtiene el resumen completo de adeudo de un préstamo
    */
   async obtenerResumenAdeudo(
@@ -107,42 +124,60 @@ export class PagoCalculoService {
       throw new Error(`Préstamo ${prestamoId} no encontrado`);
     }
 
-    // Obtener cuotas no pagadas completamente (PENDIENTE, PARCIAL, MORA)
-    const cuotasNoPagadas = await this.planPagoRepository.find({
-      where: {
-        prestamoId,
-        estado: In([EstadoCuota.PENDIENTE, EstadoCuota.PARCIAL, EstadoCuota.MORA]),
-      },
+    // Obtener TODAS las cuotas para calcular el saldo esperado
+    const todasLasCuotas = await this.planPagoRepository.find({
+      where: { prestamoId },
       order: { numeroCuota: 'ASC' },
     });
+
+    // Obtener cuotas no pagadas completamente (PENDIENTE, PARCIAL, MORA)
+    const cuotasNoPagadas = todasLasCuotas.filter(
+      c => c.estado === EstadoCuota.PENDIENTE ||
+           c.estado === EstadoCuota.PARCIAL ||
+           c.estado === EstadoCuota.MORA
+    );
+
+    // Verificar si el tipo de crédito usa recargo manual (sin interés moratorio automático)
+    const aplicaRecargoManual = prestamo.tipoCredito?.aplicaRecargoManual || false;
+    const montoRecargoSugerido = Number(prestamo.tipoCredito?.montoRecargo) || 0;
 
     // Calcular mora para cada cuota vencida
     const cuotasPendientes: CuotaPendiente[] = [];
     let cuotasVencidas = 0;
     let cuotasParciales = 0;
 
+    // Normalizar fechaCorte a medianoche para comparaciones justas
+    const fechaCorteNormalizada = this.normalizarFecha(fechaCorte);
+
     for (const cuota of cuotasNoPagadas) {
       const fechaVencimiento = new Date(cuota.fechaVencimiento);
+      // Normalizar la fecha de vencimiento también para comparación justa
+      const fechaVencimientoNormalizada = this.normalizarFecha(fechaVencimiento);
       let diasMora = 0;
       let interesMoratorioCalculado = 0;
 
       // Si la cuota está vencida, calcular mora
-      if (fechaCorte > fechaVencimiento) {
+      // Usamos fechas normalizadas para comparar solo por día, no por hora
+      if (fechaCorteNormalizada > fechaVencimientoNormalizada) {
         diasMora = this.calculoInteresService.calcularDiasEntreFechas(
-          fechaVencimiento,
-          fechaCorte,
+          fechaVencimientoNormalizada,
+          fechaCorteNormalizada,
         );
 
-        // Calcular interés moratorio sobre capital pendiente
-        const capitalPendiente = this.redondear(
-          Number(cuota.capital) - Number(cuota.capitalPagado),
-        );
+        // Solo calcular interés moratorio si NO aplica recargo manual
+        if (!aplicaRecargoManual) {
+          // Calcular interés moratorio sobre capital pendiente
+          const capitalPendiente = this.redondear(
+            Number(cuota.capital) - Number(cuota.capitalPagado),
+          );
 
-        interesMoratorioCalculado = this.calculoInteresService.calcularInteresMoratorio(
-          capitalPendiente,
-          Number(prestamo.tasaInteresMoratorio),
-          diasMora,
-        );
+          interesMoratorioCalculado = this.calculoInteresService.calcularInteresMoratorio(
+            capitalPendiente,
+            Number(prestamo.tasaInteresMoratorio),
+            diasMora,
+          );
+        }
+        // Siempre contar las cuotas vencidas
         cuotasVencidas++;
       }
 
@@ -238,23 +273,88 @@ export class PagoCalculoService {
       cuotasVencidas,
       cuotasParciales,
       proximaCuota: cuotasPendientes.length > 0 ? cuotasPendientes[0] : null,
+      // Información de recargo manual
+      recargoManual: {
+        aplica: aplicaRecargoManual,
+        montoSugerido: montoRecargoSugerido,
+        // Calcular si hay un verdadero atraso comparando saldo real vs saldo esperado
+        tieneAtraso: this.calcularTieneAtraso(
+          Number(prestamo.saldoCapital),
+          todasLasCuotas,
+          fechaCorteNormalizada,
+        ),
+      },
     };
   }
 
   /**
+   * Determina si hay un verdadero atraso en el préstamo
+   * Compara el saldo de capital actual vs el saldo esperado según el plan de pagos
+   *
+   * @param saldoCapitalActual - El saldo de capital actual del préstamo
+   * @param todasLasCuotas - Todas las cuotas del plan de pagos
+   * @param fechaCorte - La fecha de corte (normalizada a medianoche)
+   * @returns true si hay atraso (saldo actual > saldo esperado)
+   */
+  private calcularTieneAtraso(
+    saldoCapitalActual: number,
+    todasLasCuotas: PlanPago[],
+    fechaCorte: Date,
+  ): boolean {
+    // Buscar la última cuota cuya fecha de vencimiento ya pasó
+    // Esta cuota nos dice cuál debería ser el saldo esperado
+    let ultimaCuotaVencida: PlanPago | null = null;
+
+    for (const cuota of todasLasCuotas) {
+      const fechaVencimiento = this.normalizarFecha(new Date(cuota.fechaVencimiento));
+
+      // Si la fecha de vencimiento es menor o igual a la fecha de corte, la cuota ya venció
+      if (fechaVencimiento <= fechaCorte) {
+        // Guardamos la cuota con mayor número de cuota que haya vencido
+        if (!ultimaCuotaVencida || cuota.numeroCuota > ultimaCuotaVencida.numeroCuota) {
+          ultimaCuotaVencida = cuota;
+        }
+      }
+    }
+
+    // Si no hay cuotas vencidas, no hay atraso
+    if (!ultimaCuotaVencida) {
+      return false;
+    }
+
+    // El saldo esperado es el saldoCapital que debería quedar después de pagar la última cuota vencida
+    const saldoCapitalEsperado = Number(ultimaCuotaVencida.saldoCapital);
+
+    // Hay atraso si el saldo actual es mayor al esperado (con tolerancia de 0.01 para redondeos)
+    return saldoCapitalActual > (saldoCapitalEsperado + 0.01);
+  }
+
+  /**
    * Calcula la distribución de un pago
-   * Orden de aplicación: Interés moratorio → Intereses → Recargos → Capital
+   * Orden de aplicación: Recargo manual (si aplica) → Interés moratorio → Intereses → Recargos → Capital
+   * @param montoPagar - Monto total a pagar
+   * @param cuotasPendientes - Lista de cuotas pendientes
+   * @param recargoManual - Monto del recargo manual a aplicar (solo cuando el tipo de crédito lo requiere)
    */
   calcularDistribucion(
     montoPagar: number,
     cuotasPendientes: CuotaPendiente[],
+    recargoManual: number = 0,
   ): DistribucionPago {
     let montoRestante = montoPagar;
     let capitalAplicado = 0;
     let interesAplicado = 0;
     let recargosAplicado = 0;
     let interesMoratorioAplicado = 0;
+    let recargoManualAplicado = 0;
     const cuotasAfectadas: CuotaAplicacion[] = [];
+
+    // Si hay recargo manual, descontarlo primero del monto a pagar
+    if (recargoManual > 0 && montoRestante > 0) {
+      const aplicarRecargo = Math.min(montoRestante, recargoManual);
+      recargoManualAplicado = this.redondear(aplicarRecargo);
+      montoRestante -= aplicarRecargo;
+    }
 
     // Procesar cuotas en orden (más antiguas primero)
     for (const cuota of cuotasPendientes) {
@@ -356,7 +456,10 @@ export class PagoCalculoService {
         tipoPago = TipoPago.CANCELACION_TOTAL;
       } else if (cuotasAfectadas.some(c => {
         const cuotaOrig = cuotasPendientes.find(cp => cp.id === c.planPagoId);
-        return cuotaOrig && new Date(cuotaOrig.fechaVencimiento) > new Date();
+        // Normalizar fechas para comparar solo por día
+        const fechaVencNorm = cuotaOrig ? this.normalizarFecha(new Date(cuotaOrig.fechaVencimiento)) : null;
+        const hoyNorm = this.normalizarFecha(new Date());
+        return fechaVencNorm && fechaVencNorm > hoyNorm;
       })) {
         tipoPago = TipoPago.PAGO_ADELANTADO;
       } else {
@@ -371,6 +474,7 @@ export class PagoCalculoService {
       interesAplicado: this.redondear(interesAplicado),
       recargosAplicado: this.redondear(recargosAplicado),
       interesMoratorioAplicado: this.redondear(interesMoratorioAplicado),
+      recargoManualAplicado: this.redondear(recargoManualAplicado),
       excedente: this.redondear(Math.max(0, montoRestante)),
       cuotasAfectadas,
       tipoPago,

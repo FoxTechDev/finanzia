@@ -47,4 +47,55 @@ export class CreateActividadEconomicaDto {
   @IsNumber()
   @IsOptional()
   longitud?: number;
+
+  // Nuevos campos de ingresos adicionales
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  ingresosAdicionales?: number;
+
+  @IsString()
+  @IsOptional()
+  descripcionIngresosAdicionales?: string;
+
+  // Nuevos campos de gastos detallados
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  gastosVivienda?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  gastosAlimentacion?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  gastosTransporte?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  gastosServiciosBasicos?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  gastosEducacion?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  gastosMedicos?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  otrosGastos?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  totalGastos?: number;
 }

@@ -111,6 +111,34 @@ export class CatalogosService {
       : this.catalogoService.getAll('catalogos/tipo-calculo');
   }
 
+  // Tipos de Ingreso
+  getTiposIngreso(soloActivos = true): Observable<CatalogoBase[]> {
+    return soloActivos
+      ? this.catalogoService.getActivos('tipo-ingreso')
+      : this.catalogoService.getAll('tipo-ingreso');
+  }
+
+  // Tipos de Gasto
+  getTiposGasto(soloActivos = true): Observable<CatalogoBase[]> {
+    return soloActivos
+      ? this.catalogoService.getActivos('tipo-gasto')
+      : this.catalogoService.getAll('tipo-gasto');
+  }
+
+  // Tipos de Vivienda
+  getTiposVivienda(soloActivos = true): Observable<CatalogoBase[]> {
+    return soloActivos
+      ? this.catalogoService.getActivos('tipo-vivienda')
+      : this.catalogoService.getAll('tipo-vivienda');
+  }
+
+  // Tipos de Recargo
+  getTiposRecargo(soloActivos = true): Observable<CatalogoBase[]> {
+    return soloActivos
+      ? this.catalogoService.getActivos('tipos-recargo')
+      : this.catalogoService.getAll('tipos-recargo');
+  }
+
   /**
    * Método genérico para obtener cualquier catálogo por endpoint
    */

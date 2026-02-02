@@ -10,6 +10,9 @@ import { Direccion } from '../../direccion/entities/direccion.entity';
 import { ActividadEconomica } from '../../actividad-economica/entities/actividad-economica.entity';
 import { ReferenciaPersonal } from '../../referencia-personal/entities/referencia-personal.entity';
 import { ReferenciaFamiliar } from '../../referencia-familiar/entities/referencia-familiar.entity';
+import { DependenciaFamiliar } from '../../dependencia-familiar/entities/dependencia-familiar.entity';
+import { GastoCliente } from '../../gasto-cliente/entities/gasto-cliente.entity';
+import { IngresoCliente } from '../../ingreso-cliente/entities/ingreso-cliente.entity';
 
 export enum Sexo {
   MASCULINO = 'Masculino',
@@ -74,4 +77,13 @@ export class Persona {
 
   @OneToMany(() => ReferenciaFamiliar, (ref) => ref.persona, { cascade: true })
   referenciasFamiliares: ReferenciaFamiliar[];
+
+  @OneToMany(() => DependenciaFamiliar, (dep) => dep.persona, { cascade: true })
+  dependenciasFamiliares: DependenciaFamiliar[];
+
+  @OneToMany(() => GastoCliente, (gasto) => gasto.persona, { cascade: true })
+  gastos: GastoCliente[];
+
+  @OneToMany(() => IngresoCliente, (ingreso) => ingreso.persona, { cascade: true })
+  ingresos: IngresoCliente[];
 }

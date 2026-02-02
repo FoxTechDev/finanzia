@@ -33,6 +33,12 @@ export class DeduccionDto {
     return Number.isFinite(num) ? num : 0;
   })
   valor: number;
+
+  // ID del préstamo a cancelar (para refinanciamiento)
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  prestamoACancelarId?: number;
 }
 
 export class RecargoDto {
@@ -92,6 +98,12 @@ export class PreviewDesembolsoDto {
 
   @IsDateString()
   fechaPrimeraCuota: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Type(() => Number)
+  numeroCuotas?: number;
 
   @IsArray()
   @ValidateNested({ each: true })

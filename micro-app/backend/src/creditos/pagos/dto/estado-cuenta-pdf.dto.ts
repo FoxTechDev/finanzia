@@ -45,6 +45,7 @@ export class ResumenPagosPdfDto {
   interesPagado: number;
   recargosPagado: number;
   moratorioPagado: number;
+  recargoManualPagado: number;
   numeroPagos: number;
 }
 
@@ -56,6 +57,7 @@ export class PagoDetallePdfDto {
   interesAplicado: number;
   recargosAplicado: number;
   moratorioAplicado: number;
+  recargoManualAplicado: number;
   numeroPago: string;
 }
 

@@ -315,7 +315,8 @@ export class BandejaComiteComponent implements OnInit {
 
   abrirDecision(solicitud: Solicitud): void {
     const dialogRef = this.dialog.open(DecisionComiteDialogComponent, {
-      width: '700px',
+      width: '90vw',
+      maxWidth: '1200px',
       maxHeight: '90vh',
       data: { solicitud },
     });

@@ -11,7 +11,7 @@
       <mat-spinner diameter="40"></mat-spinner>
     </div>
   } @else {
-    <mat-stepper orientation="vertical" linear #stepper>
+    <mat-stepper orientation="vertical" #stepper>
       <!-- Paso 1: Datos Personales -->
       <mat-step [stepControl]="datosPersonalesForm" label="Datos Personales">
         <form [formGroup]="datosPersonalesForm">
@@ -172,6 +172,33 @@
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Detalle de la Dirección</mat-label>
               <textarea matInput formControlName="detalleDireccion" rows="3"></textarea>
+            </mat-form-field>
+          </div>
+
+          <mat-divider></mat-divider>
+          <h3 class="section-title">Información de Vivienda</h3>
+
+          <div class="form-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Tipo de Vivienda</mat-label>
+              <mat-select formControlName="tipoViviendaId">
+                @for (tipo of tiposVivienda(); track tipo.id) {
+                  <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
+                }
+              </mat-select>
+              <mat-hint>Seleccione el tipo de vivienda del cliente</mat-hint>
+              @if (direccionForm.get('tipoViviendaId')?.hasError('required')) {
+                <mat-error>Requerido</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Tiempo de Residencia (años)</mat-label>
+              <input matInput formControlName="tiempoResidenciaAnios" type="number" />
+              <mat-icon matSuffix>calendar_today</mat-icon>
+              @if (direccionForm.get('tiempoResidenciaAnios')?.hasError('min')) {
+                <mat-error>Debe ser mayor o igual a 0</mat-error>
+              }
             </mat-form-field>
           </div>
 
@@ -336,7 +363,421 @@
         </form>
       </mat-step>
 
-      <!-- Paso 4: Referencias -->
+      <!-- Paso 4: Ingresos, Gastos y Dependencias -->
+      <mat-step [stepControl]="ingresosGastosForm" label="Ingresos y Gastos">
+        <form [formGroup]="ingresosGastosForm">
+          <!-- Mensaje informativo -->
+          <div class="info-message">
+            <mat-icon>info</mat-icon>
+            <p>Esta sección es opcional. Puede agregar ingresos, gastos y dependientes familiares para un mejor análisis financiero, o puede omitirla y continuar con las referencias.</p>
+          </div>
+
+          <!-- Mensaje de error si hay elementos incompletos -->
+          @if (hasIngresosGastosErrors()) {
+            <div class="error-message">
+              <mat-icon>error</mat-icon>
+              <p>{{ getIngresosGastosErrorMessage() }}</p>
+            </div>
+          }
+
+          <!-- Ingresos -->
+          <div class="ingresos-section">
+            <div class="section-header">
+              <h3>Ingresos</h3>
+              <button mat-mini-fab color="accent" type="button" (click)="agregarIngreso()">
+                <mat-icon>add</mat-icon>
+              </button>
+            </div>
+
+            @if (ingresos.length > 0) {
+              <!-- Vista Desktop: Tabla -->
+              <div class="desktop-view">
+                <table mat-table #ingresosTable [dataSource]="ingresos.controls" class="full-width ingresos-gastos-table">
+                  <ng-container matColumnDef="tipo">
+                    <th mat-header-cell *matHeaderCellDef>Tipo de Ingreso</th>
+                    <td mat-cell *matCellDef="let control">
+                      <mat-form-field appearance="outline" class="table-field">
+                        <mat-select [formControl]="control.get('tipoIngresoId')">
+                          @for (tipo of tiposIngreso(); track tipo.id) {
+                            <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
+                          }
+                        </mat-select>
+                      </mat-form-field>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="monto">
+                    <th mat-header-cell *matHeaderCellDef>Monto</th>
+                    <td mat-cell *matCellDef="let control">
+                      <mat-form-field appearance="outline" class="table-field">
+                        <input matInput [formControl]="control.get('monto')" type="number" />
+                        <span matTextPrefix>$&nbsp;</span>
+                      </mat-form-field>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="descripcion">
+                    <th mat-header-cell *matHeaderCellDef>Descripción</th>
+                    <td mat-cell *matCellDef="let control">
+                      <mat-form-field appearance="outline" class="table-field">
+                        <input matInput [formControl]="control.get('descripcion')" />
+                      </mat-form-field>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="acciones">
+                    <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                    <td mat-cell *matCellDef="let control; let i = index">
+                      <button mat-icon-button color="warn" type="button" (click)="eliminarIngreso(i)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="displayedColumnsIngresos"></tr>
+                  <tr mat-row *matRowDef="let row; columns: displayedColumnsIngresos"></tr>
+                </table>
+              </div>
+
+              <!-- Vista Mobile: Cards -->
+              <div class="mobile-view">
+                @for (control of ingresos.controls; track control; let i = $index) {
+                  <mat-card class="ingreso-gasto-card-mobile">
+                    <mat-card-header>
+                      <mat-card-title>Ingreso {{ i + 1 }}</mat-card-title>
+                      <button mat-icon-button color="warn" type="button" (click)="eliminarIngreso(i)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <div class="form-grid-mobile" [formGroup]="$any(control)">
+                        <mat-form-field appearance="outline">
+                          <mat-label>Tipo de Ingreso</mat-label>
+                          <mat-select formControlName="tipoIngresoId">
+                            @for (tipo of tiposIngreso(); track tipo.id) {
+                              <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
+                            }
+                          </mat-select>
+                          @if (control.get('tipoIngresoId')?.hasError('required') && control.get('tipoIngresoId')?.touched) {
+                            <mat-error>Requerido</mat-error>
+                          }
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                          <mat-label>Monto</mat-label>
+                          <input matInput formControlName="monto" type="number" />
+                          <span matTextPrefix>$&nbsp;</span>
+                          @if (control.get('monto')?.hasError('required') && control.get('monto')?.touched) {
+                            <mat-error>Requerido</mat-error>
+                          }
+                          @if (control.get('monto')?.hasError('min')) {
+                            <mat-error>Debe ser mayor o igual a 0</mat-error>
+                          }
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="full-width">
+                          <mat-label>Descripción (opcional)</mat-label>
+                          <input matInput formControlName="descripcion" />
+                        </mat-form-field>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                }
+              </div>
+            } @else {
+              <p class="no-data">No hay ingresos agregados</p>
+            }
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <!-- Gastos -->
+          <div class="gastos-section">
+            <div class="section-header">
+              <h3>Gastos</h3>
+              <button mat-mini-fab color="accent" type="button" (click)="agregarGasto()">
+                <mat-icon>add</mat-icon>
+              </button>
+            </div>
+
+            @if (gastos.length > 0) {
+              <!-- Vista Desktop: Tabla -->
+              <div class="desktop-view">
+                <table mat-table #gastosTable [dataSource]="gastos.controls" class="full-width ingresos-gastos-table">
+                  <ng-container matColumnDef="tipo">
+                    <th mat-header-cell *matHeaderCellDef>Tipo de Gasto</th>
+                    <td mat-cell *matCellDef="let control">
+                      <mat-form-field appearance="outline" class="table-field">
+                        <mat-select [formControl]="control.get('tipoGastoId')">
+                          @for (tipo of tiposGasto(); track tipo.id) {
+                            <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
+                          }
+                        </mat-select>
+                      </mat-form-field>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="monto">
+                    <th mat-header-cell *matHeaderCellDef>Monto</th>
+                    <td mat-cell *matCellDef="let control">
+                      <mat-form-field appearance="outline" class="table-field">
+                        <input matInput [formControl]="control.get('monto')" type="number" />
+                        <span matTextPrefix>$&nbsp;</span>
+                      </mat-form-field>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="descripcion">
+                    <th mat-header-cell *matHeaderCellDef>Descripción</th>
+                    <td mat-cell *matCellDef="let control">
+                      <mat-form-field appearance="outline" class="table-field">
+                        <input matInput [formControl]="control.get('descripcion')" />
+                      </mat-form-field>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="acciones">
+                    <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                    <td mat-cell *matCellDef="let control; let i = index">
+                      <button mat-icon-button color="warn" type="button" (click)="eliminarGasto(i)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="displayedColumnsGastos"></tr>
+                  <tr mat-row *matRowDef="let row; columns: displayedColumnsGastos"></tr>
+                </table>
+              </div>
+
+              <!-- Vista Mobile: Cards -->
+              <div class="mobile-view">
+                @for (control of gastos.controls; track control; let i = $index) {
+                  <mat-card class="ingreso-gasto-card-mobile">
+                    <mat-card-header>
+                      <mat-card-title>Gasto {{ i + 1 }}</mat-card-title>
+                      <button mat-icon-button color="warn" type="button" (click)="eliminarGasto(i)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <div class="form-grid-mobile" [formGroup]="$any(control)">
+                        <mat-form-field appearance="outline">
+                          <mat-label>Tipo de Gasto</mat-label>
+                          <mat-select formControlName="tipoGastoId">
+                            @for (tipo of tiposGasto(); track tipo.id) {
+                              <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
+                            }
+                          </mat-select>
+                          @if (control.get('tipoGastoId')?.hasError('required') && control.get('tipoGastoId')?.touched) {
+                            <mat-error>Requerido</mat-error>
+                          }
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                          <mat-label>Monto</mat-label>
+                          <input matInput formControlName="monto" type="number" />
+                          <span matTextPrefix>$&nbsp;</span>
+                          @if (control.get('monto')?.hasError('required') && control.get('monto')?.touched) {
+                            <mat-error>Requerido</mat-error>
+                          }
+                          @if (control.get('monto')?.hasError('min')) {
+                            <mat-error>Debe ser mayor o igual a 0</mat-error>
+                          }
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="full-width">
+                          <mat-label>Descripción (opcional)</mat-label>
+                          <input matInput formControlName="descripcion" />
+                        </mat-form-field>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                }
+              </div>
+            } @else {
+              <p class="no-data">No hay gastos agregados</p>
+            }
+          </div>
+
+          <!-- Resumen Financiero -->
+          <mat-divider></mat-divider>
+          <div class="financial-summary">
+            <h3 class="section-title">Resumen Financiero</h3>
+            <div class="summary-cards">
+              <mat-card class="summary-card">
+                <mat-card-header>
+                  <mat-card-title>Total de Ingresos</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="amount total-ingresos">
+                    ${{ totalIngresos() | number:'1.2-2' }}
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="summary-card">
+                <mat-card-header>
+                  <mat-card-title>Total de Gastos</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="amount total-gastos">
+                    ${{ totalGastos() | number:'1.2-2' }}
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="summary-card full-width-card">
+                <mat-card-header>
+                  <mat-card-title>Ingreso Disponible</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="amount" [class.negative]="ingresoDisponible() < 0" [class.positive]="ingresoDisponible() >= 0">
+                    ${{ ingresoDisponible() | number:'1.2-2' }}
+                  </div>
+                  <div class="formula">
+                    = Total de Ingresos - Total de Gastos
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </div>
+
+          <!-- Dependencias Familiares -->
+          <mat-divider></mat-divider>
+          <div class="dependencias-section">
+            <div class="section-header">
+              <h3>Dependencias Familiares</h3>
+              <button mat-mini-fab color="accent" type="button" (click)="agregarDependiente()">
+                <mat-icon>add</mat-icon>
+              </button>
+            </div>
+
+            @if (dependenciasFamiliares.length > 0) {
+              <!-- Vista Desktop: Tabla -->
+              <div class="desktop-view">
+                <table mat-table #dependenciasTable [dataSource]="dependenciasFamiliares.controls" class="full-width dependientes-table">
+                  <ng-container matColumnDef="nombreDependiente">
+                    <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                    <td mat-cell *matCellDef="let control">
+                      <mat-form-field appearance="outline" class="table-field">
+                        <input matInput [formControl]="control.get('nombreDependiente')" />
+                      </mat-form-field>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="parentesco">
+                    <th mat-header-cell *matHeaderCellDef>Parentesco</th>
+                    <td mat-cell *matCellDef="let control">
+                      <mat-form-field appearance="outline" class="table-field">
+                        <mat-select [formControl]="control.get('parentesco')">
+                          @for (parentesco of parentescoDependienteOptions; track parentesco) {
+                            <mat-option [value]="parentesco">{{ parentesco }}</mat-option>
+                          }
+                        </mat-select>
+                      </mat-form-field>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="edad">
+                    <th mat-header-cell *matHeaderCellDef>Edad</th>
+                    <td mat-cell *matCellDef="let control">
+                      <mat-form-field appearance="outline" class="table-field">
+                        <input matInput [formControl]="control.get('edad')" type="number" />
+                      </mat-form-field>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="trabaja">
+                    <th mat-header-cell *matHeaderCellDef>Trabaja</th>
+                    <td mat-cell *matCellDef="let control">
+                      <mat-checkbox [formControl]="control.get('trabaja')"></mat-checkbox>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="estudia">
+                    <th mat-header-cell *matHeaderCellDef>Estudia</th>
+                    <td mat-cell *matCellDef="let control">
+                      <mat-checkbox [formControl]="control.get('estudia')"></mat-checkbox>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="acciones">
+                    <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                    <td mat-cell *matCellDef="let control; let i = index">
+                      <button mat-icon-button color="warn" type="button" (click)="eliminarDependiente(i)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="displayedColumnsDependientes"></tr>
+                  <tr mat-row *matRowDef="let row; columns: displayedColumnsDependientes"></tr>
+                </table>
+              </div>
+
+              <!-- Vista Mobile: Cards -->
+              <div class="mobile-view">
+                @for (control of dependenciasFamiliares.controls; track control; let i = $index) {
+                  <mat-card class="dependiente-card-mobile">
+                    <mat-card-header>
+                      <mat-card-title>Dependiente {{ i + 1 }}</mat-card-title>
+                      <button mat-icon-button color="warn" type="button" (click)="eliminarDependiente(i)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <div class="form-grid-mobile" [formGroup]="$any(control)">
+                        <mat-form-field appearance="outline">
+                          <mat-label>Nombre del Dependiente</mat-label>
+                          <input matInput formControlName="nombreDependiente" />
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                          <mat-label>Parentesco</mat-label>
+                          <mat-select formControlName="parentesco">
+                            @for (parentesco of parentescoDependienteOptions; track parentesco) {
+                              <mat-option [value]="parentesco">{{ parentesco }}</mat-option>
+                            }
+                          </mat-select>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                          <mat-label>Edad</mat-label>
+                          <input matInput formControlName="edad" type="number" />
+                        </mat-form-field>
+
+                        <div class="checkboxes-row">
+                          <mat-checkbox formControlName="trabaja">Trabaja</mat-checkbox>
+                          <mat-checkbox formControlName="estudia">Estudia</mat-checkbox>
+                        </div>
+
+                        <mat-form-field appearance="outline" class="full-width">
+                          <mat-label>Observaciones</mat-label>
+                          <textarea matInput formControlName="observaciones" rows="2"></textarea>
+                        </mat-form-field>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                }
+              </div>
+            } @else {
+              <p class="no-data">No hay dependientes agregados</p>
+            }
+          </div>
+
+          <div class="step-actions">
+            <button mat-button matStepperPrevious>
+              <mat-icon>arrow_back</mat-icon> Anterior
+            </button>
+            <button mat-button matStepperNext color="primary">
+              Siguiente <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </form>
+      </mat-step>
+
+      <!-- Paso 5: Referencias -->
       <mat-step label="Referencias">
         <!-- Referencias Personales -->
         <div class="references-section">

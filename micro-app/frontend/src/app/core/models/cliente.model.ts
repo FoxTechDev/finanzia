@@ -17,15 +17,27 @@ export interface Distrito {
   municipio?: Municipio;
 }
 
+export interface TipoVivienda {
+  id: number;
+  codigo: string;
+  nombre: string;
+  descripcion?: string;
+  activo: boolean;
+}
+
 export interface Direccion {
   id?: number;
   departamentoId: number;
   municipioId: number;
   distritoId: number;
   detalleDireccion?: string;
+  tipoVivienda?: string; // Mantener compatibilidad con datos antiguos
+  tipoViviendaId?: number; // Nuevo campo que apunta al catálogo
+  tiempoResidenciaAnios?: number;
   departamento?: Departamento;
   municipio?: Municipio;
   distrito?: Distrito;
+  tipoViviendaRelacion?: TipoVivienda;
 }
 
 export interface ActividadEconomica {
@@ -63,6 +75,56 @@ export interface ReferenciaFamiliar {
   direccionFamiliar?: string;
 }
 
+// Tipos de Ingreso
+export interface TipoIngreso {
+  id: number;
+  codigo: string;
+  nombre: string;
+  descripcion?: string;
+  activo: boolean;
+}
+
+// Tipos de Gasto
+export interface TipoGasto {
+  id: number;
+  codigo: string;
+  nombre: string;
+  descripcion?: string;
+  activo: boolean;
+}
+
+// Ingreso del Cliente
+export interface IngresoCliente {
+  id?: number;
+  personaId?: number;
+  tipoIngresoId: number;
+  monto: number;
+  descripcion?: string;
+  tipoIngreso?: TipoIngreso;
+}
+
+// Gasto del Cliente
+export interface GastoCliente {
+  id?: number;
+  personaId?: number;
+  tipoGastoId: number;
+  monto: number;
+  descripcion?: string;
+  tipoGasto?: TipoGasto;
+}
+
+// Dependencia Familiar
+export interface DependenciaFamiliar {
+  id?: number;
+  personaId?: number;
+  nombreDependiente: string;
+  parentesco: string;
+  edad?: number;
+  trabaja: boolean;
+  estudia: boolean;
+  observaciones?: string;
+}
+
 export type Sexo = 'Masculino' | 'Femenino' | 'Otro';
 
 export interface Persona {
@@ -82,6 +144,9 @@ export interface Persona {
   actividadEconomica?: ActividadEconomica;
   referenciasPersonales?: ReferenciaPersonal[];
   referenciasFamiliares?: ReferenciaFamiliar[];
+  ingresos?: IngresoCliente[];
+  gastos?: GastoCliente[];
+  dependenciasFamiliares?: DependenciaFamiliar[];
 }
 
 export interface CreatePersonaRequest {
@@ -98,6 +163,9 @@ export interface CreatePersonaRequest {
   lugarEmisionDui: string;
   direccion?: Omit<Direccion, 'id' | 'departamento' | 'municipio' | 'distrito'>;
   actividadEconomica?: Omit<ActividadEconomica, 'id' | 'departamento' | 'municipio' | 'distrito'>;
-  referenciasPersonales?: Omit<ReferenciaPersonal, 'id'>[];
-  referenciasFamiliares?: Omit<ReferenciaFamiliar, 'id'>[];
+  referenciasPersonales?: Omit<ReferenciaPersonal, 'id' | 'personaId'>[];
+  referenciasFamiliares?: Omit<ReferenciaFamiliar, 'id' | 'personaId'>[];
+  ingresos?: Omit<IngresoCliente, 'id' | 'personaId' | 'tipoIngreso'>[];
+  gastos?: Omit<GastoCliente, 'id' | 'personaId' | 'tipoGasto'>[];
+  dependenciasFamiliares?: Omit<DependenciaFamiliar, 'id' | 'personaId'>[];
 }

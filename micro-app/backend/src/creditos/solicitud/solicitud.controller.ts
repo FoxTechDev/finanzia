@@ -15,6 +15,8 @@ import { UpdateSolicitudDto } from './dto/update-solicitud.dto';
 import { CambiarEstadoSolicitudDto } from './dto/cambiar-estado-solicitud.dto';
 import { UpdateAnalisisAsesorDto } from './dto/update-analisis-asesor.dto';
 import { TrasladarComiteDto } from '../comite/dto/trasladar-comite.dto';
+import { CalcularPlanPagoDto } from './dto/calcular-plan-pago.dto';
+import { GuardarPlanPagoDto } from './dto/guardar-plan-pago.dto';
 
 @Controller('solicitudes')
 export class SolicitudController {
@@ -47,6 +49,36 @@ export class SolicitudController {
     return this.solicitudService.getEstadisticas();
   }
 
+  /**
+   * Calcula y previsualiza el plan de pago SIN guardar en base de datos
+   * Útil para que el usuario simule diferentes escenarios antes de guardar
+   */
+  @Post('calcular-plan')
+  calcularPlanPago(@Body() calcularDto: CalcularPlanPagoDto) {
+    return this.solicitudService.calcularPlanPago(calcularDto);
+  }
+
+  /**
+   * Calcula Y GUARDA el plan de pago en la base de datos
+   * Se debe usar cuando la solicitud es aprobada
+   */
+  @Post(':id/guardar-plan-pago')
+  guardarPlanPago(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() guardarDto: GuardarPlanPagoDto,
+  ) {
+    return this.solicitudService.guardarPlanPago(id, guardarDto);
+  }
+
+  /**
+   * Obtiene el plan de pago guardado de una solicitud
+   * Retorna el plan completo con recargos y totales
+   */
+  @Get(':id/plan-pago')
+  obtenerPlanPagoGuardado(@Param('id', ParseIntPipe) id: number) {
+    return this.solicitudService.obtenerPlanPagoGuardado(id);
+  }
+
   @Get('numero/:numero')
   findByNumero(@Param('numero') numero: string) {
     return this.solicitudService.findByNumero(numero);
@@ -55,6 +87,17 @@ export class SolicitudController {
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.solicitudService.findOne(id);
+  }
+
+  /**
+   * Obtener solicitud con plan de pago calculado
+   * Retorna toda la información de la solicitud incluyendo: datos básicos, cliente,
+   * tipo de crédito, periodicidad de pago y el plan de pago calculado dinámicamente.
+   * Útil para la vista de consulta de solicitud.
+   */
+  @Get(':id/detalle')
+  findOneConPlanPago(@Param('id', ParseIntPipe) id: number) {
+    return this.solicitudService.findOneConPlanPago(id);
   }
 
   @Get(':id/historial')

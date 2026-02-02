@@ -14,6 +14,7 @@ import {
   CreateTipoDeduccionRequest,
   CreateTipoRecargoRequest,
   EstadoPrestamo,
+  PrestamoActivo,
 } from '@core/models/credito.model';
 
 @Injectable({
@@ -21,6 +22,7 @@ import {
 })
 export class DesembolsoService {
   private apiUrl = `${environment.apiUrl}/desembolso`;
+  private prestamosUrl = `${environment.apiUrl}/prestamos`;
   private tiposDeduccionUrl = `${environment.apiUrl}/tipos-deduccion`;
   private tiposRecargoUrl = `${environment.apiUrl}/tipos-recargo`;
 
@@ -74,6 +76,14 @@ export class DesembolsoService {
       params = params.set('estado', estado);
     }
     return this.http.get<Prestamo[]>(this.apiUrl, { params });
+  }
+
+  /**
+   * Obtiene los préstamos activos (VIGENTE o MORA) de un cliente
+   * Usado para la funcionalidad de refinanciamiento
+   */
+  getPrestamosActivosCliente(personaId: number): Observable<PrestamoActivo[]> {
+    return this.http.get<PrestamoActivo[]>(`${this.prestamosUrl}/cliente/${personaId}/activos`);
   }
 
   // ============================================

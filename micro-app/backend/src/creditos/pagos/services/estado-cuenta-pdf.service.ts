@@ -176,6 +176,8 @@ export class EstadoCuentaPdfService {
         recargosPagado: acc.recargosPagado + Number(p.recargosAplicado),
         moratorioPagado:
           acc.moratorioPagado + Number(p.interesMoratorioAplicado),
+        recargoManualPagado:
+          acc.recargoManualPagado + Number(p.recargoManualAplicado || 0),
         numeroPagos: acc.numeroPagos + 1,
       }),
       {
@@ -184,6 +186,7 @@ export class EstadoCuentaPdfService {
         interesPagado: 0,
         recargosPagado: 0,
         moratorioPagado: 0,
+        recargoManualPagado: 0,
         numeroPagos: 0,
       },
     );
@@ -195,6 +198,7 @@ export class EstadoCuentaPdfService {
       interesPagado: this.redondear(resumenPagos.interesPagado),
       recargosPagado: this.redondear(resumenPagos.recargosPagado),
       moratorioPagado: this.redondear(resumenPagos.moratorioPagado),
+      recargoManualPagado: this.redondear(resumenPagos.recargoManualPagado),
       numeroPagos: resumenPagos.numeroPagos,
     };
 
@@ -207,6 +211,7 @@ export class EstadoCuentaPdfService {
       interesAplicado: Number(pago.interesAplicado),
       recargosAplicado: Number(pago.recargosAplicado),
       moratorioAplicado: Number(pago.interesMoratorioAplicado),
+      recargoManualAplicado: Number(pago.recargoManualAplicado || 0),
       numeroPago: pago.numeroPago,
     }));
 
@@ -523,14 +528,15 @@ export class EstadoCuentaPdfService {
 
     // Definir columnas (ajustadas para que quepan en la página)
     const columns = [
-      { header: 'No.', width: 28 },
-      { header: 'Fecha', width: 60 },
-      { header: 'Monto', width: 70 },
-      { header: 'Capital', width: 70 },
-      { header: 'Interés', width: 65 },
-      { header: 'Recargos', width: 60 },
-      { header: 'Mora', width: 55 },
-      { header: 'No. Recibo', width: 124 },
+      { header: 'No.', width: 25 },
+      { header: 'Fecha', width: 55 },
+      { header: 'Monto', width: 60 },
+      { header: 'Capital', width: 60 },
+      { header: 'Interés', width: 55 },
+      { header: 'Otros', width: 55 },
+      { header: 'Mora', width: 50 },
+      { header: 'Rec. mora', width: 55 },
+      { header: 'No. Recibo', width: 117 },
     ];
 
     let currentX = tableLeft;
@@ -646,9 +652,16 @@ export class EstadoCuentaPdfService {
       });
       currentX += columns[6].width;
 
+      // Recargo Manual
+      doc.text(`$${this.formatearMoneda(pago.recargoManualAplicado)}`, currentX, currentY, {
+        width: columns[7].width - 4,
+        align: 'right',
+      });
+      currentX += columns[7].width;
+
       // No. Pago
       doc.text(pago.numeroPago, currentX + 2, currentY, {
-        width: columns[7].width - 4,
+        width: columns[8].width - 4,
         align: 'center',
       });
 

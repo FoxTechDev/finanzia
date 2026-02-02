@@ -10,6 +10,7 @@ import { Persona } from '../../persona/entities/persona.entity';
 import { Departamento } from '../../departamento/entities/departamento.entity';
 import { Municipio } from '../../municipio/entities/municipio.entity';
 import { Distrito } from '../../distrito/entities/distrito.entity';
+import { TipoVivienda } from '../../tipo-vivienda/entities/tipo-vivienda.entity';
 
 @Entity('direccion')
 export class Direccion {
@@ -46,4 +47,15 @@ export class Direccion {
 
   @Column({ name: 'detalleDireccion', length: 200, nullable: true })
   detalleDireccion: string;
+
+  // Relación con tipo de vivienda
+  @ManyToOne(() => TipoVivienda, (tipoVivienda) => tipoVivienda.direcciones, { nullable: true })
+  @JoinColumn({ name: 'idTipoVivienda' })
+  tipoVivienda: TipoVivienda;
+
+  @Column({ name: 'idTipoVivienda', nullable: true })
+  tipoViviendaId: number;
+
+  @Column({ name: 'tiempoResidenciaAnios', type: 'int', nullable: true })
+  tiempoResidenciaAnios: number;
 }

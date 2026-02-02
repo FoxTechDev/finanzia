@@ -63,4 +63,16 @@ export class PrestamoController {
   ): Promise<PrestamoResumenDto[]> {
     return this.prestamoConsultaService.obtenerPrestamosPorCliente(personaId);
   }
+
+  /**
+   * GET /api/prestamos/cliente/:personaId/activos
+   * Obtiene los préstamos activos (VIGENTE o MORA) de un cliente
+   * Usado para la funcionalidad de refinanciamiento
+   */
+  @Get('cliente/:personaId/activos')
+  async obtenerPrestamosActivosPorCliente(
+    @Param('personaId', ParseIntPipe) personaId: number,
+  ): Promise<PrestamoResumenDto[]> {
+    return this.prestamoConsultaService.obtenerPrestamosActivosPorCliente(personaId);
+  }
 }

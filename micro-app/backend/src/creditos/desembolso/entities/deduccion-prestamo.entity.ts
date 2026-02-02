@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Prestamo } from './prestamo.entity';
 import { TipoDeduccion, TipoCalculo } from './tipo-deduccion.entity';
@@ -44,6 +45,15 @@ export class DeduccionPrestamo {
 
   @Column({ type: 'decimal', precision: 14, scale: 2 })
   montoCalculado: number;
+
+  // Referencia al préstamo que se cancela (para refinanciamiento)
+  @Column({ nullable: true })
+  @Index('IDX_deduccion_prestamo_cancelar')
+  prestamoACancelarId: number;
+
+  @ManyToOne(() => Prestamo, { nullable: true })
+  @JoinColumn({ name: 'prestamoACancelarId' })
+  prestamoACancelar: Prestamo;
 
   @CreateDateColumn()
   createdAt: Date;

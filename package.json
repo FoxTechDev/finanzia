@@ -1,5 +1,24 @@
 {
   "dependencies": {
+    "docx": "^9.5.1",
     "xlsx": "^0.18.5"
-  }
+  },
+  "name": "micro",
+  "version": "1.0.0",
+  "description": "",
+  "main": "analyze-excel-structure.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FoxTechDev/finanzia.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FoxTechDev/finanzia/issues"
+  },
+  "homepage": "https://github.com/FoxTechDev/finanzia#readme"
 }

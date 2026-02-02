@@ -154,6 +154,16 @@ export const CREDITOS_ROUTES: Routes = [
         data: { roles: [RoleCodes.ADMIN, RoleCodes.ASESOR, RoleCodes.COMITE] },
       },
       {
+        path: 'prestamos/:prestamoId/estado-cuenta-movil',
+        loadComponent: () =>
+          import('./components/pagos/estado-cuenta-movil/estado-cuenta-movil.component').then(
+            (m) => m.EstadoCuentaMovilComponent
+          ),
+        title: 'Estado de Cuenta',
+        canActivate: [roleGuard],
+        data: { roles: [RoleCodes.ADMIN, RoleCodes.ASESOR, RoleCodes.COMITE] },
+      },
+      {
         path: 'clasificacion-prestamos',
         loadComponent: () =>
           import('./components/clasificacion-prestamo/clasificacion-prestamo.component').then(

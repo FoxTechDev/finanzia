@@ -10,6 +10,8 @@ import {
   SolicitudEstadisticas,
   EstadoSolicitud,
   TrasladarComiteRequest,
+  CalcularPlanPagoRequest,
+  PlanPagoCalculado,
 } from '@core/models/credito.model';
 
 export interface SolicitudFilters {
@@ -89,5 +91,26 @@ export class SolicitudService {
 
   trasladarAComite(id: number, data: TrasladarComiteRequest): Observable<Solicitud> {
     return this.http.post<Solicitud>(`${this.apiUrl}/${id}/trasladar-comite`, data);
+  }
+
+  /**
+   * Calcula el plan de pago sin guardar nada (previsualización)
+   */
+  calcularPlanPago(data: CalcularPlanPagoRequest): Observable<PlanPagoCalculado> {
+    return this.http.post<PlanPagoCalculado>(`${this.apiUrl}/calcular-plan`, data);
+  }
+
+  /**
+   * Guarda el plan de pago calculado en la base de datos
+   */
+  guardarPlanPago(solicitudId: number, data: CalcularPlanPagoRequest): Observable<PlanPagoCalculado> {
+    return this.http.post<PlanPagoCalculado>(`${this.apiUrl}/${solicitudId}/guardar-plan-pago`, data);
+  }
+
+  /**
+   * Obtiene el plan de pago guardado de una solicitud
+   */
+  obtenerPlanPago(solicitudId: number): Observable<PlanPagoCalculado> {
+    return this.http.get<PlanPagoCalculado>(`${this.apiUrl}/${solicitudId}/plan-pago`);
   }
 }

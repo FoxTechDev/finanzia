@@ -72,6 +72,10 @@ export class Pago {
   @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   interesMoratorioAplicado: number;
 
+  // Recargo manual aplicado (cuando el tipo de crédito tiene aplicaRecargoManual = true)
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
+  recargoManualAplicado: number;
+
   // Saldos ANTERIORES (para reversa en caso de anulación)
   @Column({ type: 'decimal', precision: 14, scale: 2 })
   saldoCapitalAnterior: number;

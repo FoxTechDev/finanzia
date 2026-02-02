@@ -10,6 +10,8 @@ import { Solicitud } from '../solicitud/entities/solicitud.entity';
 import { SolicitudHistorial } from '../solicitud/entities/solicitud-historial.entity';
 import { DecisionComiteDto } from './dto/decision-comite.dto';
 import { EstadoSolicitudService } from '../../catalogos/estado-solicitud/estado-solicitud.service';
+import { IngresoClienteService } from '../../ingreso-cliente/ingreso-cliente.service';
+import { GastoClienteService } from '../../gasto-cliente/gasto-cliente.service';
 
 @Injectable()
 export class ComiteService {
@@ -21,6 +23,8 @@ export class ComiteService {
     @InjectRepository(SolicitudHistorial)
     private readonly historialRepository: Repository<SolicitudHistorial>,
     private readonly estadoSolicitudService: EstadoSolicitudService,
+    private readonly ingresoClienteService: IngresoClienteService,
+    private readonly gastoClienteService: GastoClienteService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -37,6 +41,7 @@ export class ComiteService {
       .leftJoinAndSelect('solicitud.lineaCredito', 'lineaCredito')
       .leftJoinAndSelect('solicitud.tipoCredito', 'tipoCredito')
       .leftJoinAndSelect('solicitud.estado', 'estado')
+      .leftJoinAndSelect('solicitud.periodicidadPago', 'periodicidadPago')
       .where('estado.codigo = :estadoCodigo', { estadoCodigo: 'EN_COMITE' });
 
     if (filters?.lineaCreditoId) {
@@ -66,6 +71,62 @@ export class ComiteService {
     }
 
     return queryBuilder.orderBy('solicitud.fechaTrasladoComite', 'ASC').getMany();
+  }
+
+  /**
+   * Obtener información completa de una solicitud para revisión del comité.
+   * Incluye datos de la solicitud, cliente, ingresos, gastos y actividad económica.
+   */
+  async findSolicitudParaComite(solicitudId: number): Promise<any> {
+    // Cargar solicitud con todas sus relaciones necesarias
+    const solicitud = await this.solicitudRepository.findOne({
+      where: { id: solicitudId },
+      relations: [
+        'persona',
+        'persona.actividadEconomica',
+        'lineaCredito',
+        'tipoCredito',
+        'estado',
+        'periodicidadPago',
+        'historial',
+      ],
+    });
+
+    if (!solicitud) {
+      throw new NotFoundException(`Solicitud con ID ${solicitudId} no encontrada`);
+    }
+
+    // Obtener ingresos del cliente
+    const ingresos = await this.ingresoClienteService.findByPersona(solicitud.personaId);
+    const totalIngresos = await this.ingresoClienteService.getTotalByPersona(solicitud.personaId);
+
+    // Obtener gastos del cliente
+    const gastos = await this.gastoClienteService.findByPersona(solicitud.personaId);
+    const totalGastos = await this.gastoClienteService.getTotalByPersona(solicitud.personaId);
+
+    // Calcular capacidad de pago (ingresos - gastos)
+    const capacidadPago = totalIngresos - totalGastos;
+
+    // Calcular ratio de endeudamiento si hay capacidad de pago
+    let ratioEndeudamiento = null;
+    if (capacidadPago > 0) {
+      // Ratio = (Cuota estimada / Ingresos) * 100
+      // Para esto necesitaríamos calcular la cuota, pero podemos dar una aproximación
+      const cuotaEstimada = solicitud.montoSolicitado / solicitud.plazoSolicitado;
+      ratioEndeudamiento = ((cuotaEstimada / totalIngresos) * 100).toFixed(2);
+    }
+
+    return {
+      solicitud,
+      ingresos,
+      gastos,
+      analisisFinanciero: {
+        totalIngresos,
+        totalGastos,
+        capacidadPago,
+        ratioEndeudamiento: ratioEndeudamiento ? parseFloat(ratioEndeudamiento) : null,
+      },
+    };
   }
 
   async findHistorial(filters?: {

@@ -283,17 +283,14 @@ export class ClasificacionPrestamoDialogComponent implements OnInit {
     if (this.isEditMode) {
       // En modo edición, excluir el código ya que no debe actualizarse
       const { codigo, ...updateData } = formValue;
-      console.log('Actualizando clasificación:', { id: this.data!.id, data: updateData });
       request = this.service.update(this.data!.id, updateData);
     } else {
       // En modo creación, incluir todos los campos
-      console.log('Creando clasificación:', formValue);
       request = this.service.create(formValue);
     }
 
     request.subscribe({
-      next: (response) => {
-        console.log('Clasificación guardada exitosamente:', response);
+      next: () => {
         this.snackBar.open(
           this.isEditMode ? 'Clasificación actualizada exitosamente' : 'Clasificación creada exitosamente',
           'Cerrar',

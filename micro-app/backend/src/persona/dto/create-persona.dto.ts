@@ -15,6 +15,9 @@ import { CreateDireccionDto } from '../../direccion/dto/create-direccion.dto';
 import { CreateActividadEconomicaDto } from '../../actividad-economica/dto/create-actividad-economica.dto';
 import { CreateReferenciaPersonalDto } from '../../referencia-personal/dto/create-referencia-personal.dto';
 import { CreateReferenciaFamiliarDto } from '../../referencia-familiar/dto/create-referencia-familiar.dto';
+import { CreateDependenciaFamiliarDto } from '../../dependencia-familiar/dto/create-dependencia-familiar.dto';
+import { CreateIngresoNestedDto } from '../../ingreso-cliente/dto/create-ingreso-nested.dto';
+import { CreateGastoNestedDto } from '../../gasto-cliente/dto/create-gasto-nested.dto';
 
 export class CreatePersonaDto {
   @IsString()
@@ -90,4 +93,22 @@ export class CreatePersonaDto {
   @IsArray()
   @IsOptional()
   referenciasFamiliares?: CreateReferenciaFamiliarDto[];
+
+  @ValidateNested({ each: true })
+  @Type(() => CreateDependenciaFamiliarDto)
+  @IsArray()
+  @IsOptional()
+  dependenciasFamiliares?: CreateDependenciaFamiliarDto[];
+
+  @ValidateNested({ each: true })
+  @Type(() => CreateIngresoNestedDto)
+  @IsArray()
+  @IsOptional()
+  ingresos?: CreateIngresoNestedDto[];
+
+  @ValidateNested({ each: true })
+  @Type(() => CreateGastoNestedDto)
+  @IsArray()
+  @IsOptional()
+  gastos?: CreateGastoNestedDto[];
 }

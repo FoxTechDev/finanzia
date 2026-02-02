@@ -21,6 +21,7 @@ import { EstadoPrestamoModel } from '@core/models/catalogo.model';
 import {
   Prestamo,
   PlanPago,
+  Pago,
   EstadoPrestamo,
   EstadoCuota,
   ESTADO_PRESTAMO_LABELS,
@@ -77,13 +78,13 @@ import {
             color="accent"
             (click)="descargarEstadoCuentaPdf()"
             [disabled]="isDownloadingPdf()"
-            matTooltip="Descargar estado de cuenta en PDF">
+            matTooltip="Ver o descargar estado de cuenta">
             @if (isDownloadingPdf()) {
               <mat-spinner diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
             } @else {
-              <mat-icon>picture_as_pdf</mat-icon>
+              <mat-icon>receipt_long</mat-icon>
             }
-            Descargar Estado de Cuenta
+            Estado de Cuenta
           </button>
         </div>
       </div>
@@ -590,6 +591,149 @@ import {
               </mat-card>
             </div>
           </mat-tab>
+
+          <!-- Tab 5: Pagos Realizados -->
+          <mat-tab label="Pagos Realizados">
+            <div class="tab-content">
+              <mat-card>
+                <mat-card-content>
+                  @if (isLoadingPagos()) {
+                    <div class="loading">
+                      <mat-spinner diameter="30"></mat-spinner>
+                      <p>Cargando pagos...</p>
+                    </div>
+                  } @else if (pagos().length === 0) {
+                    <div class="empty-state">
+                      <mat-icon>payments</mat-icon>
+                      <p>No se han registrado pagos para este préstamo</p>
+                    </div>
+                  } @else {
+                    <div class="table-responsive">
+                      <table mat-table [dataSource]="pagos()" class="pagos-table">
+
+                        <!-- Número de Pago -->
+                        <ng-container matColumnDef="numeroPago">
+                          <th mat-header-cell *matHeaderCellDef>No. Recibo</th>
+                          <td mat-cell *matCellDef="let pago">
+                            <strong>{{ pago.numeroPago }}</strong>
+                          </td>
+                        </ng-container>
+
+                        <!-- Fecha de Pago -->
+                        <ng-container matColumnDef="fechaPago">
+                          <th mat-header-cell *matHeaderCellDef>Fecha</th>
+                          <td mat-cell *matCellDef="let pago">
+                            {{ pago.fechaPago | date:'dd/MM/yyyy' }}
+                          </td>
+                        </ng-container>
+
+                        <!-- Monto Pagado -->
+                        <ng-container matColumnDef="montoPagado">
+                          <th mat-header-cell *matHeaderCellDef>Monto Total</th>
+                          <td mat-cell *matCellDef="let pago">
+                            <strong>{{ pago.montoPagado | currency:'USD':'symbol':'1.2-2' }}</strong>
+                          </td>
+                        </ng-container>
+
+                        <!-- Capital Aplicado -->
+                        <ng-container matColumnDef="capitalAplicado">
+                          <th mat-header-cell *matHeaderCellDef>Capital</th>
+                          <td mat-cell *matCellDef="let pago">
+                            {{ pago.capitalAplicado | currency:'USD':'symbol':'1.2-2' }}
+                          </td>
+                        </ng-container>
+
+                        <!-- Interés Aplicado -->
+                        <ng-container matColumnDef="interesAplicado">
+                          <th mat-header-cell *matHeaderCellDef>Interés</th>
+                          <td mat-cell *matCellDef="let pago">
+                            {{ pago.interesAplicado | currency:'USD':'symbol':'1.2-2' }}
+                          </td>
+                        </ng-container>
+
+                        <!-- Recargos Aplicados -->
+                        <ng-container matColumnDef="recargosAplicado">
+                          <th mat-header-cell *matHeaderCellDef>Recargos</th>
+                          <td mat-cell *matCellDef="let pago">
+                            @if (pago.recargosAplicado > 0) {
+                              {{ pago.recargosAplicado | currency:'USD':'symbol':'1.2-2' }}
+                            } @else {
+                              <span class="text-muted">-</span>
+                            }
+                          </td>
+                        </ng-container>
+
+                        <!-- Interés Moratorio Aplicado -->
+                        <ng-container matColumnDef="interesMoratorioAplicado">
+                          <th mat-header-cell *matHeaderCellDef>Int. Mora</th>
+                          <td mat-cell *matCellDef="let pago">
+                            @if (pago.interesMoratorioAplicado > 0) {
+                              <span class="text-warn">{{ pago.interesMoratorioAplicado | currency:'USD':'symbol':'1.2-2' }}</span>
+                            } @else {
+                              <span class="text-muted">-</span>
+                            }
+                          </td>
+                        </ng-container>
+
+                        <!-- Recargo Manual Aplicado -->
+                        <ng-container matColumnDef="recargoManualAplicado">
+                          <th mat-header-cell *matHeaderCellDef>Rec. Manual</th>
+                          <td mat-cell *matCellDef="let pago">
+                            @if (pago.recargoManualAplicado > 0) {
+                              <span class="text-warn">{{ pago.recargoManualAplicado | currency:'USD':'symbol':'1.2-2' }}</span>
+                            } @else {
+                              <span class="text-muted">-</span>
+                            }
+                          </td>
+                        </ng-container>
+
+                        <!-- Estado -->
+                        <ng-container matColumnDef="estado">
+                          <th mat-header-cell *matHeaderCellDef>Estado</th>
+                          <td mat-cell *matCellDef="let pago">
+                            <mat-chip-set>
+                              <mat-chip [ngClass]="getEstadoPagoClass(pago.estado)">
+                                {{ pago.estado }}
+                              </mat-chip>
+                            </mat-chip-set>
+                          </td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="pagosColumns"></tr>
+                        <tr
+                          mat-row
+                          *matRowDef="let row; columns: pagosColumns"
+                          [ngClass]="{ 'row-anulado': row.estado === 'ANULADO' }"
+                        ></tr>
+                      </table>
+                    </div>
+
+                    <!-- Resumen de pagos -->
+                    <div class="pagos-resumen">
+                      <div class="resumen-item">
+                        <span class="label">Total Pagado:</span>
+                        <span class="value">{{ getTotalPagado() | currency:'USD':'symbol':'1.2-2' }}</span>
+                      </div>
+                      <div class="resumen-item">
+                        <span class="label">Capital Pagado:</span>
+                        <span class="value">{{ getTotalCapitalPagado() | currency:'USD':'symbol':'1.2-2' }}</span>
+                      </div>
+                      <div class="resumen-item">
+                        <span class="label">Interés Pagado:</span>
+                        <span class="value">{{ getTotalInteresPagado() | currency:'USD':'symbol':'1.2-2' }}</span>
+                      </div>
+                      @if (getTotalRecargoManualPagado() > 0) {
+                        <div class="resumen-item">
+                          <span class="label">Recargo Manual Pagado:</span>
+                          <span class="value text-warn">{{ getTotalRecargoManualPagado() | currency:'USD':'symbol':'1.2-2' }}</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </mat-tab>
         </mat-tab-group>
       }
     </div>
@@ -989,6 +1133,60 @@ import {
         padding: 0 12px;
       }
     }
+
+    /* Tabla de pagos */
+    .pagos-table {
+      width: 100%;
+    }
+
+    .pagos-table tr.row-anulado {
+      background-color: #ffebee;
+      opacity: 0.7;
+    }
+
+    mat-chip.pago-aplicado {
+      background-color: #4caf50 !important;
+      color: white !important;
+    }
+
+    mat-chip.pago-anulado {
+      background-color: #f44336 !important;
+      color: white !important;
+    }
+
+    /* Resumen de pagos */
+    .pagos-resumen {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      margin-top: 24px;
+      padding: 16px;
+      background-color: #e3f2fd;
+      border-radius: 8px;
+    }
+
+    .pagos-resumen .resumen-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .pagos-resumen .resumen-item .label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .pagos-resumen .resumen-item .value {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1976d2;
+    }
+
+    .pagos-resumen .resumen-item .value.text-warn {
+      color: #f57c00;
+    }
   `],
 })
 export class PrestamoDetailComponent implements OnInit {
@@ -1002,8 +1200,10 @@ export class PrestamoDetailComponent implements OnInit {
 
   prestamo = signal<Prestamo | null>(null);
   planPago = signal<PlanPago[]>([]);
+  pagos = signal<Pago[]>([]);
   isLoading = signal(true);
   isLoadingPlanPago = signal(false);
+  isLoadingPagos = signal(false);
   isDownloadingPdf = signal(false);
   selectedTabIndex = signal(0);
   estadosPrestamo = signal<EstadoPrestamoModel[]>([]);
@@ -1020,6 +1220,18 @@ export class PrestamoDetailComponent implements OnInit {
     'saldoCapital',
   ];
 
+  pagosColumns = [
+    'numeroPago',
+    'fechaPago',
+    'montoPagado',
+    'capitalAplicado',
+    'interesAplicado',
+    'recargosAplicado',
+    'interesMoratorioAplicado',
+    'recargoManualAplicado',
+    'estado',
+  ];
+
   ngOnInit(): void {
     this.loadEstadosPrestamo();
 
@@ -1032,8 +1244,12 @@ export class PrestamoDetailComponent implements OnInit {
     this.route.fragment.subscribe(fragment => {
       if (fragment === 'plan-pagos') {
         this.selectedTabIndex.set(2);
-      } else if (fragment === 'historial-pagos') {
-        this.selectedTabIndex.set(2);
+      } else if (fragment === 'historial-pagos' || fragment === 'pagos') {
+        this.selectedTabIndex.set(4);
+        // Cargar pagos si no están cargados
+        if (this.pagos().length === 0 && this.prestamo()) {
+          this.loadPagos();
+        }
       }
     });
   }
@@ -1079,6 +1295,11 @@ export class PrestamoDetailComponent implements OnInit {
     if (index === 2 && this.planPago().length === 0 && this.prestamo()) {
       this.loadPlanPago();
     }
+
+    // Cargar pagos cuando se selecciona el tab de pagos
+    if (index === 4 && this.pagos().length === 0 && this.prestamo()) {
+      this.loadPagos();
+    }
   }
 
   loadPlanPago(): void {
@@ -1098,6 +1319,27 @@ export class PrestamoDetailComponent implements OnInit {
           { duration: 3000 }
         );
         this.isLoadingPlanPago.set(false);
+      },
+    });
+  }
+
+  loadPagos(): void {
+    const prestamoId = this.prestamo()?.id;
+    if (!prestamoId) return;
+
+    this.isLoadingPagos.set(true);
+    this.pagoService.getByPrestamo(prestamoId).subscribe({
+      next: (data) => {
+        this.pagos.set(data);
+        this.isLoadingPagos.set(false);
+      },
+      error: (err) => {
+        this.snackBar.open(
+          err.error?.message || 'Error al cargar los pagos',
+          'Cerrar',
+          { duration: 3000 }
+        );
+        this.isLoadingPagos.set(false);
       },
     });
   }
@@ -1179,6 +1421,34 @@ export class PrestamoDetailComponent implements OnInit {
     return this.prestamo()?.recargos?.reduce((sum, r) => sum + r.montoCalculado, 0) || 0;
   }
 
+  getTotalPagado(): number {
+    return this.pagos()
+      .filter(p => p.estado === 'APLICADO')
+      .reduce((sum, p) => sum + Number(p.montoPagado), 0);
+  }
+
+  getTotalCapitalPagado(): number {
+    return this.pagos()
+      .filter(p => p.estado === 'APLICADO')
+      .reduce((sum, p) => sum + Number(p.capitalAplicado), 0);
+  }
+
+  getTotalInteresPagado(): number {
+    return this.pagos()
+      .filter(p => p.estado === 'APLICADO')
+      .reduce((sum, p) => sum + Number(p.interesAplicado), 0);
+  }
+
+  getTotalRecargoManualPagado(): number {
+    return this.pagos()
+      .filter(p => p.estado === 'APLICADO')
+      .reduce((sum, p) => sum + Number(p.recargoManualAplicado || 0), 0);
+  }
+
+  getEstadoPagoClass(estado: string): string {
+    return estado === 'APLICADO' ? 'pago-aplicado' : 'pago-anulado';
+  }
+
   volver(): void {
     this.router.navigate(['/creditos/prestamos']);
   }
@@ -1205,6 +1475,10 @@ export class PrestamoDetailComponent implements OnInit {
         if (this.planPago().length > 0) {
           this.loadPlanPago();
         }
+        // Recargar los pagos si estaban cargados
+        if (this.pagos().length > 0) {
+          this.loadPagos();
+        }
         this.snackBar.open('Pago registrado exitosamente', 'Cerrar', { duration: 3000 });
       }
     });
@@ -1215,7 +1489,14 @@ export class PrestamoDetailComponent implements OnInit {
   }
 
   /**
-   * Descarga el estado de cuenta en PDF
+   * Detecta si el dispositivo es móvil
+   */
+  private isMobileDevice(): boolean {
+    return window.innerWidth <= 768;
+  }
+
+  /**
+   * Muestra el estado de cuenta - móvil o PDF según el dispositivo
    */
   descargarEstadoCuentaPdf(): void {
     const prestamoId = this.prestamo()?.id;
@@ -1226,6 +1507,13 @@ export class PrestamoDetailComponent implements OnInit {
       return;
     }
 
+    // Si es móvil, navegar a la vista móvil del estado de cuenta
+    if (this.isMobileDevice()) {
+      this.router.navigate(['/creditos/prestamos', prestamoId, 'estado-cuenta-movil']);
+      return;
+    }
+
+    // En escritorio, descargar el PDF
     this.isDownloadingPdf.set(true);
 
     this.pagoService.descargarEstadoCuentaPdf(prestamoId).subscribe({
