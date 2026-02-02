@@ -14,6 +14,7 @@ export class DistribucionReciboDto {
   interesAplicado: number;
   recargosAplicado: number;
   interesMoratorioAplicado: number;
+  recargoManualAplicado: number;
 }
 
 export class UsuarioReciboDto {

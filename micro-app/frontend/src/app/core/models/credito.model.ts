@@ -931,6 +931,7 @@ export interface ReciboData {
     interesAplicado: number;
     recargosAplicado: number;
     interesMoratorioAplicado: number;
+    recargoManualAplicado: number;
   };
 
   // Saldos

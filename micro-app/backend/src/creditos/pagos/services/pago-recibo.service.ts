@@ -80,6 +80,7 @@ export class PagoReciboService {
         interesAplicado: Number(pago.interesAplicado),
         recargosAplicado: Number(pago.recargosAplicado),
         interesMoratorioAplicado: Number(pago.interesMoratorioAplicado),
+        recargoManualAplicado: Number(pago.recargoManualAplicado || 0),
       },
 
       // Saldos

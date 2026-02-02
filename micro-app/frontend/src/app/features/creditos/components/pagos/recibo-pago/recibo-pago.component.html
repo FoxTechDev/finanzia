@@ -93,6 +93,12 @@
       <span class="label">  Mora:</span>
       <span class="valor">{{ recibo()!.distribucion.interesMoratorioAplicado | currency:'USD':'symbol':'1.2-2' }}</span>
     </div>
+    @if (recibo()!.distribucion.recargoManualAplicado > 0) {
+      <div class="distribucion-item">
+        <span class="label">  Recargo:</span>
+        <span class="valor">{{ recibo()!.distribucion.recargoManualAplicado | currency:'USD':'symbol':'1.2-2' }}</span>
+      </div>
+    }
 
     <div class="separador">--------------------------------</div>
 

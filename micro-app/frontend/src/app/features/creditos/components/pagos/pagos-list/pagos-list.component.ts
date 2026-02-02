@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed, ViewChild } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSortModule, MatSort } from '@angular/material/sort';
@@ -304,6 +304,14 @@ import {
                         <mat-icon>visibility</mat-icon>
                       </button>
                       @if (row.estado === 'APLICADO') {
+                        <button
+                          mat-icon-button
+                          color="accent"
+                          (click)="imprimirRecibo(row)"
+                          matTooltip="Imprimir recibo"
+                        >
+                          <mat-icon>print</mat-icon>
+                        </button>
                         <button
                           mat-icon-button
                           color="warn"
@@ -697,6 +705,7 @@ export class PagosListComponent implements OnInit {
   private pagoService = inject(PagoService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -930,5 +939,14 @@ export class PagosListComponent implements OnInit {
    */
   estadoPagoLabel(estado: string): string {
     return ESTADO_PAGO_LABELS[estado as EstadoPago] || estado;
+  }
+
+  /**
+   * Navega a la página de impresión del recibo
+   */
+  imprimirRecibo(pago: Pago): void {
+    // Abrir en nueva ventana para imprimir
+    const url = `/creditos/pagos/${pago.id}/recibo`;
+    window.open(url, '_blank', 'width=400,height=800');
   }
 }
