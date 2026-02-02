@@ -235,27 +235,35 @@
     display: none !important;
   }
 
-  // Configuración de la página
+  // Configuración de la página - altura automática, sin márgenes
   @page {
     size: 80mm auto;
     margin: 0;
   }
 
-  body {
-    margin: 0;
-    padding: 0;
+  // Reset completo para impresión
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
   }
 
   :host {
     display: block;
     width: 80mm;
+    height: auto !important;
+    overflow: visible !important;
   }
 
   // Estado de cuenta en impresión - Tipografía 12x24 ASCII
   .estado-cuenta-termica {
     width: 80mm;
+    height: auto !important;
+    min-height: 0 !important;
     margin: 0;
-    padding: 3mm;
+    padding: 2mm;
     background: white;
     border: none;
     border-radius: 0;
@@ -265,6 +273,8 @@
     line-height: 1.2;
     letter-spacing: 0.02em;
     color: #000;
+    page-break-after: avoid !important;
+    page-break-before: avoid !important;
   }
 
   // Ajustar tamaños para impresión
@@ -274,19 +284,24 @@
 
   .titulo {
     font-size: 10pt;
+    margin: 2mm 0 1mm 0;
   }
 
   .seccion-titulo {
     font-size: 8pt;
+    margin: 1mm 0 0.5mm 0;
   }
 
   .datos-linea {
     font-size: 8pt;
+    margin: 0.5mm 0;
   }
 
   .saldo-total,
   .total-pagado {
     font-size: 9pt;
+    margin: 1mm 0;
+    padding: 1mm;
 
     .valor-destacado {
       font-size: 10pt;
@@ -296,10 +311,18 @@
   .tabla-header,
   .tabla-row {
     font-size: 7pt;
+    padding: 0.3mm 0;
   }
 
   .leyenda {
     font-size: 6pt;
+    margin-top: 1mm;
+    margin-bottom: 0;
+  }
+
+  // El último separador no debe tener margen inferior
+  .separador-doble:last-child {
+    margin-bottom: 0 !important;
   }
 
   // Asegurar que todo sea blanco y negro
@@ -310,25 +333,19 @@
     print-color-adjust: exact !important;
   }
 
-  // Evitar saltos de página no deseados
-  .estado-cuenta-termica {
-    page-break-inside: avoid;
-  }
-
-  .seccion-titulo,
-  .datos-linea,
-  .tabla-row {
-    page-break-inside: avoid;
-  }
-
   // Ajustar márgenes y espaciado para optimizar espacio
   .separador,
   .separador-doble {
-    margin: 1mm 0;
+    margin: 0.5mm 0;
   }
 
-  .seccion-titulo {
-    margin: 1.5mm 0 1mm 0;
+  .header {
+    margin-bottom: 1mm;
+  }
+
+  .info-credito,
+  .info-fecha {
+    margin: 0.5mm 0;
   }
 }
 

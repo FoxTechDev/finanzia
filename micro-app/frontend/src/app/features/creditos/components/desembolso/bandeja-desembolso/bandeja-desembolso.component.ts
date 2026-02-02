@@ -73,7 +73,8 @@ import { CrearDesembolsoDialogComponent } from '../crear-desembolso-dialog/crear
               <p>No hay solicitudes pendientes de desembolso</p>
             </div>
           } @else {
-            <table mat-table [dataSource]="solicitudes()" class="full-width">
+            <div class="table-responsive">
+              <table mat-table [dataSource]="solicitudes()" class="full-width">
               <!-- Número Solicitud -->
               <ng-container matColumnDef="numeroSolicitud">
                 <th mat-header-cell *matHeaderCellDef>N° Solicitud</th>
@@ -164,7 +165,8 @@ import { CrearDesembolsoDialogComponent } from '../crear-desembolso-dialog/crear
 
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
               <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-            </table>
+              </table>
+            </div>
           }
         </mat-card-content>
       </mat-card>
@@ -259,6 +261,110 @@ import { CrearDesembolsoDialogComponent } from '../crear-desembolso-dialog/crear
     th.mat-mdc-header-cell {
       background: #fafafa;
       font-weight: 600;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 8px;
+      }
+
+      mat-card-header {
+        mat-card-title {
+          font-size: 18px;
+        }
+
+        mat-card-subtitle {
+          font-size: 12px;
+        }
+      }
+
+      .stats-container {
+        flex-direction: column;
+        gap: 12px;
+        margin: 16px 0;
+      }
+
+      .stat-card {
+        padding: 12px 16px;
+        min-width: auto;
+        width: 100%;
+      }
+
+      .stat-value {
+        font-size: 20px;
+      }
+
+      .stat-label {
+        font-size: 11px;
+      }
+
+      .loading-container {
+        padding: 32px 16px;
+      }
+
+      .loading-container p {
+        font-size: 14px;
+      }
+
+      .empty-state {
+        padding: 32px 16px;
+      }
+
+      .empty-state mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+      }
+
+      .empty-state p {
+        font-size: 14px;
+      }
+
+      .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -8px;
+      }
+
+      table {
+        min-width: 800px;
+        font-size: 13px;
+      }
+
+      th.mat-mdc-header-cell,
+      td.mat-mdc-cell {
+        padding: 6px 4px !important;
+        white-space: nowrap;
+      }
+
+      .text-muted {
+        font-size: 11px;
+      }
+
+      button[mat-raised-button] {
+        font-size: 12px;
+        padding: 0 12px;
+        min-width: auto;
+      }
+
+      button[mat-raised-button] mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        margin-right: 4px;
+      }
+
+      .mat-mdc-icon-button {
+        width: 36px;
+        height: 36px;
+        padding: 6px;
+      }
+
+      .mat-mdc-icon-button mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
     }
   `],
 })

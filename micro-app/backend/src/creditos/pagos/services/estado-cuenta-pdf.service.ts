@@ -713,9 +713,10 @@ export class EstadoCuentaPdfService {
 
   /**
    * Formatea un número como porcentaje
+   * La tasa ya viene como porcentaje (ej: 12 = 12%), no como decimal
    */
   private formatearPorcentaje(valor: number): string {
-    return `${(valor * 100).toFixed(2)}%`;
+    return `${Number(valor).toFixed(2)}%`;
   }
 
   /**

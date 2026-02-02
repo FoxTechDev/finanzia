@@ -80,6 +80,7 @@ export class EstadoCuentaMovilComponent implements OnInit {
   }
 
   formatearPorcentaje(valor: number): string {
-    return `${(valor * 100).toFixed(2)}%`;
+    // La tasa ya viene como porcentaje (ej: 12 = 12%), no como decimal
+    return `${Number(valor).toFixed(2)}%`;
   }
 }

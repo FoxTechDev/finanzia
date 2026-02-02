@@ -69,10 +69,6 @@
       <span class="valor">{{ estadoCuenta()!.prestamo.plazoMeses }} meses</span>
     </div>
     <div class="datos-linea">
-      <span class="label">Tasa:</span>
-      <span class="valor">{{ formatearPorcentaje(estadoCuenta()!.prestamo.tasaInteres) }}</span>
-    </div>
-    <div class="datos-linea">
       <span class="label">Estado:</span>
       <span class="valor estado-credito" [class.mora]="estadoCuenta()!.saldos.diasMora > 0">
         {{ estadoCuenta()!.prestamo.estado }}
@@ -176,11 +172,7 @@
 
     <!-- Leyenda -->
     <div class="leyenda">
-      Documento informativo
-      <br>
-      generado el {{ formatearFecha(estadoCuenta()!.fechaEmision) }}
+      Documento informativo - {{ formatearFecha(estadoCuenta()!.fechaEmision) }}
     </div>
-
-    <div class="separador-doble">================================</div>
   </div>
 }

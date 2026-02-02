@@ -591,6 +591,105 @@ import {
         width: 100%;
       }
     }
+
+    /* Responsive Mobile (iPhone) */
+    @media (max-width: 600px) {
+      .container {
+        padding: 8px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .header-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      .filtros-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .filtros-card {
+        margin-bottom: 12px;
+      }
+
+      .estadisticas-cards {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .estadistica-card {
+        padding: 12px;
+      }
+
+      .stat-valor {
+        font-size: 20px;
+      }
+
+      .stat-label {
+        font-size: 11px;
+      }
+
+      .filtros-actions {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .filtros-actions button {
+        width: 100%;
+      }
+
+      .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -8px;
+      }
+
+      table {
+        min-width: 800px;
+        font-size: 13px;
+      }
+
+      th, td {
+        padding: 6px 4px !important;
+        white-space: nowrap;
+      }
+
+      .mat-mdc-icon-button {
+        width: 36px;
+        height: 36px;
+        padding: 6px;
+      }
+
+      .mat-mdc-icon-button mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+
+      mat-chip {
+        font-size: 11px;
+        min-height: 24px;
+      }
+
+      .loading-container {
+        padding: 32px 16px;
+      }
+
+      .empty-state {
+        padding: 32px 16px;
+      }
+
+      .empty-state mat-icon {
+        font-size: 36px;
+        width: 36px;
+        height: 36px;
+      }
+    }
   `],
 })
 export class PagosListComponent implements OnInit {

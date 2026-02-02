@@ -193,18 +193,122 @@ import {
   `,
   styles: [
     `
-      .container { padding: 16px; }
-      .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-      .header h1 { margin: 0; }
+      .container {
+        padding: 16px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      @media (max-width: 600px) {
+        .container { padding: 8px; }
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 24px;
+      }
+
+      @media (max-width: 600px) {
+        .header h1 { font-size: 20px; }
+        .header button[mat-fab] {
+          width: 48px;
+          height: 48px;
+        }
+      }
+
       .filters-card { margin-bottom: 16px; }
-      .filters { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
-      .filters mat-form-field { flex: 1; min-width: 150px; }
-      .loading { display: flex; justify-content: center; padding: 48px; }
+
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: flex-start;
+      }
+
+      .filters mat-form-field {
+        flex: 1;
+        min-width: 150px;
+      }
+
+      @media (max-width: 600px) {
+        .filters { gap: 8px; }
+        .filters mat-form-field {
+          flex: 1 1 100%;
+          min-width: 100%;
+        }
+        .filters button {
+          width: 100%;
+          margin-top: 8px;
+        }
+      }
+
+      .loading {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
+      }
+
+      @media (max-width: 600px) {
+        .loading { padding: 32px 16px; }
+      }
+
       .full-width { width: 100%; }
-      .table-responsive { overflow-x: auto; }
-      .empty { text-align: center; padding: 48px; }
-      .empty mat-icon { font-size: 48px; width: 48px; height: 48px; color: #ccc; }
-      .empty p { color: #666; margin: 16px 0; }
+
+      .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .table-responsive table {
+        min-width: 800px;
+      }
+
+      @media (max-width: 600px) {
+        .table-responsive table {
+          font-size: 13px;
+        }
+        .table-responsive th,
+        .table-responsive td {
+          padding: 8px 4px !important;
+          white-space: nowrap;
+        }
+      }
+
+      .empty {
+        text-align: center;
+        padding: 48px 16px;
+      }
+
+      .empty mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: #ccc;
+      }
+
+      .empty p {
+        color: #666;
+        margin: 16px 0;
+      }
+
+      @media (max-width: 600px) {
+        .empty { padding: 32px 16px; }
+        .empty mat-icon {
+          font-size: 36px;
+          width: 36px;
+          height: 36px;
+        }
+        .empty p { font-size: 14px; }
+      }
 
       /* Clases de estado basadas en códigos */
       mat-chip.estado-registrada { background-color: #2196f3 !important; color: white !important; }
@@ -214,6 +318,14 @@ import {
       mat-chip.estado-denegada { background-color: #f44336 !important; color: white !important; }
       mat-chip.estado-aprobada { background-color: #4caf50 !important; color: white !important; }
       mat-chip.estado-desembolsada { background-color: #00bcd4 !important; color: white !important; }
+
+      @media (max-width: 600px) {
+        mat-chip {
+          font-size: 11px;
+          min-height: 24px;
+          padding: 2px 8px;
+        }
+      }
     `,
   ],
 })

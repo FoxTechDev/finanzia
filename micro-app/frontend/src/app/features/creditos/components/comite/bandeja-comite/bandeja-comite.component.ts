@@ -115,7 +115,8 @@ import { DecisionComiteDialogComponent } from '../decision-comite-dialog/decisio
       } @else {
         <mat-card>
           <mat-card-content>
-            <table mat-table [dataSource]="solicitudes()" class="full-width">
+            <div class="table-responsive">
+              <table mat-table [dataSource]="solicitudes()" class="full-width">
               <ng-container matColumnDef="numeroSolicitud">
                 <th mat-header-cell *matHeaderCellDef>Número</th>
                 <td mat-cell *matCellDef="let item">{{ item.numeroSolicitud }}</td>
@@ -181,7 +182,8 @@ import { DecisionComiteDialogComponent } from '../decision-comite-dialog/decisio
 
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
               <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-            </table>
+              </table>
+            </div>
 
             @if (solicitudes().length === 0) {
               <div class="empty">
@@ -196,25 +198,205 @@ import { DecisionComiteDialogComponent } from '../decision-comite-dialog/decisio
   `,
   styles: [
     `
-      .container { padding: 16px; max-width: 1400px; margin: 0 auto; }
-      .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-      .header h1 { margin: 0; }
-      .stats-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px; }
-      .stat-card { text-align: center; }
-      .stat-value { font-size: 2em; font-weight: bold; color: #1976d2; }
-      .stat-label { color: #666; }
-      .filters-card { margin-bottom: 16px; }
-      .filters-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
-      .filters-row mat-form-field { flex: 1; min-width: 180px; }
-      .loading { display: flex; justify-content: center; padding: 48px; }
-      .full-width { width: 100%; }
-      .amount { font-weight: 600; color: #1976d2; }
-      .no-data { color: #999; font-style: italic; }
-      .empty { text-align: center; padding: 48px; color: #666; }
-      .empty mat-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 16px; }
-      mat-chip.recomendacion-aprobar { background-color: #4caf50 !important; color: white !important; }
-      mat-chip.recomendacion-rechazar { background-color: #f44336 !important; color: white !important; }
-      mat-chip.recomendacion-observar { background-color: #ff9800 !important; color: white !important; }
+      .container {
+        padding: 16px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      @media (max-width: 600px) {
+        .container { padding: 8px; }
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 24px;
+      }
+
+      @media (max-width: 600px) {
+        .header h1 { font-size: 20px; }
+      }
+
+      .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      @media (max-width: 600px) {
+        .stats-cards {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+      }
+
+      .stat-card {
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 2em;
+        font-weight: bold;
+        color: #1976d2;
+      }
+
+      .stat-label {
+        color: #666;
+        font-size: 14px;
+      }
+
+      @media (max-width: 600px) {
+        .stat-value { font-size: 1.5em; }
+        .stat-label { font-size: 12px; }
+      }
+
+      .filters-card {
+        margin-bottom: 16px;
+      }
+
+      .filters-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: flex-start;
+      }
+
+      .filters-row mat-form-field {
+        flex: 1;
+        min-width: 180px;
+      }
+
+      @media (max-width: 600px) {
+        .filters-row {
+          gap: 8px;
+        }
+
+        .filters-row mat-form-field {
+          flex: 1 1 100%;
+          min-width: 100%;
+        }
+
+        .filters-row button {
+          width: 100%;
+        }
+      }
+
+      .loading {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
+      }
+
+      @media (max-width: 600px) {
+        .loading { padding: 32px 16px; }
+      }
+
+      .full-width {
+        width: 100%;
+      }
+
+      table {
+        width: 100%;
+      }
+
+      @media (max-width: 600px) {
+        .table-responsive {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+          min-width: 800px;
+          font-size: 13px;
+        }
+
+        th, td {
+          padding: 6px 4px !important;
+          white-space: nowrap;
+        }
+
+        .mat-mdc-icon-button {
+          width: 36px;
+          height: 36px;
+          padding: 6px;
+        }
+
+        button[mat-raised-button] {
+          font-size: 12px;
+          padding: 0 12px;
+        }
+
+        button[mat-raised-button] mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+
+      .amount {
+        font-weight: 600;
+        color: #1976d2;
+      }
+
+      .no-data {
+        color: #999;
+        font-style: italic;
+      }
+
+      .empty {
+        text-align: center;
+        padding: 48px 16px;
+        color: #666;
+      }
+
+      .empty mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        margin-bottom: 16px;
+      }
+
+      @media (max-width: 600px) {
+        .empty {
+          padding: 32px 16px;
+        }
+
+        .empty mat-icon {
+          font-size: 36px;
+          width: 36px;
+          height: 36px;
+        }
+      }
+
+      mat-chip.recomendacion-aprobar {
+        background-color: #4caf50 !important;
+        color: white !important;
+      }
+
+      mat-chip.recomendacion-rechazar {
+        background-color: #f44336 !important;
+        color: white !important;
+      }
+
+      mat-chip.recomendacion-observar {
+        background-color: #ff9800 !important;
+        color: white !important;
+      }
+
+      @media (max-width: 600px) {
+        mat-chip {
+          font-size: 11px;
+          min-height: 24px;
+        }
+      }
     `,
   ],
 })

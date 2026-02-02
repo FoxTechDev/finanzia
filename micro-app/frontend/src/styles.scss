@@ -363,3 +363,460 @@ a {
 .mat-mdc-card.card-success {
   border-left: 4px solid var(--success-color);
 }
+
+// ============================================
+// RESPONSIVE DESIGN FIXES FOR MOBILE (iPhone)
+// ============================================
+
+// Global responsive table container
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+
+  table {
+    min-width: 600px; // Asegura scroll horizontal en móvil
+
+    @media (max-width: 600px) {
+      font-size: 14px;
+
+      th, td {
+        padding: 8px 4px !important;
+        white-space: nowrap;
+      }
+    }
+  }
+}
+
+// Container padding responsive
+.container {
+  padding: 16px;
+
+  @media (max-width: 600px) {
+    padding: 8px;
+  }
+}
+
+// Header responsive
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  h1 {
+    font-size: 24px;
+    margin: 0;
+
+    @media (max-width: 600px) {
+      font-size: 20px;
+    }
+  }
+
+  button[mat-fab] {
+    @media (max-width: 600px) {
+      transform: scale(0.9);
+    }
+  }
+}
+
+// Filters responsive
+.filters, .filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+
+  @media (max-width: 600px) {
+    gap: 8px;
+
+    mat-form-field {
+      width: 100%;
+      min-width: 100%;
+    }
+
+    button {
+      width: 100%;
+    }
+  }
+
+  mat-form-field {
+    flex: 1;
+    min-width: 150px;
+
+    @media (max-width: 600px) {
+      flex: 1 1 100%;
+      min-width: 100%;
+    }
+  }
+}
+
+.filter-actions {
+  display: flex;
+  gap: 8px;
+
+  @media (max-width: 600px) {
+    width: 100%;
+
+    button {
+      flex: 1;
+    }
+  }
+}
+
+// Cards responsive
+.filters-card, .stats-cards {
+  margin-bottom: 16px;
+
+  @media (max-width: 600px) {
+    margin-bottom: 12px;
+  }
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+.stat-card {
+  mat-card-content {
+    padding: 16px;
+
+    @media (max-width: 600px) {
+      padding: 12px;
+    }
+  }
+
+  .stat-value {
+    font-size: 28px;
+    font-weight: 600;
+
+    @media (max-width: 600px) {
+      font-size: 24px;
+    }
+  }
+
+  .stat-label {
+    font-size: 14px;
+    color: #666;
+
+    @media (max-width: 600px) {
+      font-size: 12px;
+    }
+  }
+}
+
+// Quick filters buttons
+.quick-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  button {
+    @media (max-width: 600px) {
+      font-size: 12px;
+      padding: 0 12px;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+}
+
+// Loading states
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+
+  @media (max-width: 600px) {
+    padding: 32px 16px;
+  }
+}
+
+// Empty states
+.empty, .initial-state {
+  text-align: center;
+  padding: 48px 16px;
+
+  @media (max-width: 600px) {
+    padding: 32px 16px;
+  }
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+
+    @media (max-width: 600px) {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+    }
+  }
+
+  p {
+    font-size: 16px;
+
+    @media (max-width: 600px) {
+      font-size: 14px;
+    }
+  }
+}
+
+// Summary cards responsive
+.summary, .summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+
+  @media (max-width: 600px) {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  mat-icon {
+    font-size: 40px;
+    width: 40px;
+    height: 40px;
+
+    @media (max-width: 600px) {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+    }
+  }
+}
+
+// Form grid responsive
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+// Step actions (botones de navegación de formularios)
+.step-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+// Dialog responsive
+.mat-mdc-dialog-container {
+  @media (max-width: 600px) {
+    max-width: 95vw !important;
+    width: 95vw !important;
+    max-height: 90vh !important;
+  }
+}
+
+.mat-mdc-dialog-content {
+  @media (max-width: 600px) {
+    padding: 12px !important;
+  }
+}
+
+.mat-mdc-dialog-actions {
+  @media (max-width: 600px) {
+    flex-direction: column;
+    padding: 8px !important;
+    gap: 8px;
+
+    button {
+      width: 100%;
+      margin: 0 !important;
+    }
+  }
+}
+
+// Toolbar responsive fixes
+.toolbar {
+  @media (max-width: 600px) {
+    .mat-toolbar-row {
+      padding: 0 8px !important;
+    }
+  }
+}
+
+// Stepper responsive
+.mat-vertical-stepper-header {
+  @media (max-width: 600px) {
+    padding: 12px 8px !important;
+  }
+}
+
+.mat-vertical-content {
+  @media (max-width: 600px) {
+    padding: 0 8px 8px 16px !important;
+  }
+}
+
+// Mat-table responsive fixes
+.mat-mdc-table {
+  @media (max-width: 600px) {
+    font-size: 14px;
+
+    .mat-mdc-header-cell {
+      font-size: 12px;
+      padding: 8px 4px !important;
+    }
+
+    .mat-mdc-cell {
+      padding: 8px 4px !important;
+    }
+  }
+}
+
+// Chips responsive
+.mat-mdc-chip {
+  @media (max-width: 600px) {
+    font-size: 12px;
+    min-height: 28px;
+  }
+}
+
+// Botones de acción en tablas
+.mat-mdc-icon-button {
+  @media (max-width: 600px) {
+    width: 36px;
+    height: 36px;
+    padding: 6px;
+
+    .mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+// Snackbar responsive
+.mat-mdc-snack-bar-container {
+  @media (max-width: 600px) {
+    margin: 8px !important;
+    max-width: calc(100vw - 16px) !important;
+  }
+}
+
+// Paginator responsive
+.mat-mdc-paginator {
+  @media (max-width: 600px) {
+    .mat-mdc-paginator-container {
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 8px !important;
+      gap: 8px;
+    }
+
+    .mat-mdc-paginator-page-size {
+      margin: 0 !important;
+    }
+  }
+}
+
+// Fix para botones flotantes (FAB) en móvil
+.mat-mdc-fab, .mat-mdc-mini-fab {
+  @media (max-width: 600px) {
+    &.mat-mdc-fab {
+      width: 48px;
+      height: 48px;
+    }
+  }
+}
+
+// Asegurar que los mat-form-field tengan buen tamaño en móvil
+mat-form-field {
+  @media (max-width: 600px) {
+    .mat-mdc-form-field-subscript-wrapper {
+      font-size: 11px;
+    }
+  }
+}
+
+// Client info en tablas
+.client-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .client-name {
+    font-weight: 500;
+    font-size: 14px;
+
+    @media (max-width: 600px) {
+      font-size: 13px;
+    }
+  }
+
+  .client-dui {
+    font-size: 12px;
+    color: #666;
+
+    @media (max-width: 600px) {
+      font-size: 11px;
+    }
+  }
+}
+
+// Touch-friendly: Asegurar que los elementos interactivos tengan tamaño mínimo
+button, a, .mat-mdc-icon-button, .mat-mdc-button {
+  min-height: 44px;
+  min-width: 44px;
+
+  @media (max-width: 600px) {
+    // Los botones táctiles deben ser de al menos 44x44px para iOS
+    &:not(.mat-mdc-icon-button) {
+      min-height: 44px;
+    }
+  }
+}
+
+// Prevenir zoom en inputs en iOS
+input, select, textarea {
+  @media (max-width: 600px) {
+    font-size: 16px !important; // iOS no hace zoom si el font-size es >= 16px
+  }
+}

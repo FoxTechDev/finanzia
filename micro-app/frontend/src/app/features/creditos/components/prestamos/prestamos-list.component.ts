@@ -623,6 +623,123 @@ import {
         grid-template-columns: 1fr;
       }
     }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 8px;
+      }
+
+      .header h1 {
+        font-size: 20px;
+      }
+
+      .subtitle {
+        font-size: 12px;
+      }
+
+      .filters {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .filter-actions {
+        width: 100%;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .filter-actions button {
+        width: 100%;
+      }
+
+      .quick-filters button {
+        font-size: 12px;
+        padding: 0 8px;
+      }
+
+      .quick-filters mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+
+      .table-responsive {
+        margin: 0 -8px;
+      }
+
+      table {
+        font-size: 13px;
+      }
+
+      .mat-mdc-header-cell,
+      .mat-mdc-cell {
+        padding: 6px 4px !important;
+      }
+
+      .client-info .client-name {
+        font-size: 13px;
+      }
+
+      .client-info .client-dui {
+        font-size: 11px;
+      }
+
+      .mat-mdc-icon-button {
+        width: 36px;
+        height: 36px;
+        padding: 6px;
+      }
+
+      .mat-mdc-icon-button .mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+
+      .summary-item {
+        padding: 12px;
+        gap: 12px;
+      }
+
+      .summary-item mat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+      }
+
+      .summary-value {
+        font-size: 18px;
+      }
+
+      .summary-label {
+        font-size: 11px;
+      }
+
+      .loading p {
+        font-size: 14px;
+      }
+
+      .empty p, .initial-state p {
+        font-size: 14px;
+      }
+
+      .initial-state mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+      }
+
+      mat-chip {
+        font-size: 11px;
+        min-height: 24px;
+      }
+
+      .mat-mdc-paginator-container {
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 8px !important;
+      }
+    }
   `],
 })
 export class PrestamosListComponent implements OnInit {
