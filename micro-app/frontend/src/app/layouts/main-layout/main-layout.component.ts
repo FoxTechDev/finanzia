@@ -8,6 +8,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '@core/services/auth.service';
 import { HasRoleDirective } from '@core/directives/has-role.directive';
 import { RoleCodes } from '@core/models/user.model';
@@ -26,6 +27,7 @@ import { RoleCodes } from '@core/models/user.model';
     MatIconModule,
     MatButtonModule,
     MatExpansionModule,
+    MatDividerModule,
     HasRoleDirective,
   ],
   templateUrl: './main-layout.component.html',

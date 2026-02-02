@@ -298,6 +298,18 @@
           </mat-expansion-panel>
         </ng-container>
       </mat-accordion>
+
+      <!-- Pie del menú con información del usuario -->
+      <div class="sidenav-footer" *ngIf="authService.currentUser()">
+        <mat-divider></mat-divider>
+        <div class="user-info-footer">
+          <mat-icon>account_circle</mat-icon>
+          <div class="user-details">
+            <span class="user-name">{{ authService.currentUser()?.firstName }} {{ authService.currentUser()?.lastName }}</span>
+            <span class="user-role-footer">{{ authService.currentUser()?.rol?.nombre }}</span>
+          </div>
+        </div>
+      </div>
     </div>
   </mat-sidenav>
 
