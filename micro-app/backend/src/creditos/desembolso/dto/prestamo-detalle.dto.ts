@@ -164,12 +164,17 @@ export class PrestamoResumenDto {
   tipoCredito: {
     id: number;
     nombre: string;
+    lineaCredito?: {
+      id: number;
+      nombre: string;
+    };
   };
 
   montoAutorizado: number;
   montoDesembolsado: number;
   saldoCapital: number;
   diasMora: number;
+  periodicidadPago: string;
 
   fechaOtorgamiento: Date;
   fechaVencimiento: Date;

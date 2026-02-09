@@ -1,8 +1,22 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
 import { Persona, CreatePersonaRequest } from '@core/models/cliente.model';
+
+export interface PersonaPaginatedResponse {
+  data: Persona[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface PersonaFiltros {
+  nombre?: string;
+  dui?: string;
+  page?: number;
+  limit?: number;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -14,6 +28,25 @@ export class PersonaService {
 
   getAll(): Observable<Persona[]> {
     return this.http.get<Persona[]>(this.apiUrl);
+  }
+
+  getPaginated(filtros: PersonaFiltros): Observable<PersonaPaginatedResponse> {
+    let params = new HttpParams();
+
+    if (filtros.nombre) {
+      params = params.set('nombre', filtros.nombre);
+    }
+    if (filtros.dui) {
+      params = params.set('dui', filtros.dui);
+    }
+    if (filtros.page) {
+      params = params.set('page', filtros.page.toString());
+    }
+    if (filtros.limit) {
+      params = params.set('limit', filtros.limit.toString());
+    }
+
+    return this.http.get<PersonaPaginatedResponse>(this.apiUrl, { params });
   }
 
   getById(id: number): Observable<Persona> {

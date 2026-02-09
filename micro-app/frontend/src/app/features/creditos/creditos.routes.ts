@@ -193,6 +193,16 @@ export const CREDITOS_ROUTES: Routes = [
         canActivate: [roleGuard],
         data: { roles: [RoleCodes.ADMIN, RoleCodes.COMITE] },
       },
+      {
+        path: 'reportes/cartera',
+        loadComponent: () =>
+          import('./components/reportes/reporte-cartera.component').then(
+            (m) => m.ReporteCarteraComponent
+          ),
+        title: 'Detalle de Cartera',
+        canActivate: [roleGuard],
+        data: { roles: [RoleCodes.ADMIN, RoleCodes.COMITE] },
+      },
     ],
   },
 ];

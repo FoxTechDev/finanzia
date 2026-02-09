@@ -121,6 +121,45 @@ export class PersonaService {
     });
   }
 
+  async findAllPaginated(params: {
+    nombre?: string;
+    dui?: string;
+    page: number;
+    limit: number;
+  }): Promise<{ data: Persona[]; total: number; page: number; limit: number }> {
+    const { nombre, dui, page, limit } = params;
+
+    const queryBuilder = this.personaRepository.createQueryBuilder('persona');
+
+    // Filtro por nombre (busca en nombre y apellido)
+    if (nombre && nombre.trim()) {
+      const searchTerm = `%${nombre.trim()}%`;
+      queryBuilder.andWhere(
+        '(persona.nombre LIKE :nombre OR persona.apellido LIKE :nombre OR CONCAT(persona.nombre, \' \', persona.apellido) LIKE :nombre)',
+        { nombre: searchTerm },
+      );
+    }
+
+    // Filtro por DUI
+    if (dui && dui.trim()) {
+      queryBuilder.andWhere('persona.numeroDui LIKE :dui', {
+        dui: `%${dui.trim()}%`,
+      });
+    }
+
+    // Ordenamiento
+    queryBuilder.orderBy('persona.apellido', 'ASC').addOrderBy('persona.nombre', 'ASC');
+
+    // Paginación
+    const total = await queryBuilder.getCount();
+    const skip = (page - 1) * limit;
+    queryBuilder.skip(skip).take(limit);
+
+    const data = await queryBuilder.getMany();
+
+    return { data, total, page, limit };
+  }
+
   async findOne(id: number): Promise<Persona> {
     const persona = await this.personaRepository.findOne({
       where: { id },

@@ -6,27 +6,70 @@
     </a>
   </div>
 
+  <!-- Filtros de búsqueda -->
   <mat-card class="search-card">
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Buscar cliente</mat-label>
-      <input
-        matInput
-        [(ngModel)]="searchTerm"
-        (ngModelChange)="filterClientes()"
-        placeholder="Nombre, apellido o DUI"
-      />
-      <mat-icon matSuffix>search</mat-icon>
-    </mat-form-field>
+    <div class="filters-row">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Nombre</mat-label>
+        <input
+          matInput
+          [(ngModel)]="filtroNombre"
+          placeholder="Buscar por nombre o apellido"
+          (keyup.enter)="buscarClientes()"
+        />
+        <mat-icon matSuffix>person</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>DUI</mat-label>
+        <input
+          matInput
+          [(ngModel)]="filtroDui"
+          placeholder="Buscar por DUI"
+          (keyup.enter)="buscarClientes()"
+        />
+        <mat-icon matSuffix>badge</mat-icon>
+      </mat-form-field>
+
+      <div class="filter-actions">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="buscarClientes()"
+          [disabled]="isLoading()"
+        >
+          <mat-icon>search</mat-icon>
+          Buscar
+        </button>
+        <button
+          mat-stroked-button
+          (click)="limpiarFiltros()"
+          [disabled]="isLoading()"
+        >
+          <mat-icon>clear</mat-icon>
+          Limpiar
+        </button>
+      </div>
+    </div>
   </mat-card>
 
   @if (isLoading()) {
     <div class="loading-container">
       <mat-spinner diameter="40"></mat-spinner>
     </div>
+  } @else if (!buscado()) {
+    <!-- Estado inicial: mostrar mensaje para buscar -->
+    <mat-card class="empty-card">
+      <mat-card-content>
+        <mat-icon>search</mat-icon>
+        <p>Ingrese criterios de búsqueda para encontrar clientes</p>
+        <p class="hint">Puede buscar por nombre, apellido o DUI</p>
+      </mat-card-content>
+    </mat-card>
   } @else {
     <!-- Vista móvil: Cards -->
     <div class="mobile-view">
-      @for (cliente of filteredClientes(); track cliente.id) {
+      @for (cliente of clientes(); track cliente.id) {
         <mat-card class="cliente-card" (click)="verDetalle(cliente.id!)">
           <mat-card-header>
             <mat-card-title>{{ cliente.nombre }} {{ cliente.apellido }}</mat-card-title>
@@ -53,19 +96,27 @@
         <mat-card class="empty-card">
           <mat-card-content>
             <mat-icon>person_off</mat-icon>
-            <p>No hay clientes registrados</p>
-            <a mat-raised-button color="primary" routerLink="/clientes/nuevo">
-              Registrar primer cliente
-            </a>
+            <p>No se encontraron clientes con los criterios de búsqueda</p>
           </mat-card-content>
         </mat-card>
+      }
+
+      @if (clientes().length > 0) {
+        <mat-paginator
+          [length]="totalRegistros()"
+          [pageSize]="pageSize"
+          [pageIndex]="pageIndex"
+          [pageSizeOptions]="[10, 20, 50]"
+          (page)="onPageChange($event)"
+          showFirstLastButtons
+        ></mat-paginator>
       }
     </div>
 
     <!-- Vista desktop: Tabla -->
     <div class="desktop-view">
       <mat-card>
-        <table mat-table [dataSource]="filteredClientes()" class="full-width">
+        <table mat-table [dataSource]="clientes()" class="full-width">
           <ng-container matColumnDef="nombre">
             <th mat-header-cell *matHeaderCellDef>Nombre</th>
             <td mat-cell *matCellDef="let cliente">
@@ -102,11 +153,22 @@
           <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
         </table>
 
-        @if (filteredClientes().length === 0) {
+        @if (clientes().length === 0) {
           <div class="empty-table">
             <mat-icon>person_off</mat-icon>
-            <p>No hay clientes registrados</p>
+            <p>No se encontraron clientes con los criterios de búsqueda</p>
           </div>
+        }
+
+        @if (clientes().length > 0) {
+          <mat-paginator
+            [length]="totalRegistros()"
+            [pageSize]="pageSize"
+            [pageIndex]="pageIndex"
+            [pageSizeOptions]="[10, 20, 50]"
+            (page)="onPageChange($event)"
+            showFirstLastButtons
+          ></mat-paginator>
         }
       </mat-card>
     </div>

@@ -23,8 +23,22 @@ export class PersonaController {
   }
 
   @Get()
-  findAll() {
-    return this.personaService.findAll();
+  findAll(
+    @Query('nombre') nombre?: string,
+    @Query('dui') dui?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    // Si no hay filtros, retornar lista vacía (no cargar todos automáticamente)
+    if (!nombre && !dui) {
+      return { data: [], total: 0, page: 1, limit: 20 };
+    }
+    return this.personaService.findAllPaginated({
+      nombre,
+      dui,
+      page: page ? parseInt(page) : 1,
+      limit: limit ? parseInt(limit) : 20,
+    });
   }
 
   @Get('buscar')

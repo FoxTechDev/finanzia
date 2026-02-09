@@ -120,7 +120,7 @@ import {
                       <mat-divider></mat-divider>
                       <mat-list-item>
                         <span matListItemTitle>DUI</span>
-                        <span matListItemLine>{{ prestamo()!.persona?.numeroDui || 'No registrado' }}</span>
+                        <span matListItemLine>{{ prestamo()!.cliente?.numeroDui || prestamo()!.persona?.numeroDui || 'No registrado' }}</span>
                       </mat-list-item>
                       <mat-divider></mat-divider>
                       <mat-list-item>
@@ -1345,6 +1345,10 @@ export class PrestamoDetailComponent implements OnInit {
   }
 
   getNombreCompleto(): string {
+    const c = this.prestamo()?.cliente;
+    if (c?.nombreCompleto) return c.nombreCompleto;
+    if (c) return `${c.nombre || ''} ${c.apellido || ''}`.trim();
+    // Fallback a persona si cliente no está disponible
     const p = this.prestamo()?.persona;
     if (!p) return 'N/A';
     return `${p.nombre || ''} ${p.apellido || ''}`.trim();

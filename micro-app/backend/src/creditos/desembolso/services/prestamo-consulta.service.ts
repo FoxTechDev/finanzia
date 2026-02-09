@@ -38,6 +38,7 @@ export class PrestamoConsultaService {
       .createQueryBuilder('prestamo')
       .leftJoinAndSelect('prestamo.persona', 'persona')
       .leftJoinAndSelect('prestamo.tipoCredito', 'tipoCredito')
+      .leftJoinAndSelect('tipoCredito.lineaCredito', 'lineaCredito')
       .leftJoinAndSelect('prestamo.clasificacionPrestamo', 'clasificacion')
       .leftJoinAndSelect('prestamo.estadoPrestamoRelacion', 'estadoRelacion');
 
@@ -317,11 +318,18 @@ export class PrestamoConsultaService {
       tipoCredito: {
         id: prestamo.tipoCreditoId,
         nombre: prestamo.tipoCredito?.nombre || '',
+        lineaCredito: prestamo.tipoCredito?.lineaCredito
+          ? {
+              id: prestamo.tipoCredito.lineaCredito.id,
+              nombre: prestamo.tipoCredito.lineaCredito.nombre,
+            }
+          : undefined,
       },
       montoAutorizado: Number(prestamo.montoAutorizado),
       montoDesembolsado: Number(prestamo.montoDesembolsado),
       saldoCapital: Number(prestamo.saldoCapital),
       diasMora: prestamo.diasMora,
+      periodicidadPago: prestamo.periodicidadPago,
       fechaOtorgamiento: prestamo.fechaOtorgamiento,
       fechaVencimiento: prestamo.fechaVencimiento,
       proximaCuota: proximaCuota

@@ -423,6 +423,15 @@ export interface Prestamo {
     apellido: string;
     numeroDui: string;
   };
+  cliente?: {
+    id: number;
+    nombre: string;
+    apellido: string;
+    nombreCompleto: string;
+    numeroDui: string;
+    telefono: string;
+    correoElectronico: string;
+  };
   numeroCredito: string;
   tipoCreditoId: number;
   tipoCredito?: TipoCredito;

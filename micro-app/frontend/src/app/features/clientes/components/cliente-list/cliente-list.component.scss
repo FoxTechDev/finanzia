@@ -32,6 +32,41 @@
   margin-bottom: 16px;
   padding: 16px;
 
+  .filters-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-start;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+    }
+  }
+
+  .filter-field {
+    flex: 1;
+    min-width: 200px;
+
+    @media (max-width: 768px) {
+      width: 100%;
+    }
+  }
+
+  .filter-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 4px;
+
+    @media (max-width: 768px) {
+      width: 100%;
+      flex-direction: column;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+
   .full-width {
     width: 100%;
     margin-bottom: -1.25em;
@@ -103,6 +138,12 @@
     p {
       color: rgba(0, 0, 0, 0.6);
       margin-bottom: 16px;
+
+      &.hint {
+        font-size: 14px;
+        color: rgba(0, 0, 0, 0.4);
+        margin-top: -8px;
+      }
     }
   }
 }

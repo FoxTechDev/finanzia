@@ -62,6 +62,39 @@ export interface DatosReportePagos {
 }
 
 /**
+ * Interface para los datos del reporte de cartera
+ */
+export interface DatosReporteCartera {
+  numeroCredito: string;
+  nombreCliente: string;
+  lineaCredito: string;
+  tipoCredito: string;
+  fechaOtorgamiento: string;
+  fechaVencimiento: string;
+  monto: number;
+  plazo: number;
+  tasaInteres: number;
+  cuotaTotal: number;
+  numeroCuotas: number;
+  saldoCapital: number;
+  saldoInteres: number;
+  cuotasAtrasadas: number;
+  capitalMora: number;
+  interesMora: number;
+}
+
+export interface RespuestaReporteCartera {
+  fechaCorte: string;
+  totalPrestamos: number;
+  totalMonto: number;
+  totalSaldoCapital: number;
+  totalSaldoInteres: number;
+  totalCapitalMora: number;
+  totalInteresMora: number;
+  prestamos: DatosReporteCartera[];
+}
+
+/**
  * Service para generación de reportes del módulo de créditos
  */
 @Injectable({
@@ -187,5 +220,16 @@ export class ReporteService {
       saldoNuevo: Number(pago.saldoCapitalPosterior) || 0,
       estado: pago.estado || 'N/A'
     };
+  }
+
+  /**
+   * Obtiene datos para el reporte de cartera de préstamos
+   * @param fechaCorte Fecha de corte para el reporte (formato YYYY-MM-DD)
+   * @returns Observable con los datos del reporte incluyendo totales
+   */
+  getReporteCartera(fechaCorte: string): Observable<RespuestaReporteCartera> {
+    const params = new HttpParams().set('fechaCorte', fechaCorte);
+
+    return this.http.get<RespuestaReporteCartera>(`${environment.apiUrl}/reportes/cartera`, { params });
   }
 }

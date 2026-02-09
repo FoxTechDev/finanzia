@@ -12,6 +12,8 @@ import { ClasificacionPrestamo } from './entities/clasificacion-prestamo.entity'
 import { EstadoPrestamo } from './entities/estado-prestamo.entity';
 import { Solicitud } from '../solicitud/entities/solicitud.entity';
 import { SolicitudHistorial } from '../solicitud/entities/solicitud-historial.entity';
+import { Pago } from '../pagos/entities/pago.entity';
+import { PagoDetalleCuota } from '../pagos/entities/pago-detalle-cuota.entity';
 import { EstadoSolicitudModule } from '../../catalogos/estado-solicitud/estado-solicitud.module';
 
 // Services
@@ -21,6 +23,7 @@ import { PlanPagoService } from './services/plan-pago.service';
 import { PrestamoConsultaService } from './services/prestamo-consulta.service';
 import { ClasificacionPrestamoService } from './services/clasificacion-prestamo.service';
 import { EstadoPrestamoService } from './services/estado-prestamo.service';
+import { ReporteCarteraService } from './services/reporte-cartera.service';
 
 // Controllers
 import { DesembolsoController } from './controllers/desembolso.controller';
@@ -29,6 +32,7 @@ import { TipoDeduccionController } from './controllers/tipo-deduccion.controller
 import { TipoRecargoController } from './controllers/tipo-recargo.controller';
 import { ClasificacionPrestamoController } from './controllers/clasificacion-prestamo.controller';
 import { EstadoPrestamoController } from './controllers/estado-prestamo.controller';
+import { ReporteCarteraController } from './controllers/reporte-cartera.controller';
 
 @Module({
   imports: [
@@ -43,6 +47,8 @@ import { EstadoPrestamoController } from './controllers/estado-prestamo.controll
       EstadoPrestamo,
       Solicitud,
       SolicitudHistorial,
+      Pago,
+      PagoDetalleCuota,
     ]),
     EstadoSolicitudModule,
   ],
@@ -53,6 +59,7 @@ import { EstadoPrestamoController } from './controllers/estado-prestamo.controll
     TipoRecargoController,
     ClasificacionPrestamoController,
     EstadoPrestamoController,
+    ReporteCarteraController,
   ],
   providers: [
     DesembolsoService,
@@ -61,6 +68,7 @@ import { EstadoPrestamoController } from './controllers/estado-prestamo.controll
     PrestamoConsultaService,
     ClasificacionPrestamoService,
     EstadoPrestamoService,
+    ReporteCarteraService,
   ],
   exports: [
     DesembolsoService,
@@ -69,6 +77,7 @@ import { EstadoPrestamoController } from './controllers/estado-prestamo.controll
     PrestamoConsultaService,
     ClasificacionPrestamoService,
     EstadoPrestamoService,
+    ReporteCarteraService,
   ],
 })
 export class DesembolsoModule {}
