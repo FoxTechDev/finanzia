@@ -1,4 +1,4 @@
-import { IsOptional, IsNumber, IsEnum, IsDateString } from 'class-validator';
+import { IsOptional, IsNumber, IsEnum, IsDateString, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { EstadoPago } from '../entities/pago.entity';
 
@@ -19,6 +19,10 @@ export class FiltrosPagoDto {
   @IsOptional()
   @IsDateString()
   fechaHasta?: string;
+
+  @IsOptional()
+  @IsString()
+  cliente?: string;
 
   @IsOptional()
   @Type(() => Number)

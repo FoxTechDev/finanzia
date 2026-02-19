@@ -897,6 +897,7 @@ export interface FiltrosPago {
   estado?: EstadoPago;
   fechaDesde?: string;
   fechaHasta?: string;
+  cliente?: string;
   page?: number;
   limit?: number;
 }
@@ -1051,4 +1052,65 @@ export interface PlanPagoCalculado {
   totalPagar: number;
   numeroCuotas: number;
   planPago: CuotaPlanPagoPreview[];
+}
+
+// ============================================
+// MODIFICACION DE PLAN DE PAGOS
+// ============================================
+
+export interface ModificarPlanPagoRequest {
+  prestamoId: number;
+  observacion: string;
+  usarSaldoActual: boolean;
+  tasaInteres: number;
+  plazo: number;
+  periodicidadPago: string;
+  tipoInteres: string;
+  numeroCuotas?: number;
+  fechaPrimeraCuota: string;
+  usuarioId?: number;
+  nombreUsuario?: string;
+}
+
+export interface PreviewPlanPagoRequest {
+  usarSaldoActual: boolean;
+  tasaInteres: number;
+  plazo: number;
+  periodicidadPago: string;
+  tipoInteres: string;
+  numeroCuotas?: number;
+  fechaPrimeraCuota: string;
+}
+
+export interface PreviewPlanPagoResponse {
+  montoBase: number;
+  cuotas: CuotaPlanPagoPreview[];
+  cuotaNormal: number;
+  totalInteres: number;
+  totalPagar: number;
+  numeroCuotas: number;
+  fechaVencimiento: string;
+}
+
+export interface ModificarPlanPagoResponse {
+  mensaje: string;
+  loteModificacion: string;
+}
+
+export interface PlanPagoHistorialLote {
+  loteModificacion: string;
+  fechaModificacion: string;
+  observacion: string;
+  usuarioId: number | null;
+  nombreUsuario: string | null;
+  cuotas: {
+    numeroCuota: number;
+    fechaVencimiento: string;
+    capital: number;
+    interes: number;
+    recargos: number;
+    cuotaTotal: number;
+    saldoCapital: number;
+    estado: EstadoCuota;
+  }[];
 }

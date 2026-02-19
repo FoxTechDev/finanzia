@@ -14,6 +14,7 @@ import { Solicitud } from '../solicitud/entities/solicitud.entity';
 import { SolicitudHistorial } from '../solicitud/entities/solicitud-historial.entity';
 import { Pago } from '../pagos/entities/pago.entity';
 import { PagoDetalleCuota } from '../pagos/entities/pago-detalle-cuota.entity';
+import { PlanPagoHistorial } from './entities/plan-pago-historial.entity';
 import { EstadoSolicitudModule } from '../../catalogos/estado-solicitud/estado-solicitud.module';
 
 // Services
@@ -24,6 +25,7 @@ import { PrestamoConsultaService } from './services/prestamo-consulta.service';
 import { ClasificacionPrestamoService } from './services/clasificacion-prestamo.service';
 import { EstadoPrestamoService } from './services/estado-prestamo.service';
 import { ReporteCarteraService } from './services/reporte-cartera.service';
+import { PlanPagoModificacionService } from './services/plan-pago-modificacion.service';
 
 // Controllers
 import { DesembolsoController } from './controllers/desembolso.controller';
@@ -49,6 +51,7 @@ import { ReporteCarteraController } from './controllers/reporte-cartera.controll
       SolicitudHistorial,
       Pago,
       PagoDetalleCuota,
+      PlanPagoHistorial,
     ]),
     EstadoSolicitudModule,
   ],
@@ -69,6 +72,7 @@ import { ReporteCarteraController } from './controllers/reporte-cartera.controll
     ClasificacionPrestamoService,
     EstadoPrestamoService,
     ReporteCarteraService,
+    PlanPagoModificacionService,
   ],
   exports: [
     DesembolsoService,
@@ -78,6 +82,7 @@ import { ReporteCarteraController } from './controllers/reporte-cartera.controll
     ClasificacionPrestamoService,
     EstadoPrestamoService,
     ReporteCarteraService,
+    PlanPagoModificacionService,
   ],
 })
 export class DesembolsoModule {}

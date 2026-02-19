@@ -15,9 +15,12 @@ import { MatListModule } from '@angular/material/list';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PrestamoService } from '../../services/prestamo.service';
 import { RegistrarPagoDialogComponent } from '../pagos/registrar-pago-dialog/registrar-pago-dialog.component';
+import { ModificarPlanPagoDialogComponent } from './modificar-plan-pago-dialog.component';
 import { PagoService } from '../../services/pago.service';
 import { CatalogosService } from '@features/catalogos/services/catalogos.service';
 import { EstadoPrestamoModel } from '@core/models/catalogo.model';
+import { HasRoleDirective } from '@core/directives/has-role.directive';
+import { RoleCodes } from '@core/models/user.model';
 import {
   Prestamo,
   PlanPago,
@@ -52,6 +55,7 @@ import {
     CurrencyPipe,
     DatePipe,
     DecimalPipe,
+    HasRoleDirective,
   ],
   template: `
     <div class="container">
@@ -366,6 +370,16 @@ import {
           <!-- Tab 3: Plan de Pagos -->
           <mat-tab label="Plan de Pagos">
             <div class="tab-content">
+              @if (prestamo() && (prestamo()!.estado === 'VIGENTE' || prestamo()!.estado === 'MORA')) {
+                <ng-container *appHasRole="[rolAdmin, rolComite]">
+                  <div class="plan-pago-actions">
+                    <button mat-raised-button color="accent" (click)="modificarPlanPago()">
+                      <mat-icon>edit_note</mat-icon>
+                      Modificar Plan
+                    </button>
+                  </div>
+                </ng-container>
+              }
               <mat-card>
                 <mat-card-content>
                   @if (isLoadingPlanPago()) {
@@ -911,6 +925,17 @@ import {
       border-left: 4px solid #2196f3;
     }
 
+    /* Plan de pagos actions */
+    .plan-pago-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
+
+    .plan-pago-actions button mat-icon {
+      margin-right: 4px;
+    }
+
     /* Plan de pagos table */
     .table-responsive {
       overflow-x: auto;
@@ -1198,6 +1223,10 @@ export class PrestamoDetailComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
 
+  // Roles para la directiva *appHasRole en el template
+  rolAdmin = RoleCodes.ADMIN;
+  rolComite = RoleCodes.COMITE;
+
   prestamo = signal<Prestamo | null>(null);
   planPago = signal<PlanPago[]>([]);
   pagos = signal<Pago[]>([]);
@@ -1484,6 +1513,37 @@ export class PrestamoDetailComponent implements OnInit {
           this.loadPagos();
         }
         this.snackBar.open('Pago registrado exitosamente', 'Cerrar', { duration: 3000 });
+      }
+    });
+  }
+
+  modificarPlanPago(): void {
+    const prestamo = this.prestamo();
+    if (!prestamo) {
+      this.snackBar.open('No se pudo cargar la informacion del prestamo', 'Cerrar', { duration: 3000 });
+      return;
+    }
+
+    // Asegurar que el plan de pago este cargado
+    if (this.planPago().length === 0) {
+      this.snackBar.open('Espere a que se cargue el plan de pagos', 'Cerrar', { duration: 3000 });
+      return;
+    }
+
+    const dialogRef = this.dialog.open(ModificarPlanPagoDialogComponent, {
+      width: '950px',
+      maxHeight: '90vh',
+      disableClose: true,
+      data: { prestamo, planPago: this.planPago() },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.loadPrestamo(prestamo.id);
+        this.loadPlanPago();
+        if (this.pagos().length > 0) {
+          this.loadPagos();
+        }
       }
     });
   }

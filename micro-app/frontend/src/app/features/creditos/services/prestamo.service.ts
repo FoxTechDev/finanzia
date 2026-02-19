@@ -7,7 +7,12 @@ import { environment } from '@env/environment';
 import {
   Prestamo,
   PlanPago,
-  EstadoPrestamo
+  EstadoPrestamo,
+  ModificarPlanPagoRequest,
+  ModificarPlanPagoResponse,
+  PlanPagoHistorialLote,
+  PreviewPlanPagoRequest,
+  PreviewPlanPagoResponse,
 } from '@core/models/credito.model';
 
 export interface PrestamoFilters {
@@ -139,6 +144,27 @@ export class PrestamoService {
         return [];
       })
     );
+  }
+
+  /**
+   * Genera un preview del nuevo plan de pagos sin guardar
+   */
+  previewPlanPago(prestamoId: number, request: PreviewPlanPagoRequest): Observable<PreviewPlanPagoResponse> {
+    return this.http.post<PreviewPlanPagoResponse>(`${this.apiUrl}/${prestamoId}/plan-pago/preview`, request);
+  }
+
+  /**
+   * Modifica el plan de pagos de un préstamo
+   */
+  modificarPlanPago(prestamoId: number, request: ModificarPlanPagoRequest): Observable<ModificarPlanPagoResponse> {
+    return this.http.put<ModificarPlanPagoResponse>(`${this.apiUrl}/${prestamoId}/plan-pago`, request);
+  }
+
+  /**
+   * Obtiene el historial de modificaciones del plan de pagos
+   */
+  getHistorialPlanPago(prestamoId: number): Observable<PlanPagoHistorialLote[]> {
+    return this.http.get<PlanPagoHistorialLote[]>(`${this.apiUrl}/${prestamoId}/plan-pago/historial`);
   }
 
   /**

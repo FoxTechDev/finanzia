@@ -101,6 +101,13 @@ export class PagoConsultaService {
       });
     }
 
+    if (filtros.cliente) {
+      queryBuilder.andWhere(
+        '(persona.nombre LIKE :cliente OR persona.apellido LIKE :cliente OR persona.numeroDui LIKE :cliente OR CONCAT(persona.nombre, \' \', persona.apellido) LIKE :cliente)',
+        { cliente: `%${filtros.cliente}%` },
+      );
+    }
+
     if (filtros.fechaDesde && filtros.fechaHasta) {
       queryBuilder.andWhere('pago.fechaPago BETWEEN :desde AND :hasta', {
         desde: filtros.fechaDesde,

@@ -1,7 +1,9 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, DestroyRef } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -287,10 +289,10 @@ import {
                   </td>
                 </ng-container>
 
-                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
                 <tr
                   mat-row
-                  *matRowDef="let row; columns: displayedColumns"
+                  *matRowDef="let row; columns: displayedColumns()"
                   class="table-row"
                   [class.row-mora]="row.diasMora > 0"
                 ></tr>
@@ -749,6 +751,8 @@ export class PrestamosListComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
   private dialog = inject(MatDialog);
+  private breakpointObserver = inject(BreakpointObserver);
+  private destroyRef = inject(DestroyRef);
 
   prestamos = signal<Prestamo[]>([]);
   sortedData = signal<Prestamo[]>([]);
@@ -760,16 +764,13 @@ export class PrestamosListComponent implements OnInit {
   filters: PrestamoFilters = {};
   estados = signal<EstadoPrestamoModel[]>([]);
 
-  displayedColumns = [
-    'numeroCredito',
-    'cliente',
-    'monto',
-    'saldoCapital',
-    'estado',
-    'diasMora',
-    'fechaOtorgamiento',
-    'acciones',
-  ];
+  isMobile = signal(false);
+
+  displayedColumns = computed(() =>
+    this.isMobile()
+      ? ['numeroCredito', 'cliente', 'estado', 'acciones']
+      : ['numeroCredito', 'cliente', 'monto', 'saldoCapital', 'estado', 'diasMora', 'fechaOtorgamiento', 'acciones']
+  );
 
   // Paginación
   pageSize = 10;
@@ -777,6 +778,10 @@ export class PrestamosListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadEstados();
+    this.breakpointObserver
+      .observe('(max-width: 768px)')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(result => this.isMobile.set(result.matches));
   }
 
   loadEstados(): void {

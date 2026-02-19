@@ -64,6 +64,9 @@ export class PagoService {
       if (filtros.fechaHasta) {
         params = params.set('fechaHasta', filtros.fechaHasta);
       }
+      if (filtros.cliente) {
+        params = params.set('cliente', filtros.cliente);
+      }
       if (filtros.page) {
         params = params.set('page', filtros.page.toString());
       }

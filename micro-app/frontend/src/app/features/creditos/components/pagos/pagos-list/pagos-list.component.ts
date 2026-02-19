@@ -819,11 +819,9 @@ export class PagosListComponent implements OnInit {
       filtros.fechaHasta = this.formatearFecha(formValues.fechaHasta);
     }
 
-    // Nota: El filtro de cliente requeriría un endpoint específico en el backend
-    // Por ahora lo dejamos comentado, pero se puede implementar del lado del servidor
-    // if (formValues.cliente) {
-    //   filtros.cliente = formValues.cliente;
-    // }
+    if (formValues.cliente) {
+      filtros.cliente = formValues.cliente;
+    }
 
     return filtros;
   }
@@ -848,6 +846,10 @@ export class PagosListComponent implements OnInit {
 
     if (formValues.fechaHasta) {
       filtros.fechaHasta = this.formatearFecha(formValues.fechaHasta);
+    }
+
+    if (formValues.cliente) {
+      filtros.cliente = formValues.cliente;
     }
 
     return filtros;
