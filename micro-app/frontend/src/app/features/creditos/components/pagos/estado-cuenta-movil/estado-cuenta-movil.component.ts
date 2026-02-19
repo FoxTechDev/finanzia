@@ -72,11 +72,11 @@ export class EstadoCuentaMovilComponent implements OnInit {
 
   formatearFecha(fecha: string): string {
     if (!fecha) return 'N/A';
-    const date = new Date(fecha);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    // Parsear directamente el string YYYY-MM-DD sin usar new Date()
+    // para evitar desfase por zona horaria (UTC vs local)
+    const parts = fecha.substring(0, 10).split('-');
+    if (parts.length !== 3) return fecha;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
 
   formatearPorcentaje(valor: number): string {
