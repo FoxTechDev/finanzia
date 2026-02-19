@@ -8,6 +8,7 @@ import { Repository, DataSource } from 'typeorm';
 import { Prestamo, EstadoPrestamo } from '../entities/prestamo.entity';
 import { PlanPago, EstadoCuota } from '../entities/plan-pago.entity';
 import { PlanPagoHistorial } from '../entities/plan-pago-historial.entity';
+import { PagoDetalleCuota } from '../../pagos/entities/pago-detalle-cuota.entity';
 import { ModificarPlanPagoDto, PreviewPlanPagoDto } from '../dto/modificar-plan-pago.dto';
 import { CalculoInteresService } from './calculo-interes.service';
 import { PlanPagoService, CuotaPlanPago } from './plan-pago.service';
@@ -196,9 +197,18 @@ export class PlanPagoModificacionService {
         await queryRunner.manager.save(PlanPagoHistorial, historial);
       }
 
-      // 7. DELETE cuotas no-PAGADA
+      // 7. DELETE detalles de pago vinculados a cuotas que se van a eliminar,
+      //    luego DELETE cuotas no-PAGADA.
+      //    Los pagos (tabla pago) se mantienen intactos con sus totales.
       const idsAEliminar = cuotasNoPagadas.map(c => c.id);
       if (idsAEliminar.length > 0) {
+        await queryRunner.manager
+          .createQueryBuilder()
+          .delete()
+          .from(PagoDetalleCuota)
+          .where('planPagoId IN (:...ids)', { ids: idsAEliminar })
+          .execute();
+
         await queryRunner.manager.delete(PlanPago, idsAEliminar);
       }
 
