@@ -861,7 +861,7 @@ export class ReportePagosComponent implements OnInit {
     try {
       // Preparar datos para Excel
       const datosExcel = this.datosReporte().map((item) => ({
-        'Fecha de Pago': new Date(item.fechaPago).toLocaleDateString('es-SV'),
+        'Fecha de Pago': this.formatearFechaStr(item.fechaPago),
         'No. Préstamo': item.numeroCredito,
         'Nombre del Cliente': item.nombreCliente,
         'Línea de Crédito': item.lineaCredito,
@@ -972,7 +972,7 @@ export class ReportePagosComponent implements OnInit {
 
       // Preparar datos para la tabla
       const tableData = this.datosReporte().map((item) => [
-        new Date(item.fechaPago).toLocaleDateString('es-SV'),
+        this.formatearFechaStr(item.fechaPago),
         item.numeroCredito,
         item.nombreCliente,
         item.lineaCredito,
@@ -1060,5 +1060,16 @@ export class ReportePagosComponent implements OnInit {
     const month = String(fecha.getMonth() + 1).padStart(2, '0');
     const day = String(fecha.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * Formatea un string de fecha YYYY-MM-DD a DD/MM/YYYY
+   * sin usar new Date() para evitar desfase por timezone
+   */
+  private formatearFechaStr(fecha: string): string {
+    if (!fecha) return '';
+    const parts = fecha.substring(0, 10).split('-');
+    if (parts.length !== 3) return fecha;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
 }

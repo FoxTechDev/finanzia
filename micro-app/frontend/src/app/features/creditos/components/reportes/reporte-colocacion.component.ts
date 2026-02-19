@@ -897,8 +897,8 @@ export class ReporteColocacionComponent implements OnInit {
         'Plazo (Cuotas)': item.plazo,
         'Periodicidad de Pago': this.getPeriodicidadLabel(item.periodicidadPago),
         'Saldo Capital': item.saldoCapital,
-        'Fecha de Otorgamiento': new Date(item.fechaOtorgamiento).toLocaleDateString('es-SV'),
-        'Fecha de Vencimiento': new Date(item.fechaVencimiento).toLocaleDateString('es-SV'),
+        'Fecha de Otorgamiento': this.formatearFechaStr(item.fechaOtorgamiento),
+        'Fecha de Vencimiento': this.formatearFechaStr(item.fechaVencimiento),
       }));
 
       // Agregar fila de totales
@@ -1010,8 +1010,8 @@ export class ReporteColocacionComponent implements OnInit {
         item.plazo.toString(),
         this.getPeriodicidadLabel(item.periodicidadPago),
         `$${item.saldoCapital.toFixed(2)}`,
-        new Date(item.fechaOtorgamiento).toLocaleDateString('es-SV'),
-        new Date(item.fechaVencimiento).toLocaleDateString('es-SV'),
+        this.formatearFechaStr(item.fechaOtorgamiento),
+        this.formatearFechaStr(item.fechaVencimiento),
       ]);
 
       // Agregar fila de totales
@@ -1089,5 +1089,16 @@ export class ReporteColocacionComponent implements OnInit {
     const month = String(fecha.getMonth() + 1).padStart(2, '0');
     const day = String(fecha.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * Formatea un string de fecha YYYY-MM-DD a DD/MM/YYYY
+   * sin usar new Date() para evitar desfase por timezone
+   */
+  private formatearFechaStr(fecha: string): string {
+    if (!fecha) return '';
+    const parts = fecha.substring(0, 10).split('-');
+    if (parts.length !== 3) return fecha;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
 }

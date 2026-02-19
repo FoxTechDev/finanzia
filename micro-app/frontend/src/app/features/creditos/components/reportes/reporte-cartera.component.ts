@@ -898,8 +898,8 @@ export class ReporteCarteraComponent implements OnInit {
         'Cliente': item.nombreCliente,
         'Línea de Crédito': item.lineaCredito,
         'Tipo de Crédito': item.tipoCredito,
-        'Fecha Otorgamiento': new Date(item.fechaOtorgamiento).toLocaleDateString('es-SV'),
-        'Fecha Vencimiento': new Date(item.fechaVencimiento).toLocaleDateString('es-SV'),
+        'Fecha Otorgamiento': this.formatearFechaStr(item.fechaOtorgamiento),
+        'Fecha Vencimiento': this.formatearFechaStr(item.fechaVencimiento),
         'Monto': item.monto,
         'Plazo (Meses)': item.plazo,
         'Tasa Interés (%)': item.tasaInteres,
@@ -988,7 +988,7 @@ export class ReporteCarteraComponent implements OnInit {
       });
 
       // Fecha de corte
-      const fechaCorte = new Date(this.fechaCorteReporte()).toLocaleDateString('es-SV');
+      const fechaCorte = this.formatearFechaStr(this.fechaCorteReporte());
 
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
@@ -1013,8 +1013,8 @@ export class ReporteCarteraComponent implements OnInit {
         item.nombreCliente,
         item.lineaCredito,
         item.tipoCredito,
-        new Date(item.fechaOtorgamiento).toLocaleDateString('es-SV'),
-        new Date(item.fechaVencimiento).toLocaleDateString('es-SV'),
+        this.formatearFechaStr(item.fechaOtorgamiento),
+        this.formatearFechaStr(item.fechaVencimiento),
         `$${Number(item.monto || 0).toFixed(2)}`,
         item.plazo.toString(),
         `${Number(item.tasaInteres || 0).toFixed(2)}%`,
@@ -1111,5 +1111,16 @@ export class ReporteCarteraComponent implements OnInit {
     const month = String(fecha.getMonth() + 1).padStart(2, '0');
     const day = String(fecha.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * Formatea un string de fecha YYYY-MM-DD a DD/MM/YYYY
+   * sin usar new Date() para evitar desfase por timezone
+   */
+  private formatearFechaStr(fecha: string): string {
+    if (!fecha) return '';
+    const parts = fecha.substring(0, 10).split('-');
+    if (parts.length !== 3) return fecha;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
 }

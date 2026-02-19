@@ -70,7 +70,10 @@ export class ClienteDetailComponent implements OnInit {
   }
 
   formatDate(date: string): string {
-    return new Date(date).toLocaleDateString('es-ES');
+    if (!date) return 'N/A';
+    const parts = date.substring(0, 10).split('-');
+    if (parts.length !== 3) return date;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
 
   formatCurrency(value: number | undefined): string {
