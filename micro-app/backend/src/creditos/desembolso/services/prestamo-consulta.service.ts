@@ -330,6 +330,8 @@ export class PrestamoConsultaService {
       saldoCapital: Number(prestamo.saldoCapital),
       diasMora: prestamo.diasMora,
       periodicidadPago: prestamo.periodicidadPago,
+      tasaInteres: Number(prestamo.tasaInteres),
+      numeroCuotas: prestamo.numeroCuotas,
       fechaOtorgamiento: prestamo.fechaOtorgamiento,
       fechaVencimiento: prestamo.fechaVencimiento,
       proximaCuota: proximaCuota

@@ -175,6 +175,8 @@ export class PrestamoResumenDto {
   saldoCapital: number;
   diasMora: number;
   periodicidadPago: string;
+  tasaInteres: number;
+  numeroCuotas: number;
 
   fechaOtorgamiento: Date;
   fechaVencimiento: Date;
