@@ -248,8 +248,6 @@ export class PlanPagoModificacionService {
       const totalNuevoCuotas = resultado.numeroCuotas;
 
       await queryRunner.manager.update(Prestamo, dto.prestamoId, {
-        saldoCapital: montoBase,
-        saldoInteres: resultado.totalInteres,
         totalInteres: resultado.totalInteres,
         totalRecargos: 0,
         totalPagar: this.round(montoBase + resultado.totalInteres),
