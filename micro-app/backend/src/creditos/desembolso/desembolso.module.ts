@@ -25,6 +25,7 @@ import { PrestamoConsultaService } from './services/prestamo-consulta.service';
 import { ClasificacionPrestamoService } from './services/clasificacion-prestamo.service';
 import { EstadoPrestamoService } from './services/estado-prestamo.service';
 import { ReporteCarteraService } from './services/reporte-cartera.service';
+import { RutaCobroService } from './services/ruta-cobro.service';
 import { PlanPagoModificacionService } from './services/plan-pago-modificacion.service';
 
 // Controllers
@@ -72,6 +73,7 @@ import { ReporteCarteraController } from './controllers/reporte-cartera.controll
     ClasificacionPrestamoService,
     EstadoPrestamoService,
     ReporteCarteraService,
+    RutaCobroService,
     PlanPagoModificacionService,
   ],
   exports: [
@@ -82,6 +84,7 @@ import { ReporteCarteraController } from './controllers/reporte-cartera.controll
     ClasificacionPrestamoService,
     EstadoPrestamoService,
     ReporteCarteraService,
+    RutaCobroService,
     PlanPagoModificacionService,
   ],
 })

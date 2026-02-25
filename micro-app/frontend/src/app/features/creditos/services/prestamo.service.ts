@@ -13,6 +13,7 @@ import {
   PlanPagoHistorialLote,
   PreviewPlanPagoRequest,
   PreviewPlanPagoResponse,
+  ReciboDesembolsoData,
 } from '@core/models/credito.model';
 
 export interface PrestamoFilters {
@@ -165,6 +166,13 @@ export class PrestamoService {
    */
   getHistorialPlanPago(prestamoId: number): Observable<PlanPagoHistorialLote[]> {
     return this.http.get<PlanPagoHistorialLote[]>(`${this.apiUrl}/${prestamoId}/plan-pago/historial`);
+  }
+
+  /**
+   * Obtiene los datos del recibo de desembolso de un préstamo
+   */
+  getReciboDesembolso(prestamoId: number): Observable<ReciboDesembolsoData> {
+    return this.http.get<ReciboDesembolsoData>(`${this.apiUrl}/${prestamoId}/recibo-desembolso`);
   }
 
   /**

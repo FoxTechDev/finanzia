@@ -5,6 +5,7 @@ import { PlanPago, EstadoCuota } from '../../desembolso/entities/plan-pago.entit
 import { Prestamo, EstadoPrestamo } from '../../desembolso/entities/prestamo.entity';
 import { CalculoInteresService } from '../../desembolso/services/calculo-interes.service';
 import { TipoPago } from '../entities/pago.entity';
+import { parseLocalDate } from '../../../common/utils/date.utils';
 
 export interface CuotaPendiente {
   id: number;
@@ -150,7 +151,7 @@ export class PagoCalculoService {
     const fechaCorteNormalizada = this.normalizarFecha(fechaCorte);
 
     for (const cuota of cuotasNoPagadas) {
-      const fechaVencimiento = new Date(cuota.fechaVencimiento);
+      const fechaVencimiento = parseLocalDate(String(cuota.fechaVencimiento));
       // Normalizar la fecha de vencimiento también para comparación justa
       const fechaVencimientoNormalizada = this.normalizarFecha(fechaVencimiento);
       let diasMora = 0;
@@ -306,7 +307,7 @@ export class PagoCalculoService {
     let ultimaCuotaVencida: PlanPago | null = null;
 
     for (const cuota of todasLasCuotas) {
-      const fechaVencimiento = this.normalizarFecha(new Date(cuota.fechaVencimiento));
+      const fechaVencimiento = this.normalizarFecha(parseLocalDate(String(cuota.fechaVencimiento)));
 
       // Si la fecha de vencimiento es menor o igual a la fecha de corte, la cuota ya venció
       if (fechaVencimiento <= fechaCorte) {
@@ -457,7 +458,7 @@ export class PagoCalculoService {
       } else if (cuotasAfectadas.some(c => {
         const cuotaOrig = cuotasPendientes.find(cp => cp.id === c.planPagoId);
         // Normalizar fechas para comparar solo por día
-        const fechaVencNorm = cuotaOrig ? this.normalizarFecha(new Date(cuotaOrig.fechaVencimiento)) : null;
+        const fechaVencNorm = cuotaOrig ? this.normalizarFecha(parseLocalDate(String(cuotaOrig.fechaVencimiento))) : null;
         const hoyNorm = this.normalizarFecha(new Date());
         return fechaVencNorm && fechaVencNorm > hoyNorm;
       })) {

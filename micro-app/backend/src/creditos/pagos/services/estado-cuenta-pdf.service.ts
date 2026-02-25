@@ -141,7 +141,7 @@ export class EstadoCuentaPdfService {
     const prestamoPdf: PrestamoPdfDto = {
       numeroCredito: prestamo.numeroCredito,
       tipoCredito: prestamo.tipoCredito?.nombre || 'N/A',
-      montoDesembolsado: Number(prestamo.montoDesembolsado),
+      montoDesembolsado: Number(prestamo.montoAutorizado),
       plazoMeses: prestamo.plazoAutorizado,
       tasaInteres: Number(prestamo.tasaInteres),
       tasaInteresMoratorio: Number(prestamo.tasaInteresMoratorio),

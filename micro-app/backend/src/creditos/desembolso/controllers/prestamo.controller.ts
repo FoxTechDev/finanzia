@@ -23,6 +23,7 @@ import {
   PrestamoResumenDto,
   PrestamoPaginadoDto,
 } from '../dto/prestamo-detalle.dto';
+import { ReciboDesembolsoDto } from '../dto/recibo-desembolso.dto';
 
 /**
  * Controlador para consultas de préstamos
@@ -42,6 +43,17 @@ export class PrestamoController {
   @Get()
   async listarPrestamos(@Query() filtros: FiltrosPrestamoDto): Promise<PrestamoPaginadoDto> {
     return this.prestamoConsultaService.listarPrestamos(filtros);
+  }
+
+  /**
+   * GET /api/prestamos/:id/recibo-desembolso
+   * Obtiene los datos formateados para imprimir el recibo de desembolso en impresora térmica
+   */
+  @Get(':id/recibo-desembolso')
+  async obtenerReciboDesembolso(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<ReciboDesembolsoDto> {
+    return this.prestamoConsultaService.obtenerReciboDesembolso(id);
   }
 
   /**

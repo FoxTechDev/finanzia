@@ -1,0 +1,152 @@
+<!-- Spinner de carga -->
+@if (cargando()) {
+  <div class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando recibo...</p>
+  </div>
+}
+
+<!-- Mensaje de error -->
+@if (error() && !cargando()) {
+  <div class="error-container">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error() }}</p>
+  </div>
+}
+
+<!-- Botones de acción (solo en pantalla, no se imprimen) -->
+@if (recibo() && !cargando()) {
+  <div class="acciones-recibo no-print">
+    <button mat-raised-button color="primary" (click)="imprimir()">
+      <mat-icon>print</mat-icon>
+      Imprimir
+    </button>
+    <button mat-stroked-button (click)="abrirEnNuevaVentana()">
+      <mat-icon>open_in_new</mat-icon>
+      Abrir en nueva ventana
+    </button>
+  </div>
+
+  <!-- Recibo térmico -->
+  <div class="recibo-termica">
+    <div class="recibo-header">
+      <div class="empresa-nombre">FINANZIA S.C. DE R.L. DE C.V.</div>
+      <div class="empresa-direccion">C.C. Feria Rosa, local 315-H</div>
+      <div class="empresa-direccion">San Salvador</div>
+      <div class="separador-doble">================================</div>
+    </div>
+
+    <div class="recibo-titulo">RECIBO DE DESEMBOLSO</div>
+    <div class="recibo-fecha">Fecha: {{ recibo()!.fechaEmision | date:'dd/MM/yyyy' }}</div>
+
+    <div class="separador">--------------------------------</div>
+
+    <!-- Datos del Cliente -->
+    <div class="seccion-titulo">CLIENTE</div>
+    <div class="datos-linea">
+      <span class="label">Nombre:</span>
+      <span class="valor">{{ recibo()!.cliente.nombre }} {{ recibo()!.cliente.apellido }}</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">DUI:</span>
+      <span class="valor">{{ recibo()!.cliente.numeroDui }}</span>
+    </div>
+
+    <div class="separador">--------------------------------</div>
+
+    <!-- Datos del Préstamo -->
+    <div class="seccion-titulo">DATOS DEL PRÉSTAMO</div>
+    <div class="datos-linea">
+      <span class="label">No. Préstamo:</span>
+      <span class="valor">{{ recibo()!.prestamo.numeroCredito }}</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">Monto:</span>
+      <span class="valor">{{ recibo()!.prestamo.montoAutorizado | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">Plazo:</span>
+      <span class="valor">{{ recibo()!.prestamo.plazoAutorizado }} meses</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">Tasa:</span>
+      @if (recibo()!.prestamo.tipoInteres === 'FLAT') {
+        <span class="valor">{{ (recibo()!.prestamo.tasaInteres / 12).toFixed(2) }}% mensual</span>
+      } @else {
+        <span class="valor">{{ recibo()!.prestamo.tasaInteres }}% anual</span>
+      }
+    </div>
+    <div class="datos-linea">
+      <span class="label">Otorgamiento:</span>
+      <span class="valor">{{ recibo()!.prestamo.fechaOtorgamiento | date:'dd/MM/yyyy' }}</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">Vencimiento:</span>
+      <span class="valor">{{ recibo()!.prestamo.fechaVencimiento | date:'dd/MM/yyyy' }}</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">No. Cuotas:</span>
+      <span class="valor">{{ recibo()!.prestamo.numeroCuotas }}</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">Cuota:</span>
+      <span class="valor">{{ recibo()!.prestamo.cuotaTotal | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+    <div class="datos-linea">
+      <span class="label">Periodicidad:</span>
+      <span class="valor">{{ recibo()!.prestamo.periodicidadPago }}</span>
+    </div>
+
+    <div class="separador">--------------------------------</div>
+
+    <!-- Deducciones -->
+    <div class="seccion-titulo">DEDUCCIONES</div>
+    @for (deduccion of recibo()!.deducciones; track deduccion.nombre) {
+      <div class="datos-linea">
+        <span class="label">{{ deduccion.nombre }}:</span>
+        <span class="valor">{{ deduccion.montoCalculado | currency:'USD':'symbol':'1.2-2' }}</span>
+      </div>
+    }
+    @if (recibo()!.deducciones.length === 0) {
+      <div class="datos-linea">
+        <span class="label">Sin deducciones</span>
+      </div>
+    }
+    <div class="datos-linea total-deducciones">
+      <span class="label">Total Deducciones:</span>
+      <span class="valor">{{ recibo()!.totalDeducciones | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+
+    <div class="separador">--------------------------------</div>
+
+    <!-- Monto Líquido -->
+    <div class="monto-pagado">
+      <span class="label">LÍQUIDO A ENTREGAR:</span>
+      <span class="valor-destacado">{{ recibo()!.montoLiquido | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+
+    <div class="separador">--------------------------------</div>
+
+    <!-- Firma del Cliente -->
+    <div class="firma-seccion">
+      <div class="firma-espacio"></div>
+      <div class="firma-linea">_____________________________</div>
+      <div class="firma-texto">Firma del Cliente</div>
+    </div>
+
+    <!-- Información del pie -->
+    <div class="info-pie">
+      <div>Impreso: {{ recibo()!.fechaEmision | date:'dd/MM/yyyy HH:mm:ss' }}</div>
+    </div>
+
+    <div class="separador">--------------------------------</div>
+
+    <!-- Leyenda Legal -->
+    <div class="leyenda-legal">
+      Conserve este recibo como
+      comprobante de desembolso
+    </div>
+
+    <div class="separador-doble">================================</div>
+  </div>
+}

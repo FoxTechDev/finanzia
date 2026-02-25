@@ -10,6 +10,8 @@ import {
   PrestamoResumenDto,
   PrestamoPaginadoDto,
 } from '../dto/prestamo-detalle.dto';
+import { ReciboDesembolsoDto } from '../dto/recibo-desembolso.dto';
+import { parseLocalDate } from '../../../common/utils/date.utils';
 
 /**
  * Servicio especializado para consultas de préstamos
@@ -241,6 +243,65 @@ export class PrestamoConsultaService {
   }
 
   /**
+   * Obtiene los datos necesarios para generar el recibo de desembolso
+   * @param id ID del préstamo
+   * @returns Datos formateados para el recibo de impresora térmica
+   */
+  async obtenerReciboDesembolso(id: number): Promise<ReciboDesembolsoDto> {
+    const prestamo = await this.prestamoRepository.findOne({
+      where: { id },
+      relations: ['persona', 'tipoCredito', 'deducciones'],
+    });
+
+    if (!prestamo) {
+      throw new NotFoundException(`Préstamo con ID ${id} no encontrado`);
+    }
+
+    if (!prestamo.persona) {
+      throw new NotFoundException(
+        `No se encontró el cliente asociado al préstamo ${prestamo.numeroCredito}`,
+      );
+    }
+
+    // Calcular total de deducciones
+    const deducciones = (prestamo.deducciones || []).map((d) => ({
+      nombre: d.nombre,
+      montoCalculado: Number(d.montoCalculado),
+    }));
+
+    const totalDeducciones = deducciones.reduce(
+      (sum, d) => sum + d.montoCalculado,
+      0,
+    );
+
+    return {
+      institucion: 'FINANZIA S.C. DE R.L. DE C.V.',
+      fechaEmision: new Date().toISOString(),
+      cliente: {
+        nombre: prestamo.persona.nombre,
+        apellido: prestamo.persona.apellido,
+        numeroDui: prestamo.persona.numeroDui || '',
+      },
+      prestamo: {
+        id: prestamo.id,
+        numeroCredito: prestamo.numeroCredito,
+        montoAutorizado: Number(prestamo.montoAutorizado),
+        plazoAutorizado: prestamo.plazoAutorizado,
+        tasaInteres: Number(prestamo.tasaInteres),
+        tipoInteres: prestamo.tipoInteres,
+        periodicidadPago: prestamo.periodicidadPago,
+        numeroCuotas: prestamo.numeroCuotas,
+        cuotaTotal: Number(prestamo.cuotaTotal),
+        fechaOtorgamiento: prestamo.fechaOtorgamiento,
+        fechaVencimiento: prestamo.fechaVencimiento,
+      },
+      deducciones,
+      totalDeducciones,
+      montoLiquido: Number(prestamo.montoDesembolsado),
+    };
+  }
+
+  /**
    * Construye las condiciones de filtrado
    */
   private construirFiltros(filtros: FiltrosPrestamoDto): FindOptionsWhere<Prestamo> {
@@ -276,11 +337,11 @@ export class PrestamoConsultaService {
 
     if (filtros.fechaDesde && filtros.fechaHasta) {
       where.fechaOtorgamiento = Between(
-        new Date(filtros.fechaDesde),
-        new Date(filtros.fechaHasta),
+        parseLocalDate(filtros.fechaDesde),
+        parseLocalDate(filtros.fechaHasta),
       );
     } else if (filtros.fechaDesde) {
-      where.fechaOtorgamiento = MoreThanOrEqual(new Date(filtros.fechaDesde));
+      where.fechaOtorgamiento = MoreThanOrEqual(parseLocalDate(filtros.fechaDesde));
     }
 
     if (filtros.diasMoraMinimo) {

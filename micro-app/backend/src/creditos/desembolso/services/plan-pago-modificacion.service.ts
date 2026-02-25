@@ -12,6 +12,7 @@ import { PagoDetalleCuota } from '../../pagos/entities/pago-detalle-cuota.entity
 import { ModificarPlanPagoDto, PreviewPlanPagoDto } from '../dto/modificar-plan-pago.dto';
 import { CalculoInteresService } from './calculo-interes.service';
 import { PlanPagoService, CuotaPlanPago } from './plan-pago.service';
+import { parseLocalDate, formatLocalDate } from '../../../common/utils/date.utils';
 
 @Injectable()
 export class PlanPagoModificacionService {
@@ -78,7 +79,7 @@ export class PlanPagoModificacionService {
 
     // Generar plan con fechas (sin recargos)
     const cuotas = this.planPagoService.generarPlanPago(
-      new Date(dto.fechaPrimeraCuota),
+      parseLocalDate(dto.fechaPrimeraCuota),
       dto.periodicidadPago,
       resultado.cuotas,
       [], // sin recargos
@@ -86,7 +87,7 @@ export class PlanPagoModificacionService {
     );
 
     const fechaVencimiento = cuotas.length > 0
-      ? cuotas[cuotas.length - 1].fechaVencimiento.toISOString().substring(0, 10)
+      ? formatLocalDate(cuotas[cuotas.length - 1].fechaVencimiento)
       : dto.fechaPrimeraCuota;
 
     return {
@@ -153,7 +154,7 @@ export class PlanPagoModificacionService {
 
       // 4. Generar plan con fechas
       const nuevasCuotas = this.planPagoService.generarPlanPago(
-        new Date(dto.fechaPrimeraCuota),
+        parseLocalDate(dto.fechaPrimeraCuota),
         dto.periodicidadPago,
         resultado.cuotas,
         [],
@@ -258,7 +259,7 @@ export class PlanPagoModificacionService {
         periodicidadPago: dto.periodicidadPago,
         tipoInteres: dto.tipoInteres,
         plazoAutorizado: dto.plazo,
-        fechaPrimeraCuota: new Date(dto.fechaPrimeraCuota),
+        fechaPrimeraCuota: parseLocalDate(dto.fechaPrimeraCuota),
         fechaVencimiento: fechaVencimiento,
       });
 

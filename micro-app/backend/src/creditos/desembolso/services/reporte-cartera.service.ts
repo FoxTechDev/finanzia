@@ -9,6 +9,7 @@ import {
   ReporteCarteraItemDto,
   ReporteCarteraResponseDto,
 } from '../dto/reporte-cartera.dto';
+import { parseLocalDate } from '../../../common/utils/date.utils';
 
 /**
  * Servicio para generar el reporte de Cartera de Préstamos
@@ -101,7 +102,7 @@ export class ReporteCarteraService {
 
     // Filtrar solo los pagos hasta la fecha de corte
     const pagosHastaCorte = pagos.filter(
-      (pago) => new Date(pago.fechaPago) <= fechaCorte,
+      (pago) => parseLocalDate(String(pago.fechaPago)) <= fechaCorte,
     );
 
     // Calcular saldos considerando solo pagos hasta la fecha de corte
@@ -223,7 +224,7 @@ export class ReporteCarteraService {
 
     // Recorrer el plan de pagos y verificar cuotas vencidas
     for (const cuota of planPago) {
-      const fechaVencimiento = new Date(cuota.fechaVencimiento);
+      const fechaVencimiento = parseLocalDate(String(cuota.fechaVencimiento));
 
       // Si la fecha de vencimiento es mayor a la fecha de corte, no está vencida aún
       if (fechaVencimiento > fechaCorte) {

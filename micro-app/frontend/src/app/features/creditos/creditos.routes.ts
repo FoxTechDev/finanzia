@@ -114,6 +114,16 @@ export const CREDITOS_ROUTES: Routes = [
         data: { roles: [RoleCodes.ADMIN, RoleCodes.ASESOR, RoleCodes.COMITE] },
       },
       {
+        path: 'prestamos/:id/recibo-desembolso',
+        loadComponent: () =>
+          import('./components/desembolso/recibo-desembolso/recibo-desembolso.component').then(
+            (m) => m.ReciboDesembolsoComponent
+          ),
+        title: 'Recibo de Desembolso',
+        canActivate: [roleGuard],
+        data: { roles: [RoleCodes.ADMIN, RoleCodes.ASESOR, RoleCodes.COMITE] },
+      },
+      {
         path: 'prestamos/:id',
         loadComponent: () =>
           import('./components/prestamos/prestamo-detail.component').then(
@@ -202,6 +212,16 @@ export const CREDITOS_ROUTES: Routes = [
         title: 'Detalle de Cartera',
         canActivate: [roleGuard],
         data: { roles: [RoleCodes.ADMIN, RoleCodes.COMITE] },
+      },
+      {
+        path: 'reportes/ruta-cobro',
+        loadComponent: () =>
+          import('./components/reportes/ruta-cobro.component').then(
+            (m) => m.RutaCobroComponent
+          ),
+        title: 'Ruta de Cobro',
+        canActivate: [roleGuard],
+        data: { roles: [RoleCodes.ADMIN, RoleCodes.ASESOR, RoleCodes.COMITE] },
       },
     ],
   },

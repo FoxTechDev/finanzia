@@ -5,6 +5,7 @@ import { TipoCredito } from './entities/tipo-credito.entity';
 import { LineaCredito } from '../linea-credito/entities/linea-credito.entity';
 import { CreateTipoCreditoDto } from './dto/create-tipo-credito.dto';
 import { UpdateTipoCreditoDto } from './dto/update-tipo-credito.dto';
+import { formatLocalDate } from '../../common/utils/date.utils';
 
 @Injectable()
 export class TipoCreditoService {
@@ -65,7 +66,7 @@ export class TipoCreditoService {
   }
 
   async findAllActive(lineaCreditoId?: number): Promise<TipoCredito[]> {
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatLocalDate(new Date());
 
     const queryBuilder = this.tipoCreditoRepository.createQueryBuilder('tipo')
       .leftJoinAndSelect('tipo.lineaCredito', 'linea')

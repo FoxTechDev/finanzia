@@ -90,6 +90,13 @@ import {
             }
             Estado de Cuenta
           </button>
+          <button
+            mat-stroked-button
+            (click)="verComprobanteDesembolso()"
+            matTooltip="Ver comprobante de desembolso">
+            <mat-icon>description</mat-icon>
+            Comprobante Desembolso
+          </button>
         </div>
       </div>
 
@@ -1608,5 +1615,17 @@ export class PrestamoDetailComponent implements OnInit {
         );
       }
     });
+  }
+
+  /**
+   * Navega al comprobante de desembolso del préstamo
+   */
+  verComprobanteDesembolso(): void {
+    const prestamoId = this.prestamo()?.id;
+    if (!prestamoId) {
+      this.snackBar.open('No se pudo identificar el préstamo', 'Cerrar', { duration: 3000 });
+      return;
+    }
+    this.router.navigate(['/creditos/prestamos', prestamoId, 'recibo-desembolso']);
   }
 }

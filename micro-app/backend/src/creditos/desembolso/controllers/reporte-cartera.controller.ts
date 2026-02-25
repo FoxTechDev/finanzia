@@ -1,17 +1,28 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ReporteCarteraService } from '../services/reporte-cartera.service';
+import { RutaCobroService } from '../services/ruta-cobro.service';
 import {
   ReporteCarteraParamsDto,
   ReporteCarteraResponseDto,
 } from '../dto/reporte-cartera.dto';
+import {
+  RutaCobroParamsDto,
+  RutaCobroResponseDto,
+} from '../dto/ruta-cobro.dto';
+import { parseLocalDate } from '../../../common/utils/date.utils';
 
 /**
- * Controlador para el reporte de Cartera de Préstamos
- * Endpoint: GET /api/reportes/cartera
+ * Controlador para reportes de Cartera y Ruta de Cobro
+ * Endpoints:
+ *   GET /api/reportes/cartera
+ *   GET /api/reportes/ruta-cobro
  */
 @Controller('reportes')
 export class ReporteCarteraController {
-  constructor(private readonly reporteCarteraService: ReporteCarteraService) {}
+  constructor(
+    private readonly reporteCarteraService: ReporteCarteraService,
+    private readonly rutaCobroService: RutaCobroService,
+  ) {}
 
   /**
    * GET /api/reportes/cartera
@@ -58,7 +69,42 @@ export class ReporteCarteraController {
   async obtenerReporteCartera(
     @Query() params: ReporteCarteraParamsDto,
   ): Promise<ReporteCarteraResponseDto> {
-    const fechaCorte = new Date(params.fechaCorte);
+    const fechaCorte = parseLocalDate(params.fechaCorte);
     return this.reporteCarteraService.generarReporte(fechaCorte);
+  }
+
+  /**
+   * GET /api/reportes/ruta-cobro
+   * Lista las cuotas pendientes de pago en un rango de fechas de vencimiento
+   *
+   * @param params - Parámetros del reporte (fechaDesde, fechaHasta)
+   * @returns Listado de cuotas con estado PENDIENTE, PARCIAL o MORA
+   *
+   * @example
+   * GET /api/reportes/ruta-cobro?fechaDesde=2026-02-01&fechaHasta=2026-02-28
+   *
+   * Respuesta:
+   * {
+   *   "fechaDesde": "2026-02-01",
+   *   "fechaHasta": "2026-02-28",
+   *   "totalCuotas": 35,
+   *   "totalMonto": 17500.00,
+   *   "cuotas": [
+   *     {
+   *       "fechaVencimiento": "2026-02-05",
+   *       "nombreCliente": "García López, Ana",
+   *       "numeroCredito": "CRE2025000012",
+   *       "numeroCuota": 3,
+   *       "cuotaTotal": 500.00,
+   *       "estado": "PENDIENTE"
+   *     }
+   *   ]
+   * }
+   */
+  @Get('ruta-cobro')
+  async obtenerRutaCobro(
+    @Query() params: RutaCobroParamsDto,
+  ): Promise<RutaCobroResponseDto> {
+    return this.rutaCobroService.generarReporte(params);
   }
 }

@@ -95,6 +95,37 @@ export interface RespuestaReporteCartera {
 }
 
 /**
+ * Interface para filtros del reporte de ruta de cobro
+ */
+export interface FiltrosRutaCobro {
+  fechaDesde: string;
+  fechaHasta: string;
+}
+
+/**
+ * Interface para cada cuota en el reporte de ruta de cobro
+ */
+export interface DatosRutaCobro {
+  fechaVencimiento: string;
+  nombreCliente: string;
+  numeroCredito: string;
+  numeroCuota: number;
+  cuotaTotal: number;
+  estado: string;
+}
+
+/**
+ * Interface para la respuesta completa del reporte de ruta de cobro
+ */
+export interface RespuestaRutaCobro {
+  fechaDesde: string;
+  fechaHasta: string;
+  totalCuotas: number;
+  totalMonto: number;
+  cuotas: DatosRutaCobro[];
+}
+
+/**
  * Service para generación de reportes del módulo de créditos
  */
 @Injectable({
@@ -231,5 +262,18 @@ export class ReporteService {
     const params = new HttpParams().set('fechaCorte', fechaCorte);
 
     return this.http.get<RespuestaReporteCartera>(`${environment.apiUrl}/reportes/cartera`, { params });
+  }
+
+  /**
+   * Obtiene las cuotas pendientes de cobro en un rango de fechas de vencimiento
+   * @param filtros Objeto con fechaDesde y fechaHasta en formato YYYY-MM-DD
+   * @returns Observable con el listado de cuotas y totales de la ruta de cobro
+   */
+  getRutaCobro(filtros: FiltrosRutaCobro): Observable<RespuestaRutaCobro> {
+    let params = new HttpParams();
+    params = params.set('fechaDesde', filtros.fechaDesde);
+    params = params.set('fechaHasta', filtros.fechaHasta);
+
+    return this.http.get<RespuestaRutaCobro>(`${environment.apiUrl}/reportes/ruta-cobro`, { params });
   }
 }

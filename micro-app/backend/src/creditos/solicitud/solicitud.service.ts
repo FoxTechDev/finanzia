@@ -24,6 +24,7 @@ import { PeriodicidadPagoService } from '../../catalogos/periodicidad-pago/perio
 import { CalculoInteresService } from '../desembolso/services/calculo-interes.service';
 import { PlanPagoService } from '../desembolso/services/plan-pago.service';
 import { PeriodicidadPago } from '../desembolso/entities/prestamo.entity';
+import { parseLocalDate, formatLocalDate } from '../../common/utils/date.utils';
 
 @Injectable()
 export class SolicitudService {
@@ -103,20 +104,17 @@ export class SolicitudService {
 
       // Convertir fechaDesdePago si viene como ISO timestamp
       if (createDto.fechaDesdePago) {
-        const fecha = new Date(createDto.fechaDesdePago);
-        solicitudData.fechaDesdePago = fecha.toISOString().split('T')[0];
+        solicitudData.fechaDesdePago = formatLocalDate(parseLocalDate(createDto.fechaDesdePago));
       }
 
       // Convertir fechaHastaPago si viene como ISO timestamp
       if (createDto.fechaHastaPago) {
-        const fecha = new Date(createDto.fechaHastaPago);
-        solicitudData.fechaHastaPago = fecha.toISOString().split('T')[0];
+        solicitudData.fechaHastaPago = formatLocalDate(parseLocalDate(createDto.fechaHastaPago));
       }
 
       // Convertir fechaSolicitud si viene como ISO timestamp
       if (createDto.fechaSolicitud) {
-        const fecha = new Date(createDto.fechaSolicitud);
-        solicitudData.fechaSolicitud = fecha.toISOString().split('T')[0];
+        solicitudData.fechaSolicitud = formatLocalDate(parseLocalDate(createDto.fechaSolicitud));
       }
 
       const solicitud = queryRunner.manager.create(Solicitud, solicitudData);
@@ -616,7 +614,7 @@ export class SolicitudService {
     // IMPORTANTE: La primera cuota debe iniciar el día POSTERIOR a la fecha de solicitud
     let fechaPrimeraCuota: Date;
     if (dto.fechaPrimeraCuota) {
-      fechaPrimeraCuota = new Date(dto.fechaPrimeraCuota);
+      fechaPrimeraCuota = parseLocalDate(dto.fechaPrimeraCuota);
       // Agregar 1 día para que la primera cuota sea el día posterior
       fechaPrimeraCuota.setDate(fechaPrimeraCuota.getDate() + 1);
     } else {

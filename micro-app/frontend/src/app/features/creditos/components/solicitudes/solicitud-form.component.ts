@@ -532,9 +532,9 @@ import { AgregarRecargoDialogComponent } from './agregar-recargo-dialog/agregar-
                         [disabled]="condicionesForm.invalid"
                       >
                         @if (requiereGarantia()) {
-                          Siguiente <mat-icon>arrow_forward</mat-icon>
+                          <ng-container>Siguiente <mat-icon>arrow_forward</mat-icon></ng-container>
                         } @else {
-                          Ir a Análisis <mat-icon>arrow_forward</mat-icon>
+                          <ng-container>Ir a Análisis <mat-icon>arrow_forward</mat-icon></ng-container>
                         }
                       </button>
                     }

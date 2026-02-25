@@ -1114,3 +1114,40 @@ export interface PlanPagoHistorialLote {
     estado: EstadoCuota;
   }[];
 }
+
+// ============================================
+// DATOS DEL RECIBO DE DESEMBOLSO
+// ============================================
+
+export interface ReciboDesembolsoData {
+  institucion: string;
+  fechaEmision: string; // ISO date
+
+  cliente: {
+    nombre: string;
+    apellido: string;
+    numeroDui: string;
+  };
+
+  prestamo: {
+    id: number;
+    numeroCredito: string;
+    montoAutorizado: number;
+    plazoAutorizado: number;
+    tasaInteres: number;
+    tipoInteres: string;
+    periodicidadPago: string;
+    numeroCuotas: number;
+    cuotaTotal: number;
+    fechaOtorgamiento: string;
+    fechaVencimiento: string;
+  };
+
+  deducciones: {
+    nombre: string;
+    montoCalculado: number;
+  }[];
+
+  totalDeducciones: number;
+  montoLiquido: number;
+}

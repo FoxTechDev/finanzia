@@ -13,6 +13,7 @@ import { PagoCalculoService, ResumenAdeudo, DistribucionPago } from './pago-calc
 import { CrearPagoDto } from '../dto/crear-pago.dto';
 import { PreviewPagoDto } from '../dto/preview-pago.dto';
 import { AnularPagoDto } from '../dto/anular-pago.dto';
+import { parseLocalDate } from '../../../common/utils/date.utils';
 
 export interface PreviewPagoResponse {
   resumenAdeudo: ResumenAdeudo;
@@ -42,7 +43,7 @@ export class PagoService {
    * Genera preview de un pago sin aplicarlo
    */
   async preview(dto: PreviewPagoDto): Promise<PreviewPagoResponse> {
-    const fechaPago = new Date(dto.fechaPago);
+    const fechaPago = parseLocalDate(dto.fechaPago);
 
     // Validar préstamo existe y está vigente
     const prestamo = await this.prestamoRepository.findOne({
@@ -116,7 +117,7 @@ export class PagoService {
     await queryRunner.startTransaction();
 
     try {
-      const fechaPago = new Date(dto.fechaPago);
+      const fechaPago = parseLocalDate(dto.fechaPago);
       const fechaRegistro = new Date();
 
       // Validar préstamo

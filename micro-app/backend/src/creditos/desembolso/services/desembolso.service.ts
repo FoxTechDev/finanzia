@@ -29,6 +29,7 @@ import {
   RecargoCalculado,
   CuotaPlanPago,
 } from './plan-pago.service';
+import { parseLocalDate } from '../../../common/utils/date.utils';
 
 export interface DeduccionCalculada {
   nombre: string;
@@ -238,7 +239,7 @@ export class DesembolsoService {
     );
 
     // Generar plan de pago
-    const fechaPrimeraCuota = new Date(dto.fechaPrimeraCuota);
+    const fechaPrimeraCuota = parseLocalDate(dto.fechaPrimeraCuota);
     const planPago = this.planPagoService.generarPlanPago(
       fechaPrimeraCuota,
       dto.periodicidadPago,

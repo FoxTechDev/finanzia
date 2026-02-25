@@ -570,17 +570,6 @@ export class RegistrarPagoDialogComponent implements OnInit {
     }).subscribe({
       next: (data) => {
         this.preview.set(data);
-        // Si aplica recargo manual y hay atraso, establecer el valor sugerido si no hay valor
-        if (data.resumenAdeudo.recargoManual?.aplica &&
-            data.resumenAdeudo.recargoManual?.tieneAtraso) {
-          const currentValue = this.pagoForm.get('recargoManual')?.value;
-          // Solo establecer el valor sugerido si el campo está vacío o es 0
-          if (!currentValue || currentValue === 0) {
-            this.pagoForm.patchValue({
-              recargoManual: data.resumenAdeudo.recargoManual.montoSugerido
-            });
-          }
-        }
         this.loadingPreview.set(false);
       },
       error: (err) => {
