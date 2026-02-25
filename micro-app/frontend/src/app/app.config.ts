@@ -1,4 +1,4 @@
-import { ApplicationConfig, LOCALE_ID } from '@angular/core';
+import { ApplicationConfig, LOCALE_ID, ErrorHandler, Injectable } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -12,6 +12,18 @@ import { errorInterceptor } from './core/interceptors/error.interceptor';
 // Registrar el locale de español (El Salvador - usa punto como separador decimal)
 registerLocaleData(localeEs, 'es-SV');
 
+@Injectable()
+class ChunkErrorHandler implements ErrorHandler {
+  handleError(error: any): void {
+    const chunkFailedMessage = /Loading chunk [\d]+ failed|Failed to fetch dynamically imported module/;
+    if (chunkFailedMessage.test(error?.message || '')) {
+      window.location.reload();
+      return;
+    }
+    console.error(error);
+  }
+}
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
@@ -23,5 +35,6 @@ export const appConfig: ApplicationConfig = {
     provideNativeDateAdapter(),
     { provide: LOCALE_ID, useValue: 'es-SV' },
     { provide: MAT_DATE_LOCALE, useValue: 'es-SV' },
+    { provide: ErrorHandler, useClass: ChunkErrorHandler },
   ],
 };
