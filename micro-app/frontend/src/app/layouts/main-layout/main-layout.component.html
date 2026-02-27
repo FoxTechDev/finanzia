@@ -90,20 +90,18 @@
               </mat-panel-title>
             </mat-expansion-panel-header>
             <mat-nav-list>
-              <ng-container *appHasRole="[RoleCodes.ADMIN, RoleCodes.COMITE]">
-                <a mat-list-item routerLink="/creditos/reportes/colocacion" routerLinkActive="active" (click)="closeSidenavOnMobile()">
-                  <mat-icon matListItemIcon>trending_up</mat-icon>
-                  <span matListItemTitle>Colocación de Créditos</span>
-                </a>
-                <a mat-list-item routerLink="/creditos/reportes/pagos" routerLinkActive="active" (click)="closeSidenavOnMobile()">
-                  <mat-icon matListItemIcon>receipt_long</mat-icon>
-                  <span matListItemTitle>Reporte de Pagos</span>
-                </a>
-                <a mat-list-item routerLink="/creditos/reportes/cartera" routerLinkActive="active" (click)="closeSidenavOnMobile()">
-                  <mat-icon matListItemIcon>account_balance_wallet</mat-icon>
-                  <span matListItemTitle>Detalle de Cartera</span>
-                </a>
-              </ng-container>
+              <a *appHasRole="[RoleCodes.ADMIN, RoleCodes.COMITE]" mat-list-item routerLink="/creditos/reportes/colocacion" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                <mat-icon matListItemIcon>trending_up</mat-icon>
+                <span matListItemTitle>Colocación de Créditos</span>
+              </a>
+              <a *appHasRole="[RoleCodes.ADMIN, RoleCodes.COMITE]" mat-list-item routerLink="/creditos/reportes/pagos" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                <mat-icon matListItemIcon>receipt_long</mat-icon>
+                <span matListItemTitle>Reporte de Pagos</span>
+              </a>
+              <a *appHasRole="[RoleCodes.ADMIN, RoleCodes.COMITE]" mat-list-item routerLink="/creditos/reportes/cartera" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                <mat-icon matListItemIcon>account_balance_wallet</mat-icon>
+                <span matListItemTitle>Detalle de Cartera</span>
+              </a>
               <a mat-list-item routerLink="/creditos/reportes/ruta-cobro" routerLinkActive="active" (click)="closeSidenavOnMobile()">
                 <mat-icon matListItemIcon>directions_walk</mat-icon>
                 <span matListItemTitle>Ruta de Cobro</span>
