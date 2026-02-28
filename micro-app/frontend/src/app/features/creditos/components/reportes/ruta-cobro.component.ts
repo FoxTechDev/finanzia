@@ -603,6 +603,7 @@ import {
 
     .recibo-termica {
       width: 80mm;
+      box-sizing: border-box;
       margin: 0 auto;
       padding: 5mm;
       font-family: 'Consolas', 'Liberation Mono', 'Menlo', 'DejaVu Sans Mono', monospace;
@@ -610,6 +611,7 @@ import {
       line-height: 1.3;
       color: #000;
       letter-spacing: 0.02em;
+      overflow: hidden;
     }
 
     .recibo-header {
@@ -698,6 +700,14 @@ import {
         display: none !important;
       }
 
+      /* Resetear el contenedor principal para que no agregue padding ni ancho extra */
+      .container {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: none !important;
+        width: 80mm !important;
+      }
+
       .print-only {
         display: block !important;
       }
@@ -708,23 +718,32 @@ import {
       }
 
       body {
-        margin: 0;
-        padding: 0;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 80mm !important;
       }
 
       :host {
         display: block;
         width: 80mm;
+        overflow: hidden;
       }
 
       .recibo-termica {
-        width: 80mm;
-        margin: 0;
-        padding: 3mm;
-        border: none;
-        box-shadow: none;
-        font-size: 9pt;
-        line-height: 1.2;
+        width: 80mm !important;
+        max-width: 80mm !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 3mm !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        font-family: 'Consolas', 'Liberation Mono', 'Menlo', 'DejaVu Sans Mono', monospace !important;
+        font-size: 9pt !important;
+        line-height: 1.2 !important;
+        letter-spacing: 0.02em !important;
+        color: #000 !important;
+        overflow: hidden !important;
       }
 
       .empresa-nombre {
@@ -741,12 +760,14 @@ import {
 
       .info-pie {
         font-size: 7pt;
+        margin-top: 3mm;
       }
 
       .empresa-direccion {
         font-size: 7pt;
       }
 
+      /* Asegurar que todo sea blanco y negro */
       * {
         color: #000 !important;
         background: white !important;
@@ -754,6 +775,7 @@ import {
         print-color-adjust: exact !important;
       }
 
+      /* Evitar saltos de página no deseados */
       .recibo-termica {
         page-break-inside: avoid;
       }
@@ -762,9 +784,33 @@ import {
         page-break-inside: avoid;
       }
 
+      /* Reducir márgenes de separadores para optimizar espacio */
       .separador,
       .separador-doble {
         margin: 1mm 0;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+
+      /* Controlar el texto largo del cliente y crédito */
+      .datos-linea {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        overflow: hidden;
+      }
+
+      .datos-linea .label {
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+
+      .datos-linea .valor {
+        flex: 1 1 auto;
+        text-align: right;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        overflow: hidden;
       }
     }
   `],
