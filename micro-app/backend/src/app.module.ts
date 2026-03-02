@@ -17,6 +17,8 @@ import { TipoIngresoModule } from './tipo-ingreso/tipo-ingreso.module';
 import { TipoViviendaModule } from './tipo-vivienda/tipo-vivienda.module';
 import { GastoClienteModule } from './gasto-cliente/gasto-cliente.module';
 import { IngresoClienteModule } from './ingreso-cliente/ingreso-cliente.module';
+import { AhorrosModule } from './ahorros/ahorros.module';
+import { BancosModule } from './bancos/banco.module';
 
 @Module({
   imports: [
@@ -42,6 +44,8 @@ import { IngresoClienteModule } from './ingreso-cliente/ingreso-cliente.module';
     TipoViviendaModule,
     GastoClienteModule,
     IngresoClienteModule,
+    AhorrosModule,
+    BancosModule,
   ],
   controllers: [],
   providers: [],
