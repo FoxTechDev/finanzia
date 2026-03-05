@@ -134,6 +134,7 @@ export interface CuentaAhorroResumen {
   personaId: number;
   nombreCliente: string;
   numeroDui: string;
+  tipoAhorroId: number;
   tipoAhorro: string;
   lineaAhorro: string;
   estado: string;
@@ -201,12 +202,14 @@ export interface DepositoRequest {
   monto: number;
   fecha?: string;
   observacion?: string;
+  tipoTransaccionId?: number;
 }
 
 export interface RetiroRequest {
   monto: number;
   fecha?: string;
   observacion?: string;
+  tipoTransaccionId?: number;
 }
 
 // ===== Plan de Capitalización =====
@@ -256,8 +259,26 @@ export interface InteresCapitalizacion {
   montoPagar: number;
 }
 
+// ===== Pago de Intereses DPF (Reporte) =====
+export interface PagoInteresDpf {
+  noCuenta: string;
+  nombreCliente: string;
+  numeroDui: string;
+  tipoAhorro: string;
+  tipoCapitalizacion: string;
+  monto: number;
+  tasaInteres: number;
+  plazo: number;
+  fechaApertura: string;
+  fechaVencimiento: string;
+  estado: string;
+  fechaPago: string;
+  montoInteres: number;
+}
+
 // ===== Paginación =====
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;
+  totalIntereses?: number;
 }

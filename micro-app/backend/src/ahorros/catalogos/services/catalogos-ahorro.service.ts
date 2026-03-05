@@ -9,6 +9,7 @@ import { EstadoCuentaAhorro } from '../entities/estado-cuenta-ahorro.entity';
 import { TipoCapitalizacion } from '../entities/tipo-capitalizacion.entity';
 import { NaturalezaMovimientoAhorro } from '../entities/naturaleza-movimiento-ahorro.entity';
 import { TipoTransaccionAhorro } from '../entities/tipo-transaccion-ahorro.entity';
+import { TransaccionTipoAhorro } from '../entities/transaccion-tipo-ahorro.entity';
 import {
   CreateEstadoCuentaAhorroDto,
   UpdateEstadoCuentaAhorroDto,
@@ -31,6 +32,8 @@ export class CatalogosAhorroService {
     private readonly naturalezaRepo: Repository<NaturalezaMovimientoAhorro>,
     @InjectRepository(TipoTransaccionAhorro)
     private readonly tipoTransRepo: Repository<TipoTransaccionAhorro>,
+    @InjectRepository(TransaccionTipoAhorro)
+    private readonly transaccionTipoRepo: Repository<TransaccionTipoAhorro>,
   ) {}
 
   // ==================== Estados ====================
@@ -196,6 +199,21 @@ export class CatalogosAhorroService {
     });
   }
 
+  async findTipoTransaccionById(
+    id: number,
+  ): Promise<TipoTransaccionAhorro> {
+    const entity = await this.tipoTransRepo.findOne({
+      where: { id },
+      relations: ['naturaleza'],
+    });
+    if (!entity) {
+      throw new NotFoundException(
+        `Tipo de transacción con id ${id} no encontrado`,
+      );
+    }
+    return entity;
+  }
+
   async findTipoTransaccionByCodigo(
     codigo: string,
   ): Promise<TipoTransaccionAhorro> {
@@ -255,5 +273,56 @@ export class CatalogosAhorroService {
         `Tipo de transacción con id ${id} no encontrado`,
       );
     }
+  }
+
+  // ==================== Transacciones por Tipo Ahorro ====================
+
+  async findTransaccionesByTipoAhorro(
+    tipoAhorroId: number,
+  ): Promise<TipoTransaccionAhorro[]> {
+    const asignaciones = await this.transaccionTipoRepo.find({
+      where: { tipoAhorroId },
+      relations: ['tipoTransaccion', 'tipoTransaccion.naturaleza'],
+    });
+    return asignaciones.map((a) => a.tipoTransaccion);
+  }
+
+  async asignarTransaccion(
+    tipoAhorroId: number,
+    tipoTransaccionId: number,
+  ): Promise<TransaccionTipoAhorro> {
+    const exists = await this.transaccionTipoRepo.findOne({
+      where: { tipoAhorroId, tipoTransaccionId },
+    });
+    if (exists) {
+      throw new ConflictException('Esta transacción ya está asignada a este tipo de ahorro');
+    }
+    const entity = this.transaccionTipoRepo.create({
+      tipoAhorroId,
+      tipoTransaccionId,
+    });
+    return this.transaccionTipoRepo.save(entity);
+  }
+
+  async desasignarTransaccion(
+    tipoAhorroId: number,
+    tipoTransaccionId: number,
+  ): Promise<void> {
+    const result = await this.transaccionTipoRepo.delete({
+      tipoAhorroId,
+      tipoTransaccionId,
+    });
+    if (result.affected === 0) {
+      throw new NotFoundException('Asignación no encontrada');
+    }
+  }
+
+  async getAsignaciones(
+    tipoAhorroId: number,
+  ): Promise<TransaccionTipoAhorro[]> {
+    return this.transaccionTipoRepo.find({
+      where: { tipoAhorroId },
+      relations: ['tipoTransaccion', 'tipoTransaccion.naturaleza'],
+    });
   }
 }

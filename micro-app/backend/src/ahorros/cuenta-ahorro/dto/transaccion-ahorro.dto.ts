@@ -12,6 +12,10 @@ export class DepositoAhorroDto {
   @IsOptional()
   @MaxLength(200)
   observacion?: string;
+
+  @IsNumber()
+  @IsOptional()
+  tipoTransaccionId?: number;
 }
 
 export class RetiroAhorroDto {
@@ -26,4 +30,8 @@ export class RetiroAhorroDto {
   @IsOptional()
   @MaxLength(200)
   observacion?: string;
+
+  @IsNumber()
+  @IsOptional()
+  tipoTransaccionId?: number;
 }

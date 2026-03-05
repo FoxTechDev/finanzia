@@ -16,6 +16,7 @@ import { CuentaAhorroService } from '../services/cuenta-ahorro.service';
 import { CuentaAhorroConsultaService } from '../services/cuenta-ahorro-consulta.service';
 import { CapitalizacionService } from '../services/capitalizacion.service';
 import { ContratoDpfService } from '../services/contrato-dpf.service';
+import { ReporteInteresesPdfService } from '../services/reporte-intereses-pdf.service';
 import { TipoAhorroService } from '../../tipo-ahorro/tipo-ahorro.service';
 import { CreateCuentaAhorroDto } from '../dto/create-cuenta-ahorro.dto';
 import { FiltrosCuentaAhorroDto } from '../dto/filtros-cuenta-ahorro.dto';
@@ -27,6 +28,7 @@ export class CuentaAhorroController {
     private readonly consultaService: CuentaAhorroConsultaService,
     private readonly capitalizacionService: CapitalizacionService,
     private readonly contratoDpfService: ContratoDpfService,
+    private readonly reporteInteresesPdfService: ReporteInteresesPdfService,
     private readonly tipoAhorroService: TipoAhorroService,
   ) {}
 
@@ -73,6 +75,19 @@ export class CuentaAhorroController {
     return this.consultaService.findInteresesPorPagar(fechaDesde, fechaHasta);
   }
 
+  @Get('reportes/pago-intereses-dpf')
+  findPagoInteresesDpf(
+    @Query('fechaDesde') fechaDesde: string,
+    @Query('fechaHasta') fechaHasta: string,
+    @Query('cuentaId') cuentaId?: string,
+  ) {
+    return this.consultaService.findPagoInteresesDpf(
+      fechaDesde,
+      fechaHasta,
+      cuentaId ? parseInt(cuentaId, 10) : undefined,
+    );
+  }
+
   @Get(':id/contrato-dpf')
   async getContratoDpf(
     @Param('id', ParseIntPipe) id: number,
@@ -83,6 +98,20 @@ export class CuentaAhorroController {
       'Content-Type':
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'Content-Disposition': `attachment; filename="Contrato_DPF_${id}.docx"`,
+      'Content-Length': buffer.length,
+    });
+    res.end(buffer);
+  }
+
+  @Get(':id/reporte-intereses-pdf')
+  async getReporteInteresesPdf(
+    @Param('id', ParseIntPipe) id: number,
+    @Res() res: Response,
+  ) {
+    const buffer = await this.reporteInteresesPdfService.generarReporte(id);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="Reporte_Intereses_${id}.pdf"`,
       'Content-Length': buffer.length,
     });
     res.end(buffer);

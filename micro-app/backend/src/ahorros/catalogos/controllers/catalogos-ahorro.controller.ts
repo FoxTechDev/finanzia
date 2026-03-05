@@ -123,4 +123,26 @@ export class CatalogosAhorroController {
   deleteTipoTransaccion(@Param('id', ParseIntPipe) id: number) {
     return this.service.deleteTipoTransaccion(id);
   }
+
+  // ==================== Transacciones por Tipo Ahorro ====================
+
+  @Get('tipos-transaccion/por-tipo-ahorro/:tipoAhorroId')
+  findTransaccionesByTipoAhorro(
+    @Param('tipoAhorroId', ParseIntPipe) tipoAhorroId: number,
+  ) {
+    return this.service.findTransaccionesByTipoAhorro(tipoAhorroId);
+  }
+
+  @Post('tipos-transaccion/asignar')
+  asignarTransaccion(@Body() body: { tipoAhorroId: number; tipoTransaccionId: number }) {
+    return this.service.asignarTransaccion(body.tipoAhorroId, body.tipoTransaccionId);
+  }
+
+  @Delete('tipos-transaccion/asignar/:tipoAhorroId/:tipoTransaccionId')
+  desasignarTransaccion(
+    @Param('tipoAhorroId', ParseIntPipe) tipoAhorroId: number,
+    @Param('tipoTransaccionId', ParseIntPipe) tipoTransaccionId: number,
+  ) {
+    return this.service.desasignarTransaccion(tipoAhorroId, tipoTransaccionId);
+  }
 }

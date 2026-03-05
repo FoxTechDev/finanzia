@@ -152,6 +152,7 @@ export class CuentaAhorroConsultaService {
         ? `${c.persona.nombre} ${c.persona.apellido}`
         : '',
       numeroDui: c.persona?.numeroDui || '',
+      tipoAhorroId: c.tipoAhorroId,
       tipoAhorro: c.tipoAhorro?.nombre || '',
       lineaAhorro: c.tipoAhorro?.lineaAhorro?.nombre || '',
       estado: c.estado?.nombre || '',
@@ -247,5 +248,56 @@ export class CuentaAhorroConsultaService {
     }));
 
     return { data, total: data.length };
+  }
+
+  async findPagoInteresesDpf(
+    fechaDesde: string,
+    fechaHasta: string,
+    cuentaId?: number,
+  ): Promise<{ data: any[]; total: number; totalIntereses: number }> {
+    const qb = this.planCapRepo
+      .createQueryBuilder('plan')
+      .leftJoinAndSelect('plan.cuentaAhorro', 'cuenta')
+      .leftJoinAndSelect('cuenta.persona', 'persona')
+      .leftJoinAndSelect('cuenta.tipoAhorro', 'tipoAhorro')
+      .leftJoinAndSelect('tipoAhorro.lineaAhorro', 'lineaAhorro')
+      .leftJoinAndSelect('cuenta.tipoCapitalizacion', 'tipoCapitalizacion')
+      .leftJoinAndSelect('cuenta.estado', 'estado')
+      .where('plan.procesado = :procesado', { procesado: true })
+      .andWhere('plan.fechaProcesado BETWEEN :fechaDesde AND :fechaHasta', {
+        fechaDesde,
+        fechaHasta,
+      })
+      .andWhere('lineaAhorro.codigo = :lineaCodigo', { lineaCodigo: 'DPF' });
+
+    if (cuentaId) {
+      qb.andWhere('cuenta.id = :cuentaId', { cuentaId });
+    }
+
+    const planes = await qb
+      .orderBy('plan.fechaProcesado', 'ASC')
+      .getMany();
+
+    const data = planes.map((p) => ({
+      noCuenta: p.cuentaAhorro?.noCuenta || '',
+      nombreCliente: p.cuentaAhorro?.persona
+        ? `${p.cuentaAhorro.persona.nombre} ${p.cuentaAhorro.persona.apellido}`
+        : '',
+      numeroDui: p.cuentaAhorro?.persona?.numeroDui || '',
+      tipoAhorro: p.cuentaAhorro?.tipoAhorro?.nombre || '',
+      tipoCapitalizacion: p.cuentaAhorro?.tipoCapitalizacion?.nombre || '',
+      monto: Number(p.cuentaAhorro?.monto) || 0,
+      tasaInteres: Number(p.cuentaAhorro?.tasaInteres) || 0,
+      plazo: p.cuentaAhorro?.plazo || 0,
+      fechaApertura: p.cuentaAhorro?.fechaApertura || null,
+      fechaVencimiento: p.cuentaAhorro?.fechaVencimiento || null,
+      estado: p.cuentaAhorro?.estado?.nombre || '',
+      fechaPago: p.fechaProcesado,
+      montoInteres: Number(p.monto) || 0,
+    }));
+
+    const totalIntereses = data.reduce((sum, item) => sum + item.montoInteres, 0);
+
+    return { data, total: data.length, totalIntereses };
   }
 }

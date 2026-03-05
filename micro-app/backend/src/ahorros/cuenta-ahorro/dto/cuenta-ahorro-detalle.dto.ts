@@ -4,6 +4,7 @@ export class CuentaAhorroResumenDto {
   personaId: number;
   nombreCliente: string;
   numeroDui: string;
+  tipoAhorroId: number;
   tipoAhorro: string;
   lineaAhorro: string;
   estado: string;

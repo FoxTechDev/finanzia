@@ -120,6 +120,26 @@ export class CatalogosAhorroService {
     return this.http.delete<void>(`${this.baseUrl}/catalogos/naturalezas/${id}`);
   }
 
+  // Transacciones por tipo de ahorro
+  getTransaccionesByTipoAhorro(tipoAhorroId: number): Observable<TipoTransaccionAhorro[]> {
+    return this.http.get<TipoTransaccionAhorro[]>(
+      `${this.baseUrl}/catalogos/tipos-transaccion/por-tipo-ahorro/${tipoAhorroId}`,
+    );
+  }
+
+  asignarTransaccion(tipoAhorroId: number, tipoTransaccionId: number): Observable<any> {
+    return this.http.post(`${this.baseUrl}/catalogos/tipos-transaccion/asignar`, {
+      tipoAhorroId,
+      tipoTransaccionId,
+    });
+  }
+
+  desasignarTransaccion(tipoAhorroId: number, tipoTransaccionId: number): Observable<void> {
+    return this.http.delete<void>(
+      `${this.baseUrl}/catalogos/tipos-transaccion/asignar/${tipoAhorroId}/${tipoTransaccionId}`,
+    );
+  }
+
   // Tipos de transacción
   getTiposTransaccion(): Observable<TipoTransaccionAhorro[]> {
     return this.http.get<TipoTransaccionAhorro[]>(`${this.baseUrl}/catalogos/tipos-transaccion`);

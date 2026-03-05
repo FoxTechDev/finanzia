@@ -10,6 +10,7 @@ import {
   PaginatedResponse,
   PlanCapitalizacion,
   InteresCapitalizacion,
+  PagoInteresDpf,
 } from '@core/models/ahorro.model';
 
 @Injectable({ providedIn: 'root' })
@@ -60,6 +61,12 @@ export class CuentaAhorroService {
     });
   }
 
+  descargarReporteIntereses(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${id}/reporte-intereses-pdf`, {
+      responseType: 'blob',
+    });
+  }
+
   getActivasAV(personaId?: number): Observable<CuentaAVResumen[]> {
     const params: Record<string, string> = {};
     if (personaId) params['personaId'] = personaId.toString();
@@ -71,5 +78,11 @@ export class CuentaAhorroService {
       `${this.apiUrl}/reportes/intereses-por-pagar`,
       { params: { fechaDesde, fechaHasta } },
     );
+  }
+
+  getPagoInteresesDpf(fechaDesde: string, fechaHasta: string, cuentaId?: number): Observable<any> {
+    const params: Record<string, string> = { fechaDesde, fechaHasta };
+    if (cuentaId) params['cuentaId'] = cuentaId.toString();
+    return this.http.get(`${this.apiUrl}/reportes/pago-intereses-dpf`, { params });
   }
 }

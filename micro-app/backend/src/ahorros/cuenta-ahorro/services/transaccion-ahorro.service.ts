@@ -36,10 +36,14 @@ export class TransaccionAhorroService {
       throw new BadRequestException('El monto debe ser mayor a cero');
     }
 
+    let tipoTransaccion;
+    if (dto.tipoTransaccionId) {
+      tipoTransaccion = await this.catalogosService.findTipoTransaccionById(dto.tipoTransaccionId);
+    } else {
+      tipoTransaccion = await this.catalogosService.findTipoTransaccionByCodigo('DEPOSITO');
+    }
     const naturalezaAbono =
       await this.catalogosService.findNaturalezaByCodigo('ABONO');
-    const tipoDeposito =
-      await this.catalogosService.findTipoTransaccionByCodigo('DEPOSITO');
 
     const fecha = dto.fecha || new Date().toISOString().split('T')[0];
     const saldoAnterior = Number(cuenta.saldo);
@@ -55,7 +59,7 @@ export class TransaccionAhorroService {
         fecha,
         monto: dto.monto,
         naturalezaId: naturalezaAbono.id,
-        tipoTransaccionId: tipoDeposito.id,
+        tipoTransaccionId: tipoTransaccion.id,
         saldoAnterior,
         nuevoSaldo,
         observacion: dto.observacion || 'Depósito',
@@ -110,10 +114,14 @@ export class TransaccionAhorroService {
       );
     }
 
+    let tipoTransaccion;
+    if (dto.tipoTransaccionId) {
+      tipoTransaccion = await this.catalogosService.findTipoTransaccionById(dto.tipoTransaccionId);
+    } else {
+      tipoTransaccion = await this.catalogosService.findTipoTransaccionByCodigo('RETIRO');
+    }
     const naturalezaCargo =
       await this.catalogosService.findNaturalezaByCodigo('CARGO');
-    const tipoRetiro =
-      await this.catalogosService.findTipoTransaccionByCodigo('RETIRO');
 
     const fecha = dto.fecha || new Date().toISOString().split('T')[0];
     const saldoAnterior = Number(cuenta.saldo);
@@ -129,7 +137,7 @@ export class TransaccionAhorroService {
         fecha,
         monto: dto.monto,
         naturalezaId: naturalezaCargo.id,
-        tipoTransaccionId: tipoRetiro.id,
+        tipoTransaccionId: tipoTransaccion.id,
         saldoAnterior,
         nuevoSaldo,
         observacion: dto.observacion || 'Retiro',

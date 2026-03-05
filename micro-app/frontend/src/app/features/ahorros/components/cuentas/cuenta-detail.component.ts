@@ -52,6 +52,11 @@ import { BeneficiarioDialogComponent } from './beneficiario-dialog.component';
             <h1>Cuenta {{ cuenta()!.noCuenta }}</h1>
           </div>
           <div class="header-actions">
+            @if (lineaCodigo === 'DPF' || lineaCodigo === 'AP') {
+              <button mat-stroked-button color="primary" (click)="descargarReporteIntereses()">
+                <mat-icon>picture_as_pdf</mat-icon> Reporte Intereses
+              </button>
+            }
             @if (lineaCodigo === 'DPF') {
               <button mat-raised-button color="primary" (click)="descargarContrato()">
                 <mat-icon>description</mat-icon> Contrato DPF
@@ -504,6 +509,24 @@ export class CuentaDetailComponent implements OnInit {
       },
       error: () => {
         this.snackBar.open('Error al generar contrato', 'Cerrar', { duration: 3000 });
+      },
+    });
+  }
+
+  descargarReporteIntereses(): void {
+    const id = this.cuenta()?.id;
+    if (!id) return;
+    this.cuentaService.descargarReporteIntereses(id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Reporte_Intereses_${this.cuenta()!.noCuenta}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.snackBar.open('Error al generar reporte de intereses', 'Cerrar', { duration: 3000 });
       },
     });
   }

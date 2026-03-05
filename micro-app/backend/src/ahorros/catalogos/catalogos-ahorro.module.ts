@@ -4,6 +4,7 @@ import { EstadoCuentaAhorro } from './entities/estado-cuenta-ahorro.entity';
 import { TipoCapitalizacion } from './entities/tipo-capitalizacion.entity';
 import { NaturalezaMovimientoAhorro } from './entities/naturaleza-movimiento-ahorro.entity';
 import { TipoTransaccionAhorro } from './entities/tipo-transaccion-ahorro.entity';
+import { TransaccionTipoAhorro } from './entities/transaccion-tipo-ahorro.entity';
 import { CatalogosAhorroService } from './services/catalogos-ahorro.service';
 import { CatalogosAhorroController } from './controllers/catalogos-ahorro.controller';
 
@@ -14,6 +15,7 @@ import { CatalogosAhorroController } from './controllers/catalogos-ahorro.contro
       TipoCapitalizacion,
       NaturalezaMovimientoAhorro,
       TipoTransaccionAhorro,
+      TransaccionTipoAhorro,
     ]),
   ],
   controllers: [CatalogosAhorroController],

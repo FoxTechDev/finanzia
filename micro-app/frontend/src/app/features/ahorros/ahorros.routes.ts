@@ -73,6 +73,17 @@ export const AHORROS_ROUTES: Routes = [
         canActivate: [roleGuard],
         data: { roles: [RoleCodes.ADMIN, RoleCodes.COMITE], lineaCodigo: 'AP', lineaNombre: 'Ahorro Programado' },
       },
+      // Operaciones: Movimientos de cuentas
+      {
+        path: 'operaciones/movimientos',
+        loadComponent: () =>
+          import('./components/operaciones/movimiento-cuenta.component').then(
+            (m) => m.MovimientoCuentaComponent,
+          ),
+        title: 'Movimientos de Cuentas',
+        canActivate: [roleGuard],
+        data: { roles: [RoleCodes.ADMIN, RoleCodes.COMITE] },
+      },
       // Provisión de intereses
       {
         path: 'provision',
@@ -102,6 +113,16 @@ export const AHORROS_ROUTES: Routes = [
             (m) => m.ReporteInteresesComponent,
           ),
         title: 'Intereses a Pagar',
+        canActivate: [roleGuard],
+        data: { roles: [RoleCodes.ADMIN, RoleCodes.COMITE] },
+      },
+      {
+        path: 'reportes/pago-intereses-dpf',
+        loadComponent: () =>
+          import('./components/reportes/reporte-pago-intereses-dpf.component').then(
+            (m) => m.ReportePagoInteresesDpfComponent,
+          ),
+        title: 'Pago de Intereses DPF',
         canActivate: [roleGuard],
         data: { roles: [RoleCodes.ADMIN, RoleCodes.COMITE] },
       },
@@ -162,6 +183,16 @@ export const AHORROS_ROUTES: Routes = [
             './components/catalogos/tipos-transaccion/tipos-transaccion.component'
           ).then((m) => m.TiposTransaccionComponent),
         title: 'Tipos de Transacción',
+        canActivate: [roleGuard],
+        data: { roles: [RoleCodes.ADMIN] },
+      },
+      {
+        path: 'transacciones-tipo-ahorro',
+        loadComponent: () =>
+          import(
+            './components/catalogos/transacciones-tipo-ahorro/transacciones-tipo-ahorro.component'
+          ).then((m) => m.TransaccionesTipoAhorroComponent),
+        title: 'Transacciones por Tipo de Ahorro',
         canActivate: [roleGuard],
         data: { roles: [RoleCodes.ADMIN] },
       },

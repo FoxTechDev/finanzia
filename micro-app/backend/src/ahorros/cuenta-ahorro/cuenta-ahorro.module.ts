@@ -11,6 +11,7 @@ import { CuentaAhorroConsultaService } from './services/cuenta-ahorro-consulta.s
 import { TransaccionAhorroService } from './services/transaccion-ahorro.service';
 import { CapitalizacionService } from './services/capitalizacion.service';
 import { ContratoDpfService } from './services/contrato-dpf.service';
+import { ReporteInteresesPdfService } from './services/reporte-intereses-pdf.service';
 import { ProvisionService } from './services/provision.service';
 import { BeneficiarioService } from './services/beneficiario.service';
 import { CuentaAhorroController } from './controllers/cuenta-ahorro.controller';
@@ -43,6 +44,7 @@ import { TipoAhorroModule } from '../tipo-ahorro/tipo-ahorro.module';
     TransaccionAhorroService,
     CapitalizacionService,
     ContratoDpfService,
+    ReporteInteresesPdfService,
     ProvisionService,
     BeneficiarioService,
   ],

@@ -89,32 +89,77 @@
                 <span>Ahorros</span>
               </mat-panel-title>
             </mat-expansion-panel-header>
-            <mat-nav-list>
-              <a mat-list-item routerLink="/ahorros/vista" routerLinkActive="active" (click)="closeSidenavOnMobile()">
-                <mat-icon matListItemIcon>visibility</mat-icon>
-                <span matListItemTitle>Ahorro a la Vista</span>
-              </a>
-              <a mat-list-item routerLink="/ahorros/plazo" routerLinkActive="active" (click)="closeSidenavOnMobile()">
-                <mat-icon matListItemIcon>lock_clock</mat-icon>
-                <span matListItemTitle>Depósitos a Plazo</span>
-              </a>
-              <a mat-list-item routerLink="/ahorros/programado" routerLinkActive="active" (click)="closeSidenavOnMobile()">
-                <mat-icon matListItemIcon>event_repeat</mat-icon>
-                <span matListItemTitle>Ahorro Programado</span>
-              </a>
-              <a mat-list-item routerLink="/ahorros/reportes/apertura" routerLinkActive="active" (click)="closeSidenavOnMobile()">
-                <mat-icon matListItemIcon>summarize</mat-icon>
-                <span matListItemTitle>Reporte Apertura</span>
-              </a>
-              <a mat-list-item routerLink="/ahorros/provision" routerLinkActive="active" (click)="closeSidenavOnMobile()">
-                <mat-icon matListItemIcon>calculate</mat-icon>
-                <span matListItemTitle>Provisión Intereses</span>
-              </a>
-              <a mat-list-item routerLink="/ahorros/reportes/intereses" routerLinkActive="active" (click)="closeSidenavOnMobile()">
-                <mat-icon matListItemIcon>payments</mat-icon>
-                <span matListItemTitle>Intereses a Pagar</span>
-              </a>
-            </mat-nav-list>
+
+            <mat-accordion displayMode="flat" class="sub-accordion">
+              <!-- Sub-sección: Administración de Cuentas -->
+              <mat-expansion-panel class="sub-panel">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-icon>account_balance_wallet</mat-icon>
+                    <span>Administración de Cuentas</span>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <mat-nav-list>
+                  <a mat-list-item routerLink="/ahorros/vista" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>visibility</mat-icon>
+                    <span matListItemTitle>Ahorro a la Vista</span>
+                  </a>
+                  <a mat-list-item routerLink="/ahorros/plazo" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>lock_clock</mat-icon>
+                    <span matListItemTitle>Depósitos a Plazo</span>
+                  </a>
+                  <a mat-list-item routerLink="/ahorros/programado" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>event_repeat</mat-icon>
+                    <span matListItemTitle>Ahorro Programado</span>
+                  </a>
+                </mat-nav-list>
+              </mat-expansion-panel>
+
+              <!-- Sub-sección: Operaciones -->
+              <mat-expansion-panel class="sub-panel">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-icon>sync_alt</mat-icon>
+                    <span>Operaciones</span>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <mat-nav-list>
+                  <a mat-list-item routerLink="/ahorros/operaciones/movimientos" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>swap_horiz</mat-icon>
+                    <span matListItemTitle>Movimientos</span>
+                  </a>
+                  <a mat-list-item routerLink="/ahorros/provision" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>calculate</mat-icon>
+                    <span matListItemTitle>Provisión Intereses</span>
+                  </a>
+                </mat-nav-list>
+              </mat-expansion-panel>
+
+              <!-- Sub-sección: Reportes -->
+              <mat-expansion-panel class="sub-panel">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-icon>assessment</mat-icon>
+                    <span>Reportes</span>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <mat-nav-list>
+                  <a mat-list-item routerLink="/ahorros/reportes/apertura" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>summarize</mat-icon>
+                    <span matListItemTitle>Reporte Apertura</span>
+                  </a>
+                  <a mat-list-item routerLink="/ahorros/reportes/intereses" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>payments</mat-icon>
+                    <span matListItemTitle>Intereses a Pagar</span>
+                  </a>
+                  <a mat-list-item routerLink="/ahorros/reportes/pago-intereses-dpf" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>account_balance</mat-icon>
+                    <span matListItemTitle>Pago Intereses DPF</span>
+                  </a>
+                </mat-nav-list>
+              </mat-expansion-panel>
+            </mat-accordion>
+
           </mat-expansion-panel>
         </ng-container>
 
@@ -263,6 +308,10 @@
                   <a mat-list-item routerLink="/ahorros/tipos-transaccion" routerLinkActive="active" (click)="closeSidenavOnMobile()">
                     <mat-icon matListItemIcon>receipt_long</mat-icon>
                     <span matListItemTitle>Tipos de Transacción</span>
+                  </a>
+                  <a mat-list-item routerLink="/ahorros/transacciones-tipo-ahorro" routerLinkActive="active" (click)="closeSidenavOnMobile()">
+                    <mat-icon matListItemIcon>link</mat-icon>
+                    <span matListItemTitle>Transacciones x Tipo Ahorro</span>
                   </a>
                 </mat-nav-list>
               </mat-expansion-panel>
