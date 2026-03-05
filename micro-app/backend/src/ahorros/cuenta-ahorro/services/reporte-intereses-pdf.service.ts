@@ -2,17 +2,47 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as PDFDocument from 'pdfkit';
+import * as path from 'path';
+import * as fs from 'fs';
+import * as sharp from 'sharp';
 import { CuentaAhorro } from '../entities/cuenta-ahorro.entity';
 import { PlanCapitalizacion } from '../entities/plan-capitalizacion.entity';
 
-// Paleta corporativa
-const COLOR_AZUL_PRIMARIO = '#1976d2';
-const COLOR_AZUL_CLARO = '#e3f2fd';
+// Paleta institucional
+const COLOR_PRIMARIO = '#006064';
+const COLOR_PRIMARIO_CLARO = '#e0f2f1';
 const COLOR_GRIS_TEXTO = '#424242';
 const COLOR_GRIS_BORDE = '#bdbdbd';
 const COLOR_NEGRO = '#000000';
 const COLOR_BLANCO = '#ffffff';
 const COLOR_FILA_IMPAR = '#f5f5f5';
+
+// Logo
+function getLogoPath(): string | null {
+  const possiblePaths = [
+    path.join(__dirname, '..', '..', '..', 'assets', 'logoDocs.webp'),
+    path.join(__dirname, '..', '..', '..', '..', 'src', 'assets', 'logoDocs.webp'),
+    path.join(process.cwd(), 'src', 'assets', 'logoDocs.webp'),
+  ];
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
+}
+
+let logoBufferCache: Buffer | null = null;
+
+async function getLogoBuffer(): Promise<Buffer | null> {
+  if (logoBufferCache) return logoBufferCache;
+  const logoPath = getLogoPath();
+  if (!logoPath) return null;
+  try {
+    logoBufferCache = await sharp(logoPath).png().toBuffer();
+    return logoBufferCache;
+  } catch {
+    return null;
+  }
+}
 
 // Márgenes y medidas de página carta (612 x 792 pts)
 const MARGEN_LEFT = 50;
@@ -51,13 +81,15 @@ export class ReporteInteresesPdfService {
       order: { fechaCapitalizacion: 'ASC' },
     });
 
-    // 3. Generar el PDF y retornar como Buffer
-    return this.construirPdf(cuenta, planCapitalizacion);
+    // 3. Obtener logo y generar el PDF
+    const logoBuffer = await getLogoBuffer();
+    return this.construirPdf(cuenta, planCapitalizacion, logoBuffer);
   }
 
   private construirPdf(
     cuenta: CuentaAhorro,
     plan: PlanCapitalizacion[],
+    logoBuffer: Buffer | null,
   ): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       const doc = new PDFDocument({
@@ -77,7 +109,7 @@ export class ReporteInteresesPdfService {
       doc.on('error', reject);
 
       // Dibujar cada sección del documento
-      this.dibujarEncabezado(doc);
+      this.dibujarEncabezado(doc, logoBuffer);
       this.dibujarDatosCliente(doc, cuenta);
       this.dibujarDatosCuenta(doc, cuenta);
       this.dibujarTablaIntereses(doc, plan);
@@ -90,42 +122,59 @@ export class ReporteInteresesPdfService {
   // -----------------------------------------------------------------------
   // Sección: Encabezado
   // -----------------------------------------------------------------------
-  private dibujarEncabezado(doc: PDFKit.PDFDocument): void {
-    // Barra superior azul
-    doc
-      .rect(MARGEN_LEFT, 50, ANCHO_UTIL, 60)
-      .fill(COLOR_AZUL_PRIMARIO);
+  private dibujarEncabezado(doc: PDFKit.PDFDocument, logoBuffer: Buffer | null): void {
+    const startY = 40;
+    const logoWidth = 80;
+    const textX = MARGEN_LEFT + logoWidth + 15;
+    const textWidth = ANCHO_UTIL - logoWidth - 15;
+
+    // Logo
+    try {
+      if (logoBuffer) {
+        doc.image(logoBuffer, MARGEN_LEFT, startY, { width: logoWidth });
+      }
+    } catch {
+      // Continuar sin logo
+    }
 
     // Nombre de la institución
     doc
-      .fillColor(COLOR_BLANCO)
-      .fontSize(16)
+      .fillColor(COLOR_PRIMARIO)
+      .fontSize(14)
       .font('Helvetica-Bold')
-      .text('FINANZIA S.C. DE R.L. DE C.V.', MARGEN_LEFT, 60, {
-        width: ANCHO_UTIL,
-        align: 'center',
+      .text('FINANZIA S.C. DE R.L. DE C.V.', textX, startY + 8, {
+        width: textWidth,
       });
 
     // Subtítulo del reporte
     doc
+      .fillColor(COLOR_GRIS_TEXTO)
       .fontSize(11)
       .font('Helvetica')
-      .text('Reporte de Pago de Intereses', MARGEN_LEFT, 82, {
-        width: ANCHO_UTIL,
-        align: 'center',
+      .text('Reporte de Pago de Intereses', textX, startY + 28, {
+        width: textWidth,
       });
 
-    // Fecha de generación alineada a la derecha
+    // Línea separadora institucional
+    doc
+      .moveTo(MARGEN_LEFT, startY + 58)
+      .lineTo(MARGEN_LEFT + ANCHO_UTIL, startY + 58)
+      .strokeColor(COLOR_PRIMARIO)
+      .lineWidth(2)
+      .stroke();
+
+    // Fecha de generación
     const fechaGeneracion = this.formatearFecha(new Date());
     doc
+      .fillColor(COLOR_GRIS_TEXTO)
       .fontSize(8)
       .font('Helvetica')
-      .text(`Fecha: ${fechaGeneracion}`, MARGEN_LEFT, 100, {
+      .text(`Fecha: ${fechaGeneracion}`, MARGEN_LEFT, startY + 63, {
         width: ANCHO_UTIL,
         align: 'right',
       });
 
-    doc.moveDown(1.5);
+    doc.y = startY + 78;
   }
 
   // -----------------------------------------------------------------------
@@ -264,12 +313,11 @@ export class ReporteInteresesPdfService {
 
     const yTabla = doc.y + 6;
 
-    // Definición de columnas: [label, xOffset, width, align]
+    // Definición de columnas (sin Estado)
     type Align = 'left' | 'center' | 'right';
     const columnas: { label: string; x: number; width: number; align: Align }[] = [
-      { label: 'No.', x: MARGEN_LEFT, width: 35, align: 'center' },
-      { label: 'Fecha de Pago', x: MARGEN_LEFT + 35, width: 140, align: 'left' },
-      { label: 'Estado', x: MARGEN_LEFT + 175, width: 130, align: 'left' },
+      { label: 'No.', x: MARGEN_LEFT, width: 45, align: 'center' },
+      { label: 'Fecha de Pago', x: MARGEN_LEFT + 45, width: 260, align: 'left' },
       {
         label: 'Monto Interés',
         x: MARGEN_LEFT + 305,
@@ -284,7 +332,7 @@ export class ReporteInteresesPdfService {
     // Cabecera de la tabla
     doc
       .rect(MARGEN_LEFT, yTabla, ANCHO_UTIL, ALTO_CABECERA)
-      .fill(COLOR_AZUL_PRIMARIO);
+      .fill(COLOR_PRIMARIO);
 
     doc.fillColor(COLOR_BLANCO).fontSize(9).font('Helvetica-Bold');
     for (const col of columnas) {
@@ -298,7 +346,7 @@ export class ReporteInteresesPdfService {
     doc
       .moveTo(MARGEN_LEFT, yTabla + ALTO_CABECERA)
       .lineTo(MARGEN_LEFT + ANCHO_UTIL, yTabla + ALTO_CABECERA)
-      .strokeColor(COLOR_AZUL_PRIMARIO)
+      .strokeColor(COLOR_PRIMARIO)
       .lineWidth(0.5)
       .stroke();
 
@@ -326,13 +374,11 @@ export class ReporteInteresesPdfService {
       const monto = Number(item.monto);
       totalIntereses += monto;
 
-      const estado = item.procesado ? 'Pagado' : 'Pendiente';
       const fechaPago = this.formatearFecha(item.fechaCapitalizacion);
 
       const valores = [
         `${i + 1}`,
         fechaPago,
-        estado,
         this.formatearMonto(monto),
       ];
 
@@ -366,13 +412,13 @@ export class ReporteInteresesPdfService {
 
     doc
       .rect(MARGEN_LEFT, yTotal, ANCHO_UTIL, ALTO_FILA + 2)
-      .fill(COLOR_AZUL_CLARO);
+      .fill(COLOR_PRIMARIO_CLARO);
 
     // Borde superior del total
     doc
       .moveTo(MARGEN_LEFT, yTotal)
       .lineTo(MARGEN_LEFT + ANCHO_UTIL, yTotal)
-      .strokeColor(COLOR_AZUL_PRIMARIO)
+      .strokeColor(COLOR_PRIMARIO)
       .lineWidth(1)
       .stroke();
 
@@ -381,12 +427,12 @@ export class ReporteInteresesPdfService {
       .fontSize(10)
       .font('Helvetica-Bold')
       .text('TOTAL:', MARGEN_LEFT + 4, yTotal + 5, {
-        width: columnas[2].x + columnas[2].width - MARGEN_LEFT - 12,
+        width: columnas[1].x + columnas[1].width - MARGEN_LEFT - 12,
         align: 'right',
       });
 
     // Columna del monto total
-    const colMonto = columnas[3];
+    const colMonto = columnas[2];
     doc
       .fillColor(COLOR_NEGRO)
       .fontSize(10)
@@ -407,7 +453,6 @@ export class ReporteInteresesPdfService {
     const xLineas = [
       columnas[1].x,
       columnas[2].x,
-      columnas[3].x,
     ];
     for (const xL of xLineas) {
       doc
@@ -430,7 +475,7 @@ export class ReporteInteresesPdfService {
     doc
       .moveTo(MARGEN_LEFT, yPie)
       .lineTo(MARGEN_LEFT + ANCHO_UTIL, yPie)
-      .strokeColor(COLOR_AZUL_PRIMARIO)
+      .strokeColor(COLOR_PRIMARIO)
       .lineWidth(0.8)
       .stroke();
 
@@ -459,7 +504,7 @@ export class ReporteInteresesPdfService {
   ): void {
     doc
       .rect(MARGEN_LEFT, y, ANCHO_UTIL, 18)
-      .fill(COLOR_AZUL_PRIMARIO);
+      .fill(COLOR_PRIMARIO);
 
     doc
       .fillColor(COLOR_BLANCO)
