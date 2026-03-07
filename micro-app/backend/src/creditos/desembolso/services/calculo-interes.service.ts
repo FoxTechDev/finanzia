@@ -307,19 +307,13 @@ export class CalculoInteresService {
     let saldoCapital = capital;
 
     for (let i = 1; i <= numeroCuotas; i++) {
-      // Última cuota ajusta el saldo restante
-      const esUltimaCuota = i === numeroCuotas;
-      const capitalCuota = esUltimaCuota
-        ? saldoCapital
-        : Math.min(capitalPorCuota, saldoCapital);
-
-      saldoCapital = this.redondear(Math.max(0, saldoCapital - capitalCuota), 'saldo capital');
+      saldoCapital = this.redondear(Math.max(0, saldoCapital - capitalPorCuota), 'saldo capital');
 
       cuotas.push({
         numeroCuota: i,
-        capital: capitalCuota,
+        capital: capitalPorCuota,
         interes: interesPorCuota,
-        cuotaTotal: this.redondear(capitalCuota + interesPorCuota, 'cuota total'),
+        cuotaTotal: cuotaNormal,
         saldoCapital: Math.max(0, saldoCapital),
       });
     }
@@ -464,19 +458,13 @@ export class CalculoInteresService {
     let saldoCapital = capital;
 
     for (let i = 1; i <= numeroCuotas; i++) {
-      // Última cuota ajusta el saldo restante
-      const esUltimaCuota = i === numeroCuotas;
-      const capitalCuota = esUltimaCuota
-        ? saldoCapital
-        : Math.min(capitalPorCuota, saldoCapital);
-
-      saldoCapital = this.redondear(Math.max(0, saldoCapital - capitalCuota), 'saldo capital');
+      saldoCapital = this.redondear(Math.max(0, saldoCapital - capitalPorCuota), 'saldo capital');
 
       cuotas.push({
         numeroCuota: i,
-        capital: capitalCuota,
+        capital: capitalPorCuota,
         interes: interesPorCuota,
-        cuotaTotal: this.redondear(capitalCuota + interesPorCuota, 'cuota total'),
+        cuotaTotal: cuotaNormal,
         saldoCapital: Math.max(0, saldoCapital),
       });
     }
