@@ -24,6 +24,7 @@ export class PagoReciboService {
         'prestamo',
         'prestamo.persona',
         'prestamo.tipoCredito',
+        'prestamo.tipoCredito.lineaCredito',
       ],
     });
 
@@ -83,9 +84,13 @@ export class PagoReciboService {
         recargoManualAplicado: Number(pago.recargoManualAplicado || 0),
       },
 
-      // Saldos
-      saldoAnterior: Number(pago.saldoCapitalAnterior) + Number(pago.saldoInteresAnterior),
-      saldoActual: Number(pago.saldoCapitalPosterior) + Number(pago.saldoInteresPosterior),
+      // Saldos: para línea MICRO incluir interés pendiente, para otras solo capital
+      saldoAnterior: pago.prestamo.tipoCredito.lineaCredito?.codigo === 'MICRO'
+        ? Number(pago.saldoCapitalAnterior) + Number(pago.saldoInteresAnterior)
+        : Number(pago.saldoCapitalAnterior),
+      saldoActual: pago.prestamo.tipoCredito.lineaCredito?.codigo === 'MICRO'
+        ? Number(pago.saldoCapitalPosterior) + Number(pago.saldoInteresPosterior)
+        : Number(pago.saldoCapitalPosterior),
 
       // Usuario
       usuario: {
