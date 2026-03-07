@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, In } from 'typeorm';
-import { Prestamo, EstadoPrestamo, CategoriaNCB022 } from '../entities/prestamo.entity';
+import { Prestamo, EstadoPrestamo, CategoriaNCB022, TipoInteres } from '../entities/prestamo.entity';
 import { PlanPago, EstadoCuota } from '../entities/plan-pago.entity';
 import { DeduccionPrestamo } from '../entities/deduccion-prestamo.entity';
 import { RecargoPrestamo } from '../entities/recargo-prestamo.entity';
@@ -357,7 +357,9 @@ export class DesembolsoService {
         totalRecargos: this.asegurarNumeroValido(preview.totalRecargos),
         totalPagar: this.asegurarNumeroValido(preview.totalAPagar),
         saldoCapital: this.asegurarNumeroValido(preview.montoAutorizado),
-        saldoInteres: 0,
+        saldoInteres: dto.tipoInteres === TipoInteres.FLAT
+          ? this.asegurarNumeroValido(preview.totalInteres)
+          : 0,
         capitalMora: 0,
         interesMora: 0,
         diasMora: 0,
