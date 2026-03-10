@@ -45,9 +45,14 @@ export class BeneficiarioService {
       );
     }
 
+    const { fechaNacimiento, direccion, telefono, email, ...rest } = dto;
     const entity = this.repo.create({
       cuentaAhorroId,
-      ...dto,
+      ...rest,
+      ...(fechaNacimiento ? { fechaNacimiento } : {}),
+      ...(direccion ? { direccion } : {}),
+      ...(telefono ? { telefono } : {}),
+      ...(email ? { email } : {}),
     });
     return this.repo.save(entity);
   }
@@ -68,18 +73,19 @@ export class BeneficiarioService {
       );
     }
 
-    // Sanitize: convert empty strings to null for nullable fields
+    // Sanitize: omit empty strings for nullable fields
     // (ValidationPipe skips arrays, so @Transform decorators don't fire)
-    const entities = dtos.map((dto) =>
-      this.repo.create({
+    const entities = dtos.map((dto) => {
+      const { fechaNacimiento, direccion, telefono, email, ...rest } = dto;
+      return this.repo.create({
         cuentaAhorroId,
-        ...dto,
-        fechaNacimiento: dto.fechaNacimiento || null,
-        direccion: dto.direccion || null,
-        telefono: dto.telefono || null,
-        email: dto.email || null,
-      }),
-    );
+        ...rest,
+        ...(fechaNacimiento ? { fechaNacimiento } : {}),
+        ...(direccion ? { direccion } : {}),
+        ...(telefono ? { telefono } : {}),
+        ...(email ? { email } : {}),
+      });
+    });
     return this.repo.save(entities);
   }
 
