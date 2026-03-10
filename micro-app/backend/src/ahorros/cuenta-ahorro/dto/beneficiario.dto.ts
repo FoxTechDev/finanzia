@@ -7,7 +7,7 @@ import {
   Min,
   Max,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 
 export class CreateBeneficiarioDto {
   @IsString()
@@ -22,22 +22,26 @@ export class CreateBeneficiarioDto {
 
   @IsOptional()
   @IsString()
-  fechaNacimiento?: string;
+  @Transform(({ value }) => (value === '' ? null : value))
+  fechaNacimiento?: string | null;
 
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => (value === '' ? null : value))
   @MaxLength(255)
-  direccion?: string;
+  direccion?: string | null;
 
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => (value === '' ? null : value))
   @MaxLength(20)
-  telefono?: string;
+  telefono?: string | null;
 
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => (value === '' ? null : value))
   @MaxLength(100)
-  email?: string;
+  email?: string | null;
 
   @IsString()
   @IsNotEmpty()
@@ -64,22 +68,26 @@ export class UpdateBeneficiarioDto {
 
   @IsOptional()
   @IsString()
-  fechaNacimiento?: string;
+  @Transform(({ value }) => (value === '' ? null : value))
+  fechaNacimiento?: string | null;
 
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => (value === '' ? null : value))
   @MaxLength(255)
-  direccion?: string;
+  direccion?: string | null;
 
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => (value === '' ? null : value))
   @MaxLength(20)
-  telefono?: string;
+  telefono?: string | null;
 
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => (value === '' ? null : value))
   @MaxLength(100)
-  email?: string;
+  email?: string | null;
 
   @IsOptional()
   @IsString()

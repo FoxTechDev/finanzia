@@ -451,6 +451,10 @@ export class CuentaDetailComponent implements OnInit {
   loadBeneficiarios(id: number): void {
     this.beneficiarioService.getByCuenta(id).subscribe({
       next: (data) => this.beneficiarios.set(data),
+      error: (err) => {
+        console.error('Error al cargar beneficiarios:', err);
+        this.beneficiarios.set([]);
+      },
     });
   }
 

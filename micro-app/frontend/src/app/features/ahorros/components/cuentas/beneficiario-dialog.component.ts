@@ -123,6 +123,12 @@ export class BeneficiarioDialogComponent {
 
   save(): void {
     if (this.form.invalid) return;
-    this.dialogRef.close(this.form.value);
+    const value = { ...this.form.value };
+    // Convert empty strings to null for optional fields (fechaNacimiento is DATE in MySQL)
+    if (!value.fechaNacimiento) value.fechaNacimiento = null;
+    if (!value.telefono) value.telefono = null;
+    if (!value.email) value.email = null;
+    if (!value.direccion) value.direccion = null;
+    this.dialogRef.close(value);
   }
 }

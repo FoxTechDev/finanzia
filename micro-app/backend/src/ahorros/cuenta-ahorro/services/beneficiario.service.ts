@@ -58,15 +58,27 @@ export class BeneficiarioService {
   ): Promise<BeneficiarioCuentaAhorro[]> {
     if (!dtos || dtos.length === 0) return [];
 
-    const total = dtos.reduce((sum, d) => sum + d.porcentajeBeneficio, 0);
+    const total = dtos.reduce(
+      (sum, d) => sum + Number(d.porcentajeBeneficio),
+      0,
+    );
     if (Math.abs(total - 100) > 0.01) {
       throw new BadRequestException(
         `El porcentaje total de beneficiarios debe ser exactamente 100%. Total: ${total}%`,
       );
     }
 
+    // Sanitize: convert empty strings to null for nullable fields
+    // (ValidationPipe skips arrays, so @Transform decorators don't fire)
     const entities = dtos.map((dto) =>
-      this.repo.create({ cuentaAhorroId, ...dto }),
+      this.repo.create({
+        cuentaAhorroId,
+        ...dto,
+        fechaNacimiento: dto.fechaNacimiento || null,
+        direccion: dto.direccion || null,
+        telefono: dto.telefono || null,
+        email: dto.email || null,
+      }),
     );
     return this.repo.save(entities);
   }
