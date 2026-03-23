@@ -13,6 +13,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { formatLocalDate } from '@core/utils/date.utils';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ComiteService, ComitePendientesFilters } from '../../../services/comite.service';
@@ -473,7 +474,7 @@ export class BandejaComiteComponent implements OnInit {
 
   formatDate(date: any): string {
     if (date instanceof Date) {
-      return date.toISOString().split('T')[0];
+      return formatLocalDate(date);
     }
     return date;
   }

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CuentaAhorro } from '../entities/cuenta-ahorro.entity';
 import { ProvisionAhorro } from '../entities/provision-ahorro.entity';
+import { formatLocalDate } from '../../../common/utils/date.utils';
 
 @Injectable()
 export class ProvisionService {
@@ -18,7 +19,7 @@ export class ProvisionService {
   async calcularProvisionDiaria(
     fecha?: string,
   ): Promise<{ procesados: number }> {
-    const hoy = fecha || new Date().toISOString().split('T')[0];
+    const hoy = fecha || formatLocalDate(new Date());
 
     const cuentasActivas = await this.cuentaRepo.find({
       where: { estado: { codigo: 'ACTIVA' } },

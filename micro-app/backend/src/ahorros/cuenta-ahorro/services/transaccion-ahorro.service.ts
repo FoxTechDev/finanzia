@@ -9,6 +9,7 @@ import { TransaccionAhorro } from '../entities/transaccion-ahorro.entity';
 import { DepositoAhorroDto, RetiroAhorroDto } from '../dto/transaccion-ahorro.dto';
 import { CatalogosAhorroService } from '../../catalogos/services/catalogos-ahorro.service';
 import { CuentaAhorroService } from './cuenta-ahorro.service';
+import { formatLocalDate } from '../../../common/utils/date.utils';
 
 @Injectable()
 export class TransaccionAhorroService {
@@ -45,7 +46,7 @@ export class TransaccionAhorroService {
     const naturalezaAbono =
       await this.catalogosService.findNaturalezaByCodigo('ABONO');
 
-    const fecha = dto.fecha || new Date().toISOString().split('T')[0];
+    const fecha = dto.fecha || formatLocalDate(new Date());
     const saldoAnterior = Number(cuenta.saldo);
     const nuevoSaldo = saldoAnterior + dto.monto;
 
@@ -123,7 +124,7 @@ export class TransaccionAhorroService {
     const naturalezaCargo =
       await this.catalogosService.findNaturalezaByCodigo('CARGO');
 
-    const fecha = dto.fecha || new Date().toISOString().split('T')[0];
+    const fecha = dto.fecha || formatLocalDate(new Date());
     const saldoAnterior = Number(cuenta.saldo);
     const nuevoSaldo = saldoAnterior - dto.monto;
 

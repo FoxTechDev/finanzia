@@ -13,6 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { formatLocalDate } from '@core/utils/date.utils';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
@@ -1319,7 +1320,7 @@ export class CrearDesembolsoDialogComponent implements OnInit {
 
     const fechaPrimeraCuota = this.configForm.get('fechaPrimeraCuota')?.value;
     const fechaStr = fechaPrimeraCuota instanceof Date
-      ? fechaPrimeraCuota.toISOString().split('T')[0]
+      ? formatLocalDate(fechaPrimeraCuota)
       : fechaPrimeraCuota;
 
     const request: PreviewDesembolsoRequest = {
@@ -1359,7 +1360,7 @@ export class CrearDesembolsoDialogComponent implements OnInit {
 
     const fechaPrimeraCuota = this.configForm.get('fechaPrimeraCuota')?.value;
     const fechaStr = fechaPrimeraCuota instanceof Date
-      ? fechaPrimeraCuota.toISOString().split('T')[0]
+      ? formatLocalDate(fechaPrimeraCuota)
       : fechaPrimeraCuota;
 
     const request: CrearDesembolsoRequest = {

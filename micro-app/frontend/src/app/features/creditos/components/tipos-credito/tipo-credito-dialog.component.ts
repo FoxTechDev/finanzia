@@ -12,6 +12,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { TipoCreditoService } from '../../services/tipo-credito.service';
 import { LineaCreditoService } from '../../services/linea-credito.service';
 import { TipoCredito, LineaCredito } from '@core/models/credito.model';
+import { formatLocalDate } from '@core/utils/date.utils';
 
 @Component({
   selector: 'app-tipo-credito-dialog',
@@ -208,7 +209,7 @@ export class TipoCreditoDialogComponent implements OnInit {
   form: FormGroup;
 
   constructor() {
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatLocalDate(new Date());
     // El código se genera automáticamente en el backend, no se incluye en el formulario
     this.form = this.fb.group({
       nombre: [this.data?.nombre || '', Validators.required],

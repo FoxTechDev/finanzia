@@ -13,6 +13,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { formatLocalDate } from '@core/utils/date.utils';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatTableModule } from '@angular/material/table';
@@ -1091,7 +1092,7 @@ export class SolicitudFormComponent implements OnInit, OnDestroy {
   condicionesForm: FormGroup;
 
   constructor() {
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatLocalDate(new Date());
 
     this.clienteForm = this.fb.group({
       busquedaCliente: [''],
@@ -1397,7 +1398,7 @@ export class SolicitudFormComponent implements OnInit, OnDestroy {
     // Construir la fecha de primera cuota
     let fechaPrimeraCuota: string;
     if (periodicidad.codigo === 'DIARIO' && this.condicionesForm.value.fechaDesdePago) {
-      fechaPrimeraCuota = new Date(this.condicionesForm.value.fechaDesdePago).toISOString().split('T')[0];
+      fechaPrimeraCuota = formatLocalDate(new Date(this.condicionesForm.value.fechaDesdePago));
     } else {
       fechaPrimeraCuota = this.condicionesForm.value.fechaSolicitud;
     }
@@ -1712,7 +1713,7 @@ export class SolicitudFormComponent implements OnInit, OnDestroy {
     // Si es pago diario y hay fechaDesdePago, usar esa fecha
     let fechaPrimeraCuota: string;
     if (periodicidad.codigo === 'DIARIO' && this.condicionesForm.value.fechaDesdePago) {
-      fechaPrimeraCuota = new Date(this.condicionesForm.value.fechaDesdePago).toISOString().split('T')[0];
+      fechaPrimeraCuota = formatLocalDate(new Date(this.condicionesForm.value.fechaDesdePago));
     } else {
       // Por defecto usar la fecha de solicitud
       fechaPrimeraCuota = this.condicionesForm.value.fechaSolicitud;

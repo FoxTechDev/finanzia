@@ -13,6 +13,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatChipsModule } from '@angular/material/chips';
+import { formatLocalDate } from '@core/utils/date.utils';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { Router } from '@angular/router';
 
@@ -635,7 +636,7 @@ export class RegistrarPagoDialogComponent implements OnInit {
 
   private formatDate(date: Date): string {
     if (date instanceof Date) {
-      return date.toISOString().split('T')[0];
+      return formatLocalDate(date);
     }
     return date;
   }

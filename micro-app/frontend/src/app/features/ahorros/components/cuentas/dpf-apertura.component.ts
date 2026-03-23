@@ -13,6 +13,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTableModule } from '@angular/material/table';
 import { debounceTime, switchMap, of } from 'rxjs';
 import { CuentaAhorroService } from '../../services/cuenta-ahorro.service';
+import { formatLocalDate } from '@core/utils/date.utils';
 import { CatalogosAhorroService } from '../../services/catalogos-ahorro.service';
 import { BancoService } from '../../services/banco.service';
 import { BeneficiarioService } from '../../services/beneficiario.service';
@@ -273,7 +274,7 @@ export class DpfAperturaComponent implements OnInit {
   benefColumns = ['nombre', 'parentesco', 'porcentaje', 'acciones'];
 
   constructor() {
-    const hoy = new Date().toISOString().split('T')[0];
+    const hoy = formatLocalDate(new Date());
     this.form = this.fb.group({
       personaId: [null, Validators.required],
       tipoAhorroId: [null, Validators.required],
@@ -370,7 +371,7 @@ export class DpfAperturaComponent implements OnInit {
       const fecha = new Date(fechaApertura);
       fecha.setDate(fecha.getDate() + tipo.plazo);
       this.form.patchValue({
-        fechaVencimiento: fecha.toISOString().split('T')[0],
+        fechaVencimiento: formatLocalDate(fecha),
       });
     }
   }

@@ -12,6 +12,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { debounceTime, switchMap, of } from 'rxjs';
+import { formatLocalDate } from '@core/utils/date.utils';
 import { PersonaService } from '../../../clientes/services/persona.service';
 import { CuentaAhorroService } from '../../services/cuenta-ahorro.service';
 import { TransaccionAhorroService } from '../../services/transaccion-ahorro.service';
@@ -334,7 +335,7 @@ export class MovimientoCuentaComponent implements OnInit {
   tipoTransaccionSeleccionada = signal<TipoTransaccionAhorro | null>(null);
 
   constructor() {
-    const hoy = new Date().toISOString().split('T')[0];
+    const hoy = formatLocalDate(new Date());
     this.form = this.fb.group({
       cuentaId: [null, Validators.required],
       tipoTransaccionId: [null, Validators.required],
@@ -486,7 +487,7 @@ export class MovimientoCuentaComponent implements OnInit {
     this.tiposTransaccion.set([]);
     this.cuentas.set([]);
     this.searchControl.reset('');
-    const hoy = new Date().toISOString().split('T')[0];
+    const hoy = formatLocalDate(new Date());
     this.form.reset({ tipoTransaccionId: null, fecha: hoy });
   }
 }

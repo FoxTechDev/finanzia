@@ -13,6 +13,7 @@ import {
 } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatStepperModule } from '@angular/material/stepper';
+import { formatLocalDate } from '@core/utils/date.utils';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -711,7 +712,7 @@ export class ClienteFormComponent implements OnInit {
 
   private formatDate(date: Date | string): string {
     const d = new Date(date);
-    return d.toISOString().split('T')[0];
+    return formatLocalDate(d);
   }
 
   private cleanEmptyValues(obj: Record<string, unknown>, numericFields: string[] = []): Record<string, unknown> {

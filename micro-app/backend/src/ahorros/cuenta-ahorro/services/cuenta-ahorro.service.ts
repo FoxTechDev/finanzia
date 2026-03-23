@@ -13,6 +13,7 @@ import { PlanCapitalizacion } from '../entities/plan-capitalizacion.entity';
 import { CatalogosAhorroService } from '../../catalogos/services/catalogos-ahorro.service';
 import { TipoAhorroService } from '../../tipo-ahorro/tipo-ahorro.service';
 import { CapitalizacionService } from './capitalizacion.service';
+import { formatLocalDate } from '../../../common/utils/date.utils';
 
 @Injectable()
 export class CuentaAhorroService {
@@ -162,7 +163,7 @@ export class CuentaAhorroService {
 
     try {
       const saldoAnterior = Number(cuenta.saldo);
-      const hoy = new Date().toISOString().split('T')[0];
+      const hoy = formatLocalDate(new Date());
 
       if (saldoAnterior > 0) {
         const transaccion = Object.assign(new TransaccionAhorro(), {
@@ -250,7 +251,7 @@ export class CuentaAhorroService {
     const vencimientoAnterior = new Date(cuenta.fechaVencimiento);
     const nuevoVencimiento = new Date(vencimientoAnterior);
     nuevoVencimiento.setDate(nuevoVencimiento.getDate() + cuenta.plazo);
-    const nuevoVencimientoStr = nuevoVencimiento.toISOString().split('T')[0];
+    const nuevoVencimientoStr = formatLocalDate(nuevoVencimiento);
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -260,7 +261,7 @@ export class CuentaAhorroService {
       // 1. Registrar en bitácora de renovación
       const bitacora = Object.assign(new BitacoraRenovacion(), {
         cuentaAhorroId: id,
-        fechaRenovacion: new Date().toISOString().split('T')[0],
+        fechaRenovacion: formatLocalDate(new Date()),
         vencimientoAnterior: cuenta.fechaVencimiento,
         nuevoVencimiento: nuevoVencimientoStr,
         usuarioId,

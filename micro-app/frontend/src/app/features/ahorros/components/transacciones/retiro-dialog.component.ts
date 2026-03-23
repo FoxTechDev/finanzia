@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TransaccionAhorroService } from '../../services/transaccion-ahorro.service';
+import { formatLocalDate } from '@core/utils/date.utils';
 
 @Component({
   selector: 'app-retiro-dialog',
@@ -75,7 +76,7 @@ export class RetiroDialogComponent {
   form: FormGroup;
 
   constructor() {
-    const hoy = new Date().toISOString().split('T')[0];
+    const hoy = formatLocalDate(new Date());
     this.form = this.fb.group({
       monto: [null, [Validators.required, Validators.min(0.01), Validators.max(this.data.saldoDisponible)]],
       fecha: [hoy],

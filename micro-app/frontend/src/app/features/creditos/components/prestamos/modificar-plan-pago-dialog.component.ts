@@ -12,6 +12,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
+import { formatLocalDate } from '@core/utils/date.utils';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 
 import { PrestamoService } from '../../services/prestamo.service';
@@ -462,7 +463,7 @@ export class ModificarPlanPagoDialogComponent implements OnInit {
     // Fecha primera cuota: mañana por defecto
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    this.fechaPrimeraCuota = tomorrow.toISOString().substring(0, 10);
+    this.fechaPrimeraCuota = formatLocalDate(tomorrow);
   }
 
   getNombreCliente(): string {

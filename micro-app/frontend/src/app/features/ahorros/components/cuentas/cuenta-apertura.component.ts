@@ -13,6 +13,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { debounceTime, switchMap, of } from 'rxjs';
+import { formatLocalDate } from '@core/utils/date.utils';
 import { CuentaAhorroService } from '../../services/cuenta-ahorro.service';
 import { CatalogosAhorroService } from '../../services/catalogos-ahorro.service';
 import { BeneficiarioService } from '../../services/beneficiario.service';
@@ -228,7 +229,7 @@ export class CuentaAperturaComponent implements OnInit {
   benefColumns = ['nombre', 'parentesco', 'porcentaje', 'acciones'];
 
   constructor() {
-    const hoy = new Date().toISOString().split('T')[0];
+    const hoy = formatLocalDate(new Date());
     this.form = this.fb.group({
       personaId: [null, Validators.required],
       tipoAhorroId: [null, Validators.required],

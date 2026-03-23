@@ -5,6 +5,7 @@ import { CuentaAhorro } from '../entities/cuenta-ahorro.entity';
 import { PlanCapitalizacion } from '../entities/plan-capitalizacion.entity';
 import { TransaccionAhorro } from '../entities/transaccion-ahorro.entity';
 import { CatalogosAhorroService } from '../../catalogos/services/catalogos-ahorro.service';
+import { formatLocalDate } from '../../../common/utils/date.utils';
 
 @Injectable()
 export class CapitalizacionService {
@@ -50,7 +51,7 @@ export class CapitalizacionService {
       fechas.push(
         this.planRepo.create({
           cuentaAhorroId: cuentaId,
-          fechaCapitalizacion: fecha.toISOString().split('T')[0],
+          fechaCapitalizacion: formatLocalDate(fecha),
         }),
       );
       fecha = new Date(fecha);
@@ -64,7 +65,7 @@ export class CapitalizacionService {
   }
 
   async procesarCapitalizacion(): Promise<{ procesados: number }> {
-    const hoy = new Date().toISOString().split('T')[0];
+    const hoy = formatLocalDate(new Date());
 
     const pendientes = await this.planRepo.find({
       where: {
@@ -176,7 +177,7 @@ export class CapitalizacionService {
         fechas.push(
           this.planRepo.create({
             cuentaAhorroId: cuentaId,
-            fechaCapitalizacion: fecha.toISOString().split('T')[0],
+            fechaCapitalizacion: formatLocalDate(fecha),
           }),
         );
       }
@@ -188,7 +189,7 @@ export class CapitalizacionService {
       fechas.push(
         this.planRepo.create({
           cuentaAhorroId: cuentaId,
-          fechaCapitalizacion: fecha.toISOString().split('T')[0],
+          fechaCapitalizacion: formatLocalDate(fecha),
         }),
       );
     }
@@ -228,7 +229,7 @@ export class CapitalizacionService {
       fechas.push(
         this.planRepo.create({
           cuentaAhorroId: cuentaId,
-          fechaCapitalizacion: vencimiento.toISOString().split('T')[0],
+          fechaCapitalizacion: formatLocalDate(vencimiento),
           monto: interes,
         }),
       );
@@ -248,7 +249,7 @@ export class CapitalizacionService {
         fechas.push(
           this.planRepo.create({
             cuentaAhorroId: cuentaId,
-            fechaCapitalizacion: fechaActual.toISOString().split('T')[0],
+            fechaCapitalizacion: formatLocalDate(fechaActual),
             monto: interes,
           }),
         );
@@ -268,7 +269,7 @@ export class CapitalizacionService {
         fechas.push(
           this.planRepo.create({
             cuentaAhorroId: cuentaId,
-            fechaCapitalizacion: vencimiento.toISOString().split('T')[0],
+            fechaCapitalizacion: formatLocalDate(vencimiento),
             monto: interes,
           }),
         );
@@ -349,7 +350,7 @@ export class CapitalizacionService {
       fechas.push(
         this.planRepo.create({
           cuentaAhorroId: cuentaId,
-          fechaCapitalizacion: fechaFin.toISOString().split('T')[0],
+          fechaCapitalizacion: formatLocalDate(fechaFin),
           monto: interes,
         }),
       );
@@ -369,7 +370,7 @@ export class CapitalizacionService {
         fechas.push(
           this.planRepo.create({
             cuentaAhorroId: cuentaId,
-            fechaCapitalizacion: fechaActual.toISOString().split('T')[0],
+            fechaCapitalizacion: formatLocalDate(fechaActual),
             monto: interes,
           }),
         );
@@ -389,7 +390,7 @@ export class CapitalizacionService {
         fechas.push(
           this.planRepo.create({
             cuentaAhorroId: cuentaId,
-            fechaCapitalizacion: fechaFin.toISOString().split('T')[0],
+            fechaCapitalizacion: formatLocalDate(fechaFin),
             monto: interes,
           }),
         );
