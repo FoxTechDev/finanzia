@@ -139,4 +139,51 @@ export class ReporteArqueoService {
       totalEntregar: Math.round(totalEntregar * 100) / 100,
     };
   }
+
+  async generarColectaDiaria(params: ArqueoParams): Promise<ColectaDiariaResponse> {
+    const pagosRaw = await this.pagoRepository
+      .createQueryBuilder('pago')
+      .leftJoinAndSelect('pago.prestamo', 'prestamo')
+      .leftJoinAndSelect('prestamo.persona', 'persona')
+      .where('pago.fechaPago BETWEEN :desde AND :hasta', {
+        desde: params.fechaDesde,
+        hasta: params.fechaHasta,
+      })
+      .andWhere('pago.estado = :estado', { estado: 'APLICADO' })
+      .orderBy('pago.numeroPago', 'ASC')
+      .getMany();
+
+    const pagos: PagoColecta[] = pagosRaw.map((p) => ({
+      numeroPago: p.numeroPago,
+      nombreCliente: p.prestamo?.persona
+        ? `${p.prestamo.persona.nombre} ${p.prestamo.persona.apellido}`
+        : '',
+      montoPagado: Number(p.montoPagado) || 0,
+    }));
+
+    const totalPagos = pagos.length;
+    const montoTotal = pagos.reduce((s, p) => s + p.montoPagado, 0);
+
+    return {
+      fechaDesde: params.fechaDesde,
+      fechaHasta: params.fechaHasta,
+      pagos,
+      totalPagos,
+      montoTotal: Math.round(montoTotal * 100) / 100,
+    };
+  }
+}
+
+export interface PagoColecta {
+  numeroPago: string;
+  nombreCliente: string;
+  montoPagado: number;
+}
+
+export interface ColectaDiariaResponse {
+  fechaDesde: string;
+  fechaHasta: string;
+  pagos: PagoColecta[];
+  totalPagos: number;
+  montoTotal: number;
 }

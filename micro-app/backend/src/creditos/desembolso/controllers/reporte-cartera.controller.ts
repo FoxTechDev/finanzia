@@ -5,6 +5,7 @@ import {
   ReporteArqueoService,
   ArqueoParams,
   ArqueoResponse,
+  ColectaDiariaResponse,
 } from '../services/reporte-arqueo.service';
 import {
   ReporteCarteraParamsDto,
@@ -124,5 +125,16 @@ export class ReporteCarteraController {
     @Query() params: ArqueoParams,
   ): Promise<ArqueoResponse> {
     return this.reporteArqueoService.generarReporte(params);
+  }
+
+  /**
+   * GET /api/reportes/colecta-diaria
+   * Detalle de pagos realizados en un periodo con No. Recibo, Cliente y Monto
+   */
+  @Get('colecta-diaria')
+  async obtenerColectaDiaria(
+    @Query() params: ArqueoParams,
+  ): Promise<ColectaDiariaResponse> {
+    return this.reporteArqueoService.generarColectaDiaria(params);
   }
 }

@@ -214,6 +214,16 @@ export const CREDITOS_ROUTES: Routes = [
         data: { roles: [RoleCodes.ADMIN, RoleCodes.COMITE] },
       },
       {
+        path: 'reportes/colecta-diaria',
+        loadComponent: () =>
+          import('./components/reportes/reporte-colecta-diaria.component').then(
+            (m) => m.ReporteColectaDiariaComponent
+          ),
+        title: 'Colecta Diaria',
+        canActivate: [roleGuard],
+        data: { roles: [RoleCodes.ADMIN, RoleCodes.ASESOR, RoleCodes.COMITE] },
+      },
+      {
         path: 'reportes/arqueo',
         loadComponent: () =>
           import('./components/reportes/reporte-arqueo.component').then(

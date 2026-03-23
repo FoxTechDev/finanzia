@@ -173,6 +173,26 @@ export interface ArqueoResponse {
 }
 
 /**
+ * Interface para pagos en la colecta diaria
+ */
+export interface PagoColecta {
+  numeroPago: string;
+  nombreCliente: string;
+  montoPagado: number;
+}
+
+/**
+ * Interface para la respuesta de colecta diaria
+ */
+export interface ColectaDiariaResponse {
+  fechaDesde: string;
+  fechaHasta: string;
+  pagos: PagoColecta[];
+  totalPagos: number;
+  montoTotal: number;
+}
+
+/**
  * Service para generación de reportes del módulo de créditos
  */
 @Injectable({
@@ -333,5 +353,13 @@ export class ReporteService {
     params = params.set('fechaHasta', filtros.fechaHasta);
 
     return this.http.get<ArqueoResponse>(`${environment.apiUrl}/reportes/arqueo`, { params });
+  }
+
+  getColectaDiaria(filtros: FiltrosReporteArqueo): Observable<ColectaDiariaResponse> {
+    let params = new HttpParams();
+    params = params.set('fechaDesde', filtros.fechaDesde);
+    params = params.set('fechaHasta', filtros.fechaHasta);
+
+    return this.http.get<ColectaDiariaResponse>(`${environment.apiUrl}/reportes/colecta-diaria`, { params });
   }
 }
