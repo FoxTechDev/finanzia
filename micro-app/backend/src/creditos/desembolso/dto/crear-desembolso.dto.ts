@@ -43,6 +43,16 @@ export class CrearDesembolsoDto {
   @Type(() => RecargoDto)
   recargos: RecargoDto[];
 
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  fondosPropios: number;
+
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  transferenciaBancaria: number;
+
   @IsOptional()
   @IsNumber()
   @Type(() => Number)

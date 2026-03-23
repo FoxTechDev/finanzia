@@ -126,6 +126,53 @@ export interface RespuestaRutaCobro {
 }
 
 /**
+ * Interface para filtros del reporte de arqueo
+ */
+export interface FiltrosReporteArqueo {
+  fechaDesde: string;
+  fechaHasta: string;
+}
+
+/**
+ * Interface para pagos agrupados por día en el arqueo
+ */
+export interface ArqueoDiaPagos {
+  fecha: string;
+  cantidad: number;
+  monto: number;
+}
+
+/**
+ * Interface para desembolsos agrupados por día en el arqueo
+ */
+export interface ArqueoDiaDesembolsos {
+  fecha: string;
+  cantidad: number;
+  montoDesembolsado: number;
+  fondosPropios: number;
+  transferenciaBancaria: number;
+}
+
+/**
+ * Interface para la respuesta del reporte de arqueo
+ */
+export interface ArqueoResponse {
+  fechaDesde: string;
+  fechaHasta: string;
+  pagosPorDia: ArqueoDiaPagos[];
+  totalPagos: number;
+  montoTotalPagos: number;
+  desembolsosPorDia: ArqueoDiaDesembolsos[];
+  totalDesembolsos: number;
+  montoTotalDesembolsos: number;
+  totalFondosPropios: number;
+  totalTransferenciaBancaria: number;
+  totalIngresos: number;
+  totalRetiros: number;
+  totalEntregar: number;
+}
+
+/**
  * Service para generación de reportes del módulo de créditos
  */
 @Injectable({
@@ -275,5 +322,16 @@ export class ReporteService {
     params = params.set('fechaHasta', filtros.fechaHasta);
 
     return this.http.get<RespuestaRutaCobro>(`${environment.apiUrl}/reportes/ruta-cobro`, { params });
+  }
+
+  /**
+   * Obtiene datos para el reporte de arqueo
+   */
+  getReporteArqueo(filtros: FiltrosReporteArqueo): Observable<ArqueoResponse> {
+    let params = new HttpParams();
+    params = params.set('fechaDesde', filtros.fechaDesde);
+    params = params.set('fechaHasta', filtros.fechaHasta);
+
+    return this.http.get<ArqueoResponse>(`${environment.apiUrl}/reportes/arqueo`, { params });
   }
 }

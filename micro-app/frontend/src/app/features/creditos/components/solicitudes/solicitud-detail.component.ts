@@ -67,7 +67,7 @@ import {
       } @else if (solicitud()) {
         <div class="actions-bar">
           @if (puedeEditar()) {
-            <button mat-raised-button (click)="editar()">
+            <button mat-raised-button color="primary" (click)="editar()">
               <mat-icon>edit</mat-icon> Editar
             </button>
           }
@@ -77,7 +77,7 @@ import {
             </button>
           }
           @if (puedeDecidirComite()) {
-            <button mat-raised-button color="accent" (click)="abrirDecisionComite()">
+            <button mat-raised-button color="primary" (click)="abrirDecisionComite()">
               <mat-icon>gavel</mat-icon> Decisión de Comité
             </button>
           }
@@ -364,12 +364,21 @@ import {
                   <mat-spinner diameter="40"></mat-spinner>
                   <p>Calculando plan de pago...</p>
                 </div>
+              } @else if (planLoadFailed()) {
+                <mat-card>
+                  <mat-card-content>
+                    <div class="empty">
+                      <mat-icon>warning</mat-icon>
+                      <p>Error al cargar el plan de pago. Verifique que la solicitud tenga un plan guardado.</p>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
               } @else if (puedeCalcularPlan()) {
                 <mat-card>
                   <mat-card-content>
                     <div class="empty">
                       <mat-icon>info</mat-icon>
-                      <p>El plan de pago estará disponible cuando la solicitud sea aprobada</p>
+                      <p>El plan de pago se calculará automáticamente al cargar la solicitud</p>
                     </div>
                   </mat-card-content>
                 </mat-card>
@@ -388,6 +397,7 @@ import {
 
           <mat-tab label="Historial">
             <div class="tab-content">
+              <div class="table-container">
               <table mat-table [dataSource]="historial()" class="full-width">
                 <ng-container matColumnDef="fecha">
                   <th mat-header-cell *matHeaderCellDef>Fecha</th>
@@ -421,6 +431,7 @@ import {
                 <tr mat-header-row *matHeaderRowDef="historialColumns"></tr>
                 <tr mat-row *matRowDef="let row; columns: historialColumns"></tr>
               </table>
+              </div>
 
               @if (historial().length === 0) {
                 <div class="empty">
@@ -445,7 +456,7 @@ import {
       .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin: 16px 0; }
       .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; gap: 8px; }
       .info-row .label { font-weight: 500; color: #666; }
-      .amount { font-size: 1.2em; font-weight: 600; color: #1976d2; }
+      .amount { font-size: 1.2em; font-weight: 600; color: #0F808C; }
       .dates-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
       .full-width { width: 100%; }
       .empty { text-align: center; padding: 32px; color: #666; }
@@ -454,6 +465,14 @@ import {
       .comite { color: #ff9800; }
       .aprobado-card { background: #e8f5e9; }
       mat-divider { margin: 16px 0; }
+
+      /* Card headers con color del navbar */
+      mat-card-header { background-color: #0F808C; color: white; padding: 12px 16px; border-radius: 4px 4px 0 0; margin: -16px -16px 16px -16px; }
+      mat-card-header mat-card-title { color: white; font-size: 1rem; }
+
+      @media (max-width: 600px) {
+        mat-card-header { margin: -8px -8px 12px -8px; padding: 10px 12px; }
+      }
 
       /* Plan de Pago Styles */
       .plan-resumen { margin-bottom: 16px; }
@@ -473,16 +492,17 @@ import {
       }
       .plan-info-item .label { font-size: 0.85em; color: #666; font-weight: 500; }
       .plan-info-item .value { font-size: 1.1em; font-weight: 600; }
-      .plan-info-item .highlight { color: #673ab7; }
-      .plan-info-item .amount { color: #1976d2; }
-      .plan-info-item .amount-total { color: #4caf50; font-size: 1.3em; }
+      .plan-info-item .highlight { color: #0F808C; }
+      .plan-info-item .amount { color: #0F808C; }
+      .plan-info-item .amount-total { color: #0F808C; font-size: 1.3em; }
 
       .plan-table-card { margin-top: 16px; }
       .plan-table-card mat-card-title { display: flex; align-items: center; gap: 8px; }
       .table-container { overflow-x: auto; margin-top: 16px; }
       .plan-pago-table { width: 100%; min-width: 700px; }
+      .full-width { min-width: 600px; }
       .amount-cell { text-align: right; font-family: monospace; }
-      .highlight-cell { font-weight: 600; color: #1976d2; }
+      .highlight-cell { font-weight: 600; color: #0F808C; }
 
       /* Clases de estado basadas en códigos */
       mat-chip.estado-registrada { background-color: #2196f3 !important; color: white !important; }
@@ -509,6 +529,7 @@ import {
         .info-grid { grid-template-columns: 1fr; }
         .plan-info-grid { grid-template-columns: repeat(2, 1fr); }
         .dates-grid { grid-template-columns: repeat(2, 1fr); }
+        .actions-bar button { min-height: 44px; }
       }
     `,
   ],
@@ -525,6 +546,7 @@ export class SolicitudDetailComponent implements OnInit {
   historial = signal<SolicitudHistorial[]>([]);
   planPago = signal<PlanPagoCalculado | null>(null);
   isLoadingPlan = signal(false);
+  planLoadFailed = signal(false);
 
   historialColumns = ['fecha', 'estadoAnterior', 'estadoNuevo', 'usuario', 'observacion'];
 
@@ -615,7 +637,21 @@ export class SolicitudDetailComponent implements OnInit {
     const plazo = sol.plazoAprobado || sol.plazoSolicitado;
     const tasa = sol.tasaInteresAprobada || sol.tasaInteresPropuesta;
     const periodicidad = sol.periodicidadPago?.codigo || sol.tipoCredito?.periodicidadPago || 'MENSUAL';
-    const tipoInteres = sol.tipoCredito?.tipoCuota || 'FLAT';
+    // Usar tipoInteres de la solicitud, no del tipoCredito
+    const tipoInteres = sol.tipoInteres || sol.tipoCredito?.tipoCuota || 'FLAT';
+
+    // Determinar fecha de primera cuota según periodicidad
+    let fechaPrimeraCuota: string | undefined;
+    if (periodicidad === 'DIARIO' && sol.fechaDesdePago) {
+      fechaPrimeraCuota = sol.fechaDesdePago;
+    } else if (sol.fechaSolicitud) {
+      fechaPrimeraCuota = sol.fechaSolicitud;
+    }
+
+    // Para periodicidad DIARIA, enviar numeroCuotas (requerido por el backend)
+    const numeroCuotas = periodicidad === 'DIARIO' && sol.diasCalculados
+      ? sol.diasCalculados
+      : undefined;
 
     this.solicitudService.calcularPlanPago({
       monto,
@@ -623,7 +659,8 @@ export class SolicitudDetailComponent implements OnInit {
       tasaInteres: tasa,
       periodicidad,
       tipoInteres,
-      fechaPrimeraCuota: sol.fechaDesdePago || undefined,
+      fechaPrimeraCuota,
+      numeroCuotas,
     }).subscribe({
       next: (plan) => {
         this.planPago.set(plan);
@@ -631,6 +668,7 @@ export class SolicitudDetailComponent implements OnInit {
       },
       error: () => {
         this.isLoadingPlan.set(false);
+        this.planLoadFailed.set(true);
         console.error('Error al calcular plan de pago');
       },
     });
@@ -694,11 +732,8 @@ export class SolicitudDetailComponent implements OnInit {
   }
 
   trasladarAComite(): void {
-    const observacion = prompt('Ingrese una observación para el comité (opcional):');
     this.solicitudService
-      .trasladarAComite(this.solicitud()!.id, {
-        observacionAsesor: observacion || undefined,
-      })
+      .trasladarAComite(this.solicitud()!.id, {})
       .subscribe({
         next: () => {
           this.snackBar.open('Solicitud trasladada al comité exitosamente', 'Cerrar', { duration: 3000 });

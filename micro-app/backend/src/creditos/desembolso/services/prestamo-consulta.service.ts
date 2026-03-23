@@ -450,6 +450,8 @@ export class PrestamoConsultaService {
       },
       montoAutorizado: Number(prestamo.montoAutorizado),
       montoDesembolsado: Number(prestamo.montoDesembolsado),
+      fondosPropios: Number(prestamo.fondosPropios) || 0,
+      transferenciaBancaria: Number(prestamo.transferenciaBancaria) || 0,
       totalPagar: Number(prestamo.totalPagar),
       totalInteres: Number(prestamo.totalInteres),
       totalRecargos: Number(prestamo.totalRecargos),

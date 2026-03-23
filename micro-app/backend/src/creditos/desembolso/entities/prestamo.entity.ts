@@ -209,6 +209,13 @@ export class Prestamo {
   })
   estado: EstadoPrestamo;
 
+  // Fondos
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
+  fondosPropios: number;
+
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
+  transferenciaBancaria: number;
+
   // Indica si este préstamo es un refinanciamiento (canceló otro préstamo)
   @Column({ default: false })
   refinanciamiento: boolean;

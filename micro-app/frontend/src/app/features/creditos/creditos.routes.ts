@@ -214,6 +214,16 @@ export const CREDITOS_ROUTES: Routes = [
         data: { roles: [RoleCodes.ADMIN, RoleCodes.COMITE] },
       },
       {
+        path: 'reportes/arqueo',
+        loadComponent: () =>
+          import('./components/reportes/reporte-arqueo.component').then(
+            (m) => m.ReporteArqueoComponent
+          ),
+        title: 'Arqueo',
+        canActivate: [roleGuard],
+        data: { roles: [RoleCodes.ADMIN, RoleCodes.ASESOR, RoleCodes.COMITE] },
+      },
+      {
         path: 'reportes/ruta-cobro',
         loadComponent: () =>
           import('./components/reportes/ruta-cobro.component').then(

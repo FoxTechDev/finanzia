@@ -177,6 +177,20 @@ import {
                 <mat-datepicker #picker></mat-datepicker>
               </mat-form-field>
             </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Fondos Propios</mat-label>
+                <input matInput type="number" formControlName="fondosPropios" min="0" step="0.01">
+                <span matPrefix>$&nbsp;</span>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Transferencia Bancaria</mat-label>
+                <input matInput type="number" formControlName="transferenciaBancaria" min="0" step="0.01">
+                <span matPrefix>$&nbsp;</span>
+              </mat-form-field>
+            </div>
           </form>
 
           <!-- Mostrar Plan de Pago de la Solicitud -->
@@ -679,6 +693,13 @@ import {
       gap: 16px;
     }
 
+    @media (max-width: 600px) {
+      .form-row {
+        flex-direction: column;
+        gap: 0;
+      }
+    }
+
     .full-width {
       width: 100%;
     }
@@ -807,10 +828,12 @@ import {
     .table-container {
       max-height: 300px;
       overflow-y: auto;
+      overflow-x: auto;
     }
 
     .plan-pago-table {
       width: 100%;
+      min-width: 520px;
     }
 
     .plan-pago-table th {
@@ -968,6 +991,8 @@ export class CrearDesembolsoDialogComponent implements OnInit {
       tipoInteres: [TipoInteres.FLAT, Validators.required],
       numeroCuotas: [12, [Validators.required, Validators.min(1)]],
       fechaPrimeraCuota: [fechaDefault, Validators.required],
+      fondosPropios: [0, [Validators.required, Validators.min(0)]],
+      transferenciaBancaria: [0, [Validators.required, Validators.min(0)]],
     });
 
     this.deduccionesForm = this.fb.group({
@@ -1343,6 +1368,8 @@ export class CrearDesembolsoDialogComponent implements OnInit {
       tipoInteres: this.configForm.get('tipoInteres')?.value,
       fechaPrimeraCuota: fechaStr,
       numeroCuotas: this.configForm.get('numeroCuotas')?.value,
+      fondosPropios: Number(this.configForm.get('fondosPropios')?.value) || 0,
+      transferenciaBancaria: Number(this.configForm.get('transferenciaBancaria')?.value) || 0,
       deducciones: this.transformarDeducciones(),
       recargos: this.transformarRecargos(),
     };

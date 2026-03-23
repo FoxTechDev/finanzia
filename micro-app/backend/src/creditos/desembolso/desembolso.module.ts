@@ -27,6 +27,7 @@ import { EstadoPrestamoService } from './services/estado-prestamo.service';
 import { ReporteCarteraService } from './services/reporte-cartera.service';
 import { RutaCobroService } from './services/ruta-cobro.service';
 import { PlanPagoModificacionService } from './services/plan-pago-modificacion.service';
+import { ReporteArqueoService } from './services/reporte-arqueo.service';
 
 // Controllers
 import { DesembolsoController } from './controllers/desembolso.controller';
@@ -75,6 +76,7 @@ import { ReporteCarteraController } from './controllers/reporte-cartera.controll
     ReporteCarteraService,
     RutaCobroService,
     PlanPagoModificacionService,
+    ReporteArqueoService,
   ],
   exports: [
     DesembolsoService,
@@ -86,6 +88,7 @@ import { ReporteCarteraController } from './controllers/reporte-cartera.controll
     ReporteCarteraService,
     RutaCobroService,
     PlanPagoModificacionService,
+    ReporteArqueoService,
   ],
 })
 export class DesembolsoModule {}

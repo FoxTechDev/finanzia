@@ -368,6 +368,8 @@ export class DesembolsoService {
         fechaVencimiento: preview.fechaVencimiento,
         categoriaNCB022: CategoriaNCB022.A,
         estado: EstadoPrestamo.VIGENTE,
+        fondosPropios: this.asegurarNumeroValido(dto.fondosPropios),
+        transferenciaBancaria: this.asegurarNumeroValido(dto.transferenciaBancaria),
         usuarioDesembolsoId: dto.usuarioDesembolsoId,
         nombreUsuarioDesembolso: dto.nombreUsuarioDesembolso,
       });

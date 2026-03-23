@@ -170,6 +170,16 @@ import {
                         <span matListItemTitle>Monto Desembolsado</span>
                         <span matListItemLine class="highlight">{{ prestamo()!.montoDesembolsado | currency:'USD':'symbol':'1.2-2' }}</span>
                       </mat-list-item>
+                      <mat-divider></mat-divider>
+                      <mat-list-item>
+                        <span matListItemTitle>Fondos Propios</span>
+                        <span matListItemLine>{{ prestamo()!.fondosPropios | currency:'USD':'symbol':'1.2-2' }}</span>
+                      </mat-list-item>
+                      <mat-divider></mat-divider>
+                      <mat-list-item>
+                        <span matListItemTitle>Transferencia Bancaria</span>
+                        <span matListItemLine>{{ prestamo()!.transferenciaBancaria | currency:'USD':'symbol':'1.2-2' }}</span>
+                      </mat-list-item>
                     </mat-list>
                   </mat-card-content>
                 </mat-card>
@@ -823,7 +833,7 @@ import {
 
     .grid-2 {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));
       gap: 16px;
     }
 
@@ -1169,6 +1179,7 @@ import {
     /* Tabla de pagos */
     .pagos-table {
       width: 100%;
+      min-width: 700px;
     }
 
     .pagos-table tr.row-anulado {

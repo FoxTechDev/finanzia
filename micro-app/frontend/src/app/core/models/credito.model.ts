@@ -116,6 +116,7 @@ export interface Solicitud {
   tipoInteres?: TipoInteres; // Tipo de interés para el plan de pago
   fechaDesdePago?: string | null;
   fechaHastaPago?: string | null;
+  diasCalculados?: number | null;
   destinoCredito: DestinoCredito;
   descripcionDestino: string | null;
   estadoId: number;
@@ -460,6 +461,8 @@ export interface Prestamo {
   fechaCancelacion: string | null;
   categoriaNCB022: CategoriaNCB022;
   estado: EstadoPrestamo;
+  fondosPropios: number;
+  transferenciaBancaria: number;
   refinanciamiento: boolean;
   usuarioDesembolsoId: number | null;
   nombreUsuarioDesembolso: string | null;
@@ -579,6 +582,8 @@ export interface PreviewDesembolsoRequest {
 }
 
 export interface CrearDesembolsoRequest extends PreviewDesembolsoRequest {
+  fondosPropios: number;
+  transferenciaBancaria: number;
   usuarioDesembolsoId?: number;
   nombreUsuarioDesembolso?: string;
 }

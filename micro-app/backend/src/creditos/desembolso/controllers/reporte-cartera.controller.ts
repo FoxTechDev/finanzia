@@ -2,6 +2,11 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { ReporteCarteraService } from '../services/reporte-cartera.service';
 import { RutaCobroService } from '../services/ruta-cobro.service';
 import {
+  ReporteArqueoService,
+  ArqueoParams,
+  ArqueoResponse,
+} from '../services/reporte-arqueo.service';
+import {
   ReporteCarteraParamsDto,
   ReporteCarteraResponseDto,
 } from '../dto/reporte-cartera.dto';
@@ -12,16 +17,18 @@ import {
 import { parseLocalDate } from '../../../common/utils/date.utils';
 
 /**
- * Controlador para reportes de Cartera y Ruta de Cobro
+ * Controlador para reportes de Cartera, Ruta de Cobro y Arqueo
  * Endpoints:
  *   GET /api/reportes/cartera
  *   GET /api/reportes/ruta-cobro
+ *   GET /api/reportes/arqueo
  */
 @Controller('reportes')
 export class ReporteCarteraController {
   constructor(
     private readonly reporteCarteraService: ReporteCarteraService,
     private readonly rutaCobroService: RutaCobroService,
+    private readonly reporteArqueoService: ReporteArqueoService,
   ) {}
 
   /**
@@ -106,5 +113,16 @@ export class ReporteCarteraController {
     @Query() params: RutaCobroParamsDto,
   ): Promise<RutaCobroResponseDto> {
     return this.rutaCobroService.generarReporte(params);
+  }
+
+  /**
+   * GET /api/reportes/arqueo
+   * Genera el reporte de arqueo: pagos (ingresos) vs desembolsos (fondos propios = retiros, transferencia = ingreso)
+   */
+  @Get('arqueo')
+  async obtenerReporteArqueo(
+    @Query() params: ArqueoParams,
+  ): Promise<ArqueoResponse> {
+    return this.reporteArqueoService.generarReporte(params);
   }
 }

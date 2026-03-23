@@ -39,6 +39,8 @@ export class PrestamoDetalleDto {
   // Montos
   montoAutorizado: number;
   montoDesembolsado: number;
+  fondosPropios: number;
+  transferenciaBancaria: number;
   totalPagar: number;
   totalInteres: number;
   totalRecargos: number;
