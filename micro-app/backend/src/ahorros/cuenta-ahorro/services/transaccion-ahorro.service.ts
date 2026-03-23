@@ -154,11 +154,29 @@ export class TransaccionAhorroService {
         ? nuevoSaldo - Number(cuenta.montoPignorado)
         : nuevoSaldo;
 
-      await queryRunner.manager.update(CuentaAhorro, cuentaId, {
+      const updateData: any = {
         saldo: nuevoSaldo,
         saldoDisponible: Math.max(saldoDisponible, 0),
         fechaUltMovimiento: fecha,
-      });
+      };
+
+      // Si el saldo queda en cero, cambiar estado según tipo de operación
+      if (nuevoSaldo <= 0) {
+        const codigoTipoTrans = tipoTransaccion.codigo?.toUpperCase() || '';
+
+        if (codigoTipoTrans === 'ANULACION') {
+          const estadoAnulada = await this.catalogosService.findEstadoByCodigo('ANULADA');
+          updateData.estadoId = estadoAnulada.id;
+          updateData.fechaCancelacion = fecha;
+        } else {
+          // CANCELACION, RETIRO u otro cargo que deje saldo en cero
+          const estadoCancelada = await this.catalogosService.findEstadoByCodigo('CANCELADA');
+          updateData.estadoId = estadoCancelada.id;
+          updateData.fechaCancelacion = fecha;
+        }
+      }
+
+      await queryRunner.manager.update(CuentaAhorro, cuentaId, updateData);
 
       await queryRunner.commitTransaction();
       return savedTrans;

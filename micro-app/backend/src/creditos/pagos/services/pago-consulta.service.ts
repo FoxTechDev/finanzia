@@ -86,6 +86,8 @@ export class PagoConsultaService {
       .createQueryBuilder('pago')
       .leftJoinAndSelect('pago.prestamo', 'prestamo')
       .leftJoinAndSelect('prestamo.persona', 'persona')
+      .leftJoinAndSelect('prestamo.tipoCredito', 'tipoCredito')
+      .leftJoinAndSelect('tipoCredito.lineaCredito', 'lineaCredito')
       .leftJoinAndSelect('pago.detallesCuota', 'detalles');
 
     // Aplicar filtros

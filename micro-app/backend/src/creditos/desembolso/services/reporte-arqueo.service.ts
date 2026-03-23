@@ -150,24 +150,44 @@ export class ReporteArqueoService {
         hasta: params.fechaHasta,
       })
       .andWhere('pago.estado = :estado', { estado: 'APLICADO' })
-      .orderBy('pago.numeroPago', 'ASC')
+      .orderBy('pago.fechaPago', 'ASC')
+      .addOrderBy('pago.numeroPago', 'ASC')
       .getMany();
 
-    const pagos: PagoColecta[] = pagosRaw.map((p) => ({
-      numeroPago: p.numeroPago,
-      nombreCliente: p.prestamo?.persona
-        ? `${p.prestamo.persona.nombre} ${p.prestamo.persona.apellido}`
-        : '',
-      montoPagado: Number(p.montoPagado) || 0,
-    }));
+    // Agrupar por día
+    const diasMap = new Map<string, PagoColecta[]>();
+    for (const p of pagosRaw) {
+      const fecha = String(p.fechaPago).substring(0, 10);
+      if (!diasMap.has(fecha)) {
+        diasMap.set(fecha, []);
+      }
+      diasMap.get(fecha)!.push({
+        numeroPago: p.numeroPago,
+        nombreCliente: p.prestamo?.persona
+          ? `${p.prestamo.persona.nombre} ${p.prestamo.persona.apellido}`
+          : '',
+        montoPagado: Number(p.montoPagado) || 0,
+      });
+    }
 
-    const totalPagos = pagos.length;
-    const montoTotal = pagos.reduce((s, p) => s + p.montoPagado, 0);
+    const dias: ColectaDia[] = [];
+    for (const [fecha, pagos] of diasMap) {
+      const subtotalMonto = pagos.reduce((s, p) => s + p.montoPagado, 0);
+      dias.push({
+        fecha,
+        pagos,
+        subtotalPagos: pagos.length,
+        subtotalMonto: Math.round(subtotalMonto * 100) / 100,
+      });
+    }
+
+    const totalPagos = pagosRaw.length;
+    const montoTotal = dias.reduce((s, d) => s + d.subtotalMonto, 0);
 
     return {
       fechaDesde: params.fechaDesde,
       fechaHasta: params.fechaHasta,
-      pagos,
+      dias,
       totalPagos,
       montoTotal: Math.round(montoTotal * 100) / 100,
     };
@@ -180,10 +200,17 @@ export interface PagoColecta {
   montoPagado: number;
 }
 
+export interface ColectaDia {
+  fecha: string;
+  pagos: PagoColecta[];
+  subtotalPagos: number;
+  subtotalMonto: number;
+}
+
 export interface ColectaDiariaResponse {
   fechaDesde: string;
   fechaHasta: string;
-  pagos: PagoColecta[];
+  dias: ColectaDia[];
   totalPagos: number;
   montoTotal: number;
 }

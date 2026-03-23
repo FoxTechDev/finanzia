@@ -23,6 +23,7 @@ export interface DatosReporteColocacion {
   nombreCliente: string;
   lineaCredito: string;
   tipoCredito: string;
+  montoAutorizado: number;
   montoDesembolsado: number;
   tasaInteres: number;
   plazo: number;
@@ -182,12 +183,22 @@ export interface PagoColecta {
 }
 
 /**
+ * Interface para un día de colecta
+ */
+export interface ColectaDia {
+  fecha: string;
+  pagos: PagoColecta[];
+  subtotalPagos: number;
+  subtotalMonto: number;
+}
+
+/**
  * Interface para la respuesta de colecta diaria
  */
 export interface ColectaDiariaResponse {
   fechaDesde: string;
   fechaHasta: string;
-  pagos: PagoColecta[];
+  dias: ColectaDia[];
   totalPagos: number;
   montoTotal: number;
 }
@@ -252,6 +263,7 @@ export class ReporteService {
         (prestamo.cliente?.nombreCompleto || 'N/A'),
       lineaCredito: prestamo.tipoCredito?.lineaCredito?.nombre || 'N/A',
       tipoCredito: prestamo.tipoCredito?.nombre || 'N/A',
+      montoAutorizado: Number(prestamo.montoAutorizado) || 0,
       montoDesembolsado: Number(prestamo.montoDesembolsado) || 0,
       tasaInteres: Number(prestamo.tasaInteres) || 0,
       plazo: Number(prestamo.numeroCuotas) || 0,

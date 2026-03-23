@@ -280,6 +280,14 @@ import { LineaCredito, TipoCredito, PERIODICIDAD_PAGO_LABELS, PeriodicidadPago }
                   <td mat-cell *matCellDef="let item">{{ item.tipoCredito }}</td>
                 </ng-container>
 
+                <!-- Monto Otorgado -->
+                <ng-container matColumnDef="montoAutorizado">
+                  <th mat-header-cell *matHeaderCellDef>Monto Otorgado</th>
+                  <td mat-cell *matCellDef="let item">
+                    {{ item.montoAutorizado | currency:'USD':'symbol':'1.2-2' }}
+                  </td>
+                </ng-container>
+
                 <!-- Monto Desembolsado -->
                 <ng-container matColumnDef="montoDesembolsado">
                   <th mat-header-cell *matHeaderCellDef>Monto Desembolsado</th>
@@ -660,6 +668,7 @@ export class ReporteColocacionComponent implements OnInit {
     'nombreCliente',
     'lineaCredito',
     'tipoCredito',
+    'montoAutorizado',
     'montoDesembolsado',
     'tasaInteres',
     'plazo',
@@ -846,6 +855,16 @@ export class ReporteColocacionComponent implements OnInit {
   }
 
   /**
+   * Calcula el total otorgado
+   */
+  calcularTotalAutorizado(): number {
+    return this.datosReporte().reduce(
+      (sum, item) => sum + item.montoAutorizado,
+      0
+    );
+  }
+
+  /**
    * Calcula el total desembolsado
    */
   calcularTotalDesembolsado(): number {
@@ -892,6 +911,7 @@ export class ReporteColocacionComponent implements OnInit {
         'Nombre del Cliente': item.nombreCliente,
         'Línea de Crédito': item.lineaCredito,
         'Tipo de Crédito': item.tipoCredito,
+        'Monto Otorgado': item.montoAutorizado,
         'Monto Desembolsado': item.montoDesembolsado,
         'Tasa de Interés (%)': item.tasaInteres,
         'Plazo (Cuotas)': item.plazo,
@@ -907,6 +927,7 @@ export class ReporteColocacionComponent implements OnInit {
         'Nombre del Cliente': '',
         'Línea de Crédito': '',
         'Tipo de Crédito': 'TOTALES',
+        'Monto Otorgado': this.calcularTotalAutorizado(),
         'Monto Desembolsado': this.calcularTotalDesembolsado(),
         'Tasa de Interés (%)': '',
         'Plazo (Cuotas)': '',
@@ -1005,6 +1026,7 @@ export class ReporteColocacionComponent implements OnInit {
         item.nombreCliente,
         item.lineaCredito,
         item.tipoCredito,
+        `$${item.montoAutorizado.toFixed(2)}`,
         `$${item.montoDesembolsado.toFixed(2)}`,
         `${item.tasaInteres.toFixed(2)}%`,
         item.plazo.toString(),
@@ -1020,6 +1042,7 @@ export class ReporteColocacionComponent implements OnInit {
         '',
         '',
         'TOTALES',
+        `$${this.calcularTotalAutorizado().toFixed(2)}`,
         `$${this.calcularTotalDesembolsado().toFixed(2)}`,
         '',
         '',
@@ -1038,7 +1061,8 @@ export class ReporteColocacionComponent implements OnInit {
             'Cliente',
             'Línea',
             'Tipo',
-            'Monto',
+            'Otorgado',
+            'Desembolsado',
             'Tasa',
             'Plazo',
             'Period.',

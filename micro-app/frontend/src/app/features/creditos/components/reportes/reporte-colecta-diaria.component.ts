@@ -115,24 +115,38 @@ import {
 
             <mat-divider style="margin: 24px 0;"></mat-divider>
 
-            @if (datos()!.pagos.length > 0) {
-              <div class="table-responsive">
-                <table mat-table [dataSource]="datos()!.pagos">
-                  <ng-container matColumnDef="numeroPago">
-                    <th mat-header-cell *matHeaderCellDef>No. Recibo</th>
-                    <td mat-cell *matCellDef="let r"><strong>{{ r.numeroPago }}</strong></td>
-                  </ng-container>
-                  <ng-container matColumnDef="nombreCliente">
-                    <th mat-header-cell *matHeaderCellDef>Cliente</th>
-                    <td mat-cell *matCellDef="let r">{{ r.nombreCliente }}</td>
-                  </ng-container>
-                  <ng-container matColumnDef="montoPagado">
-                    <th mat-header-cell *matHeaderCellDef>Monto</th>
-                    <td mat-cell *matCellDef="let r" class="amount-cell">{{ r.montoPagado | currency:'USD':'symbol':'1.2-2' }}</td>
-                  </ng-container>
-                  <tr mat-header-row *matHeaderRowDef="columnas"></tr>
-                  <tr mat-row *matRowDef="let row; columns: columnas"></tr>
-                </table>
+            @if (datos()!.dias.length > 0) {
+              @for (dia of datos()!.dias; track dia.fecha) {
+                <div class="dia-section">
+                  <h3 class="dia-header"><mat-icon>calendar_today</mat-icon> {{ fmtFecha(dia.fecha) }}</h3>
+                  <div class="table-responsive">
+                    <table mat-table [dataSource]="dia.pagos">
+                      <ng-container matColumnDef="numeroPago">
+                        <th mat-header-cell *matHeaderCellDef>No. Recibo</th>
+                        <td mat-cell *matCellDef="let r"><strong>{{ r.numeroPago }}</strong></td>
+                      </ng-container>
+                      <ng-container matColumnDef="nombreCliente">
+                        <th mat-header-cell *matHeaderCellDef>Cliente</th>
+                        <td mat-cell *matCellDef="let r">{{ r.nombreCliente }}</td>
+                      </ng-container>
+                      <ng-container matColumnDef="montoPagado">
+                        <th mat-header-cell *matHeaderCellDef>Monto</th>
+                        <td mat-cell *matCellDef="let r" class="amount-cell">{{ r.montoPagado | currency:'USD':'symbol':'1.2-2' }}</td>
+                      </ng-container>
+                      <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+                      <tr mat-row *matRowDef="let row; columns: columnas"></tr>
+                    </table>
+                  </div>
+                  <div class="dia-subtotal">
+                    <span>Subtotal: {{ dia.subtotalPagos }} pago(s)</span>
+                    <span class="amount-cell">{{ dia.subtotalMonto | currency:'USD':'symbol':'1.2-2' }}</span>
+                  </div>
+                </div>
+              }
+
+              <div class="total-general">
+                <span>TOTAL GENERAL: {{ datos()!.totalPagos }} pago(s)</span>
+                <span>{{ datos()!.montoTotal | currency:'USD':'symbol':'1.2-2' }}</span>
               </div>
             } @else {
               <div class="empty"><mat-icon>info</mat-icon><p>No hay pagos en el periodo</p></div>
@@ -151,20 +165,29 @@ import {
       <div class="recibo-termica print-only">
         <div class="t-center"><strong>FINANZIA S.C. DE R.L. DE C.V.</strong><br>COLECTA DIARIA<br>Del {{ fmtFecha(datos()!.fechaDesde) }} al {{ fmtFecha(datos()!.fechaHasta) }}</div>
         <div class="t-sep">================================</div>
-        <div class="t-line-3">
-          <span class="col-recibo">RECIBO</span>
-          <span class="col-nombre">CLIENTE</span>
-          <span class="col-monto">MONTO</span>
-        </div>
-        <div class="t-sep">--------------------------------</div>
-        @for (p of datos()!.pagos; track p.numeroPago) {
+        @for (dia of datos()!.dias; track dia.fecha) {
+          <div class="t-center"><strong>{{ fmtFecha(dia.fecha) }}</strong></div>
+          <div class="t-sep">--------------------------------</div>
           <div class="t-line-3">
-            <span class="col-recibo">{{ p.numeroPago }}</span>
-            <span class="col-nombre">{{ p.nombreCliente }}</span>
-            <span class="col-monto">\${{ p.montoPagado.toFixed(2) }}</span>
+            <span class="col-recibo">RECIBO</span>
+            <span class="col-nombre">CLIENTE</span>
+            <span class="col-monto">MONTO</span>
           </div>
+          <div class="t-sep">--------------------------------</div>
+          @for (p of dia.pagos; track p.numeroPago) {
+            <div class="t-line-3">
+              <span class="col-recibo">{{ p.numeroPago }}</span>
+              <span class="col-nombre">{{ p.nombreCliente }}</span>
+              <span class="col-monto">\${{ p.montoPagado.toFixed(2) }}</span>
+            </div>
+          }
+          <div class="t-sep">--------------------------------</div>
+          <div class="t-subtotal">
+            <span>Subtotal ({{ dia.subtotalPagos }})</span>
+            <span>\${{ dia.subtotalMonto.toFixed(2) }}</span>
+          </div>
+          <div class="t-sep">================================</div>
         }
-        <div class="t-sep">================================</div>
         <div class="t-total">
           <span>TOTAL ({{ datos()!.totalPagos }})</span>
           <span>\${{ datos()!.montoTotal.toFixed(2) }}</span>
@@ -202,6 +225,12 @@ import {
     table { width: 100%; }
     th { background-color: #f5f5f5; font-weight: 600; color: #333; white-space: nowrap; }
     .amount-cell { text-align: right; font-family: monospace; font-weight: 500; }
+
+    .dia-section { margin-bottom: 24px; }
+    .dia-header { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; color: #0F808C; margin: 0 0 8px 0; }
+    .dia-header mat-icon { font-size: 20px; width: 20px; height: 20px; }
+    .dia-subtotal { display: flex; justify-content: space-between; padding: 10px 16px; background: #f0f7f8; border-radius: 8px; margin-top: 8px; font-weight: 600; color: #0F808C; font-size: 14px; }
+    .total-general { display: flex; justify-content: space-between; padding: 16px; background: #0F808C; color: white; border-radius: 8px; font-weight: 700; font-size: 16px; margin-top: 8px; }
 
     .empty { text-align: center; padding: 48px 20px; }
     .empty mat-icon { font-size: 64px; width: 64px; height: 64px; color: #bdbdbd; }
@@ -253,6 +282,7 @@ import {
       .col-recibo { flex: 0 0 30%; overflow: hidden; text-overflow: ellipsis; }
       .col-nombre { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .col-monto { flex: 0 0 22%; text-align: right; }
+      .t-subtotal { display: flex; justify-content: space-between; font-weight: bold; font-size: 9pt; }
       .t-total { display: flex; justify-content: space-between; font-weight: bold; font-size: 10pt; }
       .t-footer { font-size: 7pt; margin-top: 3mm; }
 
