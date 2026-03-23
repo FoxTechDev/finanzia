@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { CuentaAhorro } from '../entities/cuenta-ahorro.entity';
 import { TransaccionAhorro } from '../entities/transaccion-ahorro.entity';
 import { PlanCapitalizacion } from '../entities/plan-capitalizacion.entity';
+import { BitacoraRenovacion } from '../entities/bitacora-renovacion.entity';
 import { FiltrosCuentaAhorroDto } from '../dto/filtros-cuenta-ahorro.dto';
 import {
   CuentaAhorroResumenDto,
@@ -19,6 +20,8 @@ export class CuentaAhorroConsultaService {
     private readonly transRepo: Repository<TransaccionAhorro>,
     @InjectRepository(PlanCapitalizacion)
     private readonly planCapRepo: Repository<PlanCapitalizacion>,
+    @InjectRepository(BitacoraRenovacion)
+    private readonly bitacoraRepo: Repository<BitacoraRenovacion>,
   ) {}
 
   async findAll(
@@ -299,5 +302,12 @@ export class CuentaAhorroConsultaService {
     const totalIntereses = data.reduce((sum, item) => sum + item.montoInteres, 0);
 
     return { data, total: data.length, totalIntereses };
+  }
+
+  async findRenovaciones(cuentaId: number): Promise<BitacoraRenovacion[]> {
+    return this.bitacoraRepo.find({
+      where: { cuentaAhorroId: cuentaId },
+      order: { createdAt: 'DESC' },
+    });
   }
 }

@@ -43,8 +43,12 @@ export class CuentaAhorroService {
     return this.http.patch<CuentaAhorroDetalle>(`${this.apiUrl}/${id}/pignorar`, { despignorar: true });
   }
 
-  renovar(id: number, nuevoVencimiento: string): Observable<CuentaAhorroDetalle> {
-    return this.http.post<CuentaAhorroDetalle>(`${this.apiUrl}/${id}/renovar`, { nuevoVencimiento });
+  renovar(id: number): Observable<CuentaAhorroDetalle> {
+    return this.http.post<CuentaAhorroDetalle>(`${this.apiUrl}/${id}/renovar`, {});
+  }
+
+  getRenovaciones(id: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${id}/renovaciones`);
   }
 
   getEstadoCuenta(id: number): Observable<any> {

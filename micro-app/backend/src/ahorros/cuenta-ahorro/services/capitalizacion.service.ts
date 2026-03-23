@@ -313,6 +313,92 @@ export class CapitalizacionService {
     return Math.round(interes * 100) / 100;
   }
 
+  /**
+   * Genera plan de capitalización para un DPF renovado,
+   * usando fechas de inicio y fin personalizadas.
+   * Retorna las entidades SIN guardar (para usar dentro de una transacción externa).
+   */
+  async generarPlanDPFDesde(
+    cuentaId: number,
+    fechaInicio: Date,
+    fechaFin: Date,
+  ): Promise<PlanCapitalizacion[]> {
+    const cuenta = await this.cuentaRepo.findOne({
+      where: { id: cuentaId },
+      relations: ['tipoCapitalizacion'],
+    });
+
+    if (!cuenta || !cuenta.tipoCapitalizacionId) {
+      return [];
+    }
+
+    const saldo = Number(cuenta.saldo) || Number(cuenta.monto);
+    const tasaAnual = Number(cuenta.tasaInteres);
+    const diasCap = cuenta.tipoCapitalizacion?.dias || 0;
+
+    const fechas: PlanCapitalizacion[] = [];
+
+    if (diasCap === 0) {
+      // Al vencimiento: una sola entrada
+      const interes = this.calcularInteresProrrateo(
+        saldo,
+        tasaAnual,
+        fechaInicio,
+        fechaFin,
+      );
+      fechas.push(
+        this.planRepo.create({
+          cuentaAhorroId: cuentaId,
+          fechaCapitalizacion: fechaFin.toISOString().split('T')[0],
+          monto: interes,
+        }),
+      );
+    } else {
+      // Periódico (mensual, etc.)
+      let fechaAnterior = new Date(fechaInicio);
+      let fechaActual = new Date(fechaInicio);
+      fechaActual.setDate(fechaActual.getDate() + diasCap);
+
+      while (fechaActual <= fechaFin) {
+        const interes = this.calcularInteresProrrateo(
+          saldo,
+          tasaAnual,
+          fechaAnterior,
+          fechaActual,
+        );
+        fechas.push(
+          this.planRepo.create({
+            cuentaAhorroId: cuentaId,
+            fechaCapitalizacion: fechaActual.toISOString().split('T')[0],
+            monto: interes,
+          }),
+        );
+        fechaAnterior = new Date(fechaActual);
+        fechaActual = new Date(fechaActual);
+        fechaActual.setDate(fechaActual.getDate() + diasCap);
+      }
+
+      // Período residual
+      if (fechaAnterior < fechaFin) {
+        const interes = this.calcularInteresProrrateo(
+          saldo,
+          tasaAnual,
+          fechaAnterior,
+          fechaFin,
+        );
+        fechas.push(
+          this.planRepo.create({
+            cuentaAhorroId: cuentaId,
+            fechaCapitalizacion: fechaFin.toISOString().split('T')[0],
+            monto: interes,
+          }),
+        );
+      }
+    }
+
+    return fechas;
+  }
+
   async findPlanByCuenta(cuentaId: number): Promise<PlanCapitalizacion[]> {
     return this.planRepo.find({
       where: { cuentaAhorroId: cuentaId },

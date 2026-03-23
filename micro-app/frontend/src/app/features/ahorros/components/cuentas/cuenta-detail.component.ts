@@ -17,6 +17,8 @@ import { TransaccionAhorroService } from '../../services/transaccion-ahorro.serv
 import { BeneficiarioService } from '../../services/beneficiario.service';
 import { CuentaAhorroDetalle, TransaccionAhorro, PlanCapitalizacion, BeneficiarioCuentaAhorro } from '@core/models/ahorro.model';
 import { BeneficiarioDialogComponent } from './beneficiario-dialog.component';
+import { HasRoleDirective } from '@core/directives/has-role.directive';
+import { RoleCodes } from '@core/models/user.model';
 
 @Component({
   selector: 'app-cuenta-detail',
@@ -36,6 +38,7 @@ import { BeneficiarioDialogComponent } from './beneficiario-dialog.component';
     MatDialogModule,
     DecimalPipe,
     DatePipe,
+    HasRoleDirective,
   ],
   template: `
     <div class="container">
@@ -60,6 +63,22 @@ import { BeneficiarioDialogComponent } from './beneficiario-dialog.component';
             @if (lineaCodigo === 'DPF') {
               <button mat-raised-button color="primary" (click)="descargarContrato()">
                 <mat-icon>description</mat-icon> Contrato DPF
+              </button>
+            }
+            @if (lineaCodigo === 'DPF' && cuenta()!.estado.toUpperCase() === 'ACTIVA') {
+              <button
+                *appHasRole="[RoleCodes.ADMIN, RoleCodes.COMITE]"
+                mat-raised-button
+                color="accent"
+                (click)="renovarDpf()"
+                [disabled]="renovando()"
+              >
+                @if (renovando()) {
+                  <mat-spinner diameter="18" style="display: inline-block; margin-right: 8px;"></mat-spinner>
+                } @else {
+                  <mat-icon>autorenew</mat-icon>
+                }
+                Renovar DPF
               </button>
             }
           </div>
@@ -234,7 +253,8 @@ import { BeneficiarioDialogComponent } from './beneficiario-dialog.component';
             </div>
           </mat-tab>
 
-          <!-- Tab: Plan de Capitalización -->
+          <!-- Tab: Plan de Capitalización (no mostrar en AV) -->
+          @if (lineaCodigo !== 'AV') {
           <mat-tab label="Plan Capitalización">
             <div class="tab-content">
               <mat-card>
@@ -284,6 +304,50 @@ import { BeneficiarioDialogComponent } from './beneficiario-dialog.component';
               </mat-card>
             </div>
           </mat-tab>
+          }
+
+          <!-- Tab: Renovaciones (solo DPF) -->
+          @if (lineaCodigo === 'DPF') {
+          <mat-tab label="Renovaciones">
+            <div class="tab-content">
+              <mat-card>
+                <mat-card-content>
+                  <div class="table-responsive">
+                    <table mat-table [dataSource]="renovaciones()" class="full-width">
+                      <ng-container matColumnDef="fechaRenovacion">
+                        <th mat-header-cell *matHeaderCellDef>Fecha Renovación</th>
+                        <td mat-cell *matCellDef="let r">{{ r.fechaRenovacion | date:'dd/MM/yyyy' }}</td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="vencimientoAnterior">
+                        <th mat-header-cell *matHeaderCellDef>Vencimiento Anterior</th>
+                        <td mat-cell *matCellDef="let r">{{ r.vencimientoAnterior | date:'dd/MM/yyyy' }}</td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="nuevoVencimiento">
+                        <th mat-header-cell *matHeaderCellDef>Nuevo Vencimiento</th>
+                        <td mat-cell *matCellDef="let r">{{ r.nuevoVencimiento | date:'dd/MM/yyyy' }}</td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="nombreUsuario">
+                        <th mat-header-cell *matHeaderCellDef>Usuario</th>
+                        <td mat-cell *matCellDef="let r">{{ r.nombreUsuario || '-' }}</td>
+                      </ng-container>
+
+                      <tr mat-header-row *matHeaderRowDef="renovColumns"></tr>
+                      <tr mat-row *matRowDef="let row; columns: renovColumns"></tr>
+                    </table>
+                  </div>
+                  @if (renovaciones().length === 0) {
+                    <div class="empty">
+                      <p>No se han realizado renovaciones</p>
+                    </div>
+                  }
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </mat-tab>
+          }
 
           <!-- Tab: Beneficiarios -->
           <mat-tab label="Beneficiarios">
@@ -395,15 +459,20 @@ export class CuentaDetailComponent implements OnInit {
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
 
+  RoleCodes = RoleCodes;
+
   cuenta = signal<CuentaAhorroDetalle | null>(null);
   transacciones = signal<TransaccionAhorro[]>([]);
   planCap = signal<PlanCapitalizacion[]>([]);
   beneficiarios = signal<BeneficiarioCuentaAhorro[]>([]);
+  renovaciones = signal<any[]>([]);
   isLoading = signal(true);
+  renovando = signal(false);
 
   transColumns = ['fecha', 'tipo', 'naturaleza', 'monto', 'saldo', 'observacion'];
   planColumns = ['fecha', 'monto', 'procesado', 'fechaProcesado'];
   benefColumns = ['nombre', 'parentesco', 'porcentaje', 'acciones'];
+  renovColumns = ['fechaRenovacion', 'vencimientoAnterior', 'nuevoVencimiento', 'nombreUsuario'];
 
   lineaCodigo = '';
 
@@ -428,6 +497,9 @@ export class CuentaDetailComponent implements OnInit {
         this.loadTransacciones(id);
         this.loadPlan(id);
         this.loadBeneficiarios(id);
+        if (this.lineaCodigo === 'DPF') {
+          this.loadRenovaciones(id);
+        }
       },
       error: () => {
         this.snackBar.open('Error al cargar cuenta', 'Cerrar', { duration: 3000 });
@@ -445,6 +517,13 @@ export class CuentaDetailComponent implements OnInit {
   loadPlan(id: number): void {
     this.cuentaService.getPlanCapitalizacion(id).subscribe({
       next: (data) => this.planCap.set(data),
+    });
+  }
+
+  loadRenovaciones(id: number): void {
+    this.cuentaService.getRenovaciones(id).subscribe({
+      next: (data) => this.renovaciones.set(data),
+      error: () => this.renovaciones.set([]),
     });
   }
 
@@ -531,6 +610,42 @@ export class CuentaDetailComponent implements OnInit {
       },
       error: () => {
         this.snackBar.open('Error al generar reporte de intereses', 'Cerrar', { duration: 3000 });
+      },
+    });
+  }
+
+  renovarDpf(): void {
+    const cuenta = this.cuenta();
+    if (!cuenta) return;
+
+    const plazo = cuenta.plazo || 0;
+    const vencActual = cuenta.fechaVencimiento || '';
+    const partes = vencActual.substring(0, 10).split('-');
+    const vencStr = partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : vencActual;
+
+    // Calcular nuevo vencimiento para mostrarlo en el confirm
+    const fechaVenc = new Date(vencActual);
+    fechaVenc.setDate(fechaVenc.getDate() + plazo);
+    const nuevoStr = `${String(fechaVenc.getDate()).padStart(2, '0')}/${String(fechaVenc.getMonth() + 1).padStart(2, '0')}/${fechaVenc.getFullYear()}`;
+
+    if (!confirm(
+      `¿Renovar DPF ${cuenta.noCuenta}?\n\n` +
+      `Vencimiento actual: ${vencStr}\n` +
+      `Plazo: ${plazo} días\n` +
+      `Nuevo vencimiento: ${nuevoStr}\n\n` +
+      `Se generará un nuevo plan de capitalización.`
+    )) return;
+
+    this.renovando.set(true);
+    this.cuentaService.renovar(cuenta.id).subscribe({
+      next: () => {
+        this.snackBar.open('DPF renovado exitosamente', 'Cerrar', { duration: 3000 });
+        this.renovando.set(false);
+        this.loadCuenta(cuenta.id);
+      },
+      error: (err) => {
+        this.snackBar.open(err.error?.message || 'Error al renovar', 'Cerrar', { duration: 4000 });
+        this.renovando.set(false);
       },
     });
   }

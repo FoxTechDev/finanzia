@@ -10,7 +10,9 @@ import {
   Request,
   Res,
   Header,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { Response } from 'express';
 import { CuentaAhorroService } from '../services/cuenta-ahorro.service';
 import { CuentaAhorroConsultaService } from '../services/cuenta-ahorro-consulta.service';
@@ -168,19 +170,23 @@ export class CuentaAhorroController {
     );
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post(':id/renovar')
   renovar(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { nuevoVencimiento: string },
     @Request() req: any,
   ) {
     return this.cuentaService.renovar(
       id,
-      body.nuevoVencimiento,
       req.user?.id,
       req.user?.firstName
         ? `${req.user.firstName} ${req.user.lastName || ''}`
         : undefined,
     );
+  }
+
+  @Get(':id/renovaciones')
+  getRenovaciones(@Param('id', ParseIntPipe) id: number) {
+    return this.consultaService.findRenovaciones(id);
   }
 }

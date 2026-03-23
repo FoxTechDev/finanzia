@@ -9,8 +9,10 @@ import { CuentaAhorro } from '../entities/cuenta-ahorro.entity';
 import { TransaccionAhorro } from '../entities/transaccion-ahorro.entity';
 import { CreateCuentaAhorroDto } from '../dto/create-cuenta-ahorro.dto';
 import { BitacoraRenovacion } from '../entities/bitacora-renovacion.entity';
+import { PlanCapitalizacion } from '../entities/plan-capitalizacion.entity';
 import { CatalogosAhorroService } from '../../catalogos/services/catalogos-ahorro.service';
 import { TipoAhorroService } from '../../tipo-ahorro/tipo-ahorro.service';
+import { CapitalizacionService } from './capitalizacion.service';
 
 @Injectable()
 export class CuentaAhorroService {
@@ -22,6 +24,7 @@ export class CuentaAhorroService {
     private readonly dataSource: DataSource,
     private readonly catalogosService: CatalogosAhorroService,
     private readonly tipoAhorroService: TipoAhorroService,
+    private readonly capitalizacionService: CapitalizacionService,
   ) {}
 
   async abrir(
@@ -226,7 +229,6 @@ export class CuentaAhorroService {
 
   async renovar(
     id: number,
-    nuevoVencimiento: string,
     usuarioId?: number,
     nombreUsuario?: string,
   ): Promise<CuentaAhorro> {
@@ -238,28 +240,60 @@ export class CuentaAhorroService {
       );
     }
 
+    if (!cuenta.plazo || cuenta.plazo <= 0) {
+      throw new BadRequestException(
+        'La cuenta no tiene un plazo definido para renovar',
+      );
+    }
+
+    // Calcular nuevo vencimiento: fechaVencimiento actual + plazo días
+    const vencimientoAnterior = new Date(cuenta.fechaVencimiento);
+    const nuevoVencimiento = new Date(vencimientoAnterior);
+    nuevoVencimiento.setDate(nuevoVencimiento.getDate() + cuenta.plazo);
+    const nuevoVencimientoStr = nuevoVencimiento.toISOString().split('T')[0];
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
+      // 1. Registrar en bitácora de renovación
       const bitacora = Object.assign(new BitacoraRenovacion(), {
         cuentaAhorroId: id,
         fechaRenovacion: new Date().toISOString().split('T')[0],
         vencimientoAnterior: cuenta.fechaVencimiento,
-        nuevoVencimiento,
+        nuevoVencimiento: nuevoVencimientoStr,
         usuarioId,
         nombreUsuario,
       });
       await queryRunner.manager.save(BitacoraRenovacion, bitacora);
 
+      // 2. Actualizar fecha de vencimiento y estado
       const estadoActiva =
         await this.catalogosService.findEstadoByCodigo('ACTIVA');
 
       await queryRunner.manager.update(CuentaAhorro, id, {
-        fechaVencimiento: nuevoVencimiento,
+        fechaVencimiento: nuevoVencimientoStr,
         estadoId: estadoActiva.id,
       });
+
+      // 3. Eliminar plan de capitalización no procesado
+      await queryRunner.manager.delete(PlanCapitalizacion, {
+        cuentaAhorroId: id,
+        procesado: false,
+      });
+
+      // 4. Generar nuevo plan de capitalización
+      //    Usamos la fecha de vencimiento anterior como fecha de inicio
+      const nuevoPlan =
+        await this.capitalizacionService.generarPlanDPFDesde(
+          id,
+          vencimientoAnterior,
+          nuevoVencimiento,
+        );
+      if (nuevoPlan.length > 0) {
+        await queryRunner.manager.save(PlanCapitalizacion, nuevoPlan);
+      }
 
       await queryRunner.commitTransaction();
       return this.findOneEntity(id);
