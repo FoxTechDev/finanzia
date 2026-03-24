@@ -24,17 +24,18 @@ export enum SeccionRutaCobro {
 
 /**
  * DTO para una fila del reporte de Ruta de Cobro
+ * Un registro por préstamo (sin duplicados)
  */
 export class RutaCobroItemDto {
   fechaVencimiento: string;
   nombreCliente: string;
   numeroCredito: string;
-  numeroCuota: number;
-  cuotaTotal: number;
-  saldoCuota: number;
-  estado: string;
   periodicidadPago: string;
   seccion: SeccionRutaCobro;
+  /** Para al día: monto de la próxima cuota. Para vencido: saldo total del crédito */
+  montoCobrar: number;
+  /** Descripción del monto (ej: "Cuota #3" o "Saldo total") */
+  detalleCobro: string;
 }
 
 /**

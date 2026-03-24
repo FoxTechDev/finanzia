@@ -206,7 +206,7 @@ import {
                     <mat-icon>{{ getSeccionIcon(sec.seccion) }}</mat-icon>
                     <div>
                       <span class="summary-label">{{ sec.label }}</span>
-                      <span class="summary-value">{{ sec.totalCuotas }} cuota(s)</span>
+                      <span class="summary-value">{{ sec.totalCuotas }} préstamo(s)</span>
                       <span class="summary-monto">
                         {{ sec.totalMonto | currency:'USD':'symbol':'1.2-2' }}
                       </span>
@@ -218,7 +218,7 @@ import {
                 <mat-icon>attach_money</mat-icon>
                 <div>
                   <span class="summary-label">Total a Cobrar</span>
-                  <span class="summary-value">{{ datosReporte().length }} cuota(s)</span>
+                  <span class="summary-value">{{ datosReporte().length }} préstamo(s)</span>
                   <span class="summary-monto">
                     {{ calcularTotalMonto() | currency:'USD':'symbol':'1.2-2' }}
                   </span>
@@ -241,18 +241,12 @@ import {
                   </td>
                 </ng-container>
 
-                <!-- Fecha de Pago -->
+                <!-- Fecha -->
                 <ng-container matColumnDef="fechaVencimiento">
-                  <th mat-header-cell *matHeaderCellDef>Fecha de Pago</th>
+                  <th mat-header-cell *matHeaderCellDef>Fecha</th>
                   <td mat-cell *matCellDef="let item">
                     {{ formatearFechaStr(item.fechaVencimiento) }}
                   </td>
-                </ng-container>
-
-                <!-- Nombre del Cliente -->
-                <ng-container matColumnDef="nombreCliente">
-                  <th mat-header-cell *matHeaderCellDef>Nombre del Cliente</th>
-                  <td mat-cell *matCellDef="let item">{{ item.nombreCliente }}</td>
                 </ng-container>
 
                 <!-- Número de Crédito -->
@@ -263,25 +257,18 @@ import {
                   </td>
                 </ng-container>
 
-                <!-- Periodicidad -->
-                <ng-container matColumnDef="periodicidadPago">
-                  <th mat-header-cell *matHeaderCellDef>Periodicidad</th>
-                  <td mat-cell *matCellDef="let item">{{ item.periodicidadPago }}</td>
+                <!-- Nombre del Cliente -->
+                <ng-container matColumnDef="nombreCliente">
+                  <th mat-header-cell *matHeaderCellDef>Nombre del Cliente</th>
+                  <td mat-cell *matCellDef="let item">{{ item.nombreCliente }}</td>
                 </ng-container>
 
-                <!-- Cuota Total -->
-                <ng-container matColumnDef="cuotaTotal">
-                  <th mat-header-cell *matHeaderCellDef>Cuota</th>
+                <!-- Monto a Cobrar -->
+                <ng-container matColumnDef="montoCobrar">
+                  <th mat-header-cell *matHeaderCellDef>Monto a Cobrar</th>
                   <td mat-cell *matCellDef="let item">
-                    {{ +item.cuotaTotal | currency:'USD':'symbol':'1.2-2' }}
-                  </td>
-                </ng-container>
-
-                <!-- Saldo Cuota -->
-                <ng-container matColumnDef="saldoCuota">
-                  <th mat-header-cell *matHeaderCellDef>Saldo</th>
-                  <td mat-cell *matCellDef="let item">
-                    <strong>{{ +item.saldoCuota | currency:'USD':'symbol':'1.2-2' }}</strong>
+                    <strong>{{ +item.montoCobrar | currency:'USD':'symbol':'1.2-2' }}</strong>
+                    <div class="detalle-cobro">{{ item.detalleCobro }}</div>
                   </td>
                 </ng-container>
 
@@ -336,27 +323,23 @@ import {
             <div class="seccion-titulo">{{ seccion.label | uppercase }}</div>
             <div class="separador">--------------------------------</div>
 
-            @for (item of getCuotasSeccion(seccion.seccion); track item.numeroCredito + item.numeroCuota) {
+            @for (item of getCuotasSeccion(seccion.seccion); track item.numeroCredito) {
               <div class="cobro-item">
                 <div class="datos-linea">
                   <span class="label">Fecha:</span>
                   <span class="valor">{{ formatearFechaStr(item.fechaVencimiento) }}</span>
                 </div>
                 <div class="datos-linea">
-                  <span class="label">Cliente:</span>
-                  <span class="valor">{{ item.nombreCliente }}</span>
-                </div>
-                <div class="datos-linea">
                   <span class="label">Crédito:</span>
                   <span class="valor">{{ item.numeroCredito }}</span>
                 </div>
                 <div class="datos-linea">
-                  <span class="label">Cuota #:</span>
-                  <span class="valor">{{ item.numeroCuota }}</span>
+                  <span class="label">Cliente:</span>
+                  <span class="valor">{{ item.nombreCliente }}</span>
                 </div>
                 <div class="datos-linea">
-                  <span class="label">Saldo:</span>
-                  <span class="valor valor-destacado">$ {{ (+item.saldoCuota).toFixed(2) }}</span>
+                  <span class="label">{{ item.detalleCobro }}:</span>
+                  <span class="valor valor-destacado">$ {{ (+item.montoCobrar).toFixed(2) }}</span>
                 </div>
                 <div class="separador cobro-separador">- - - - - - - - - - - - - - - -</div>
               </div>
@@ -594,6 +577,12 @@ import {
 
     .row-vencido:hover {
       background-color: #fce4ec !important;
+    }
+
+    .detalle-cobro {
+      font-size: 11px;
+      color: #888;
+      font-weight: 400;
     }
 
     .table-responsive {
@@ -958,11 +947,9 @@ export class RutaCobroComponent implements OnInit {
   columnasVisibles = [
     'seccion',
     'fechaVencimiento',
-    'nombreCliente',
     'numeroCredito',
-    'periodicidadPago',
-    'cuotaTotal',
-    'saldoCuota',
+    'nombreCliente',
+    'montoCobrar',
   ];
 
   ngOnInit(): void {
@@ -1021,7 +1008,7 @@ export class RutaCobroComponent implements OnInit {
 
         if (respuesta.cuotas.length > 0) {
           this.snackBar.open(
-            `Reporte generado: ${respuesta.cuotas.length} cuota(s) encontrada(s)`,
+            `Reporte generado: ${respuesta.cuotas.length} préstamo(s) encontrada(s)`,
             'Cerrar',
             { duration: 3000 }
           );
@@ -1069,11 +1056,11 @@ export class RutaCobroComponent implements OnInit {
   }
 
   /**
-   * Calcula la suma del saldo pendiente de todos los registros del reporte
+   * Calcula la suma del monto a cobrar de todos los registros del reporte
    */
   calcularTotalMonto(): number {
     return this.datosReporte().reduce(
-      (sum, item) => sum + Number(item.saldoCuota || 0),
+      (sum, item) => sum + Number(item.montoCobrar || 0),
       0
     );
   }
@@ -1132,27 +1119,21 @@ export class RutaCobroComponent implements OnInit {
     try {
       const datosExcel = this.datosReporte().map((item) => ({
         'Tipo': this.getSeccionLabel(item.seccion),
-        'Fecha de Pago': this.formatearFechaStr(item.fechaVencimiento),
-        'Nombre del Cliente': item.nombreCliente,
+        'Fecha': this.formatearFechaStr(item.fechaVencimiento),
         'No. Préstamo': item.numeroCredito,
-        'Periodicidad': item.periodicidadPago,
-        'No. Cuota': item.numeroCuota,
-        'Cuota': item.cuotaTotal,
-        'Saldo': item.saldoCuota,
-        'Estado': item.estado,
+        'Nombre del Cliente': item.nombreCliente,
+        'Detalle': item.detalleCobro,
+        'Monto a Cobrar': item.montoCobrar,
       }));
 
       // Fila de totales al final
       datosExcel.push({
         'Tipo': '',
-        'Fecha de Pago': '',
-        'Nombre del Cliente': '',
-        'No. Préstamo': 'TOTALES',
-        'Periodicidad': '',
-        'No. Cuota': this.datosReporte().length,
-        'Cuota': this.calcularTotalMonto(),
-        'Saldo': this.calcularTotalMonto(),
-        'Estado': '',
+        'Fecha': '',
+        'No. Préstamo': '',
+        'Nombre del Cliente': 'TOTALES',
+        'Detalle': `${this.datosReporte().length} préstamos`,
+        'Monto a Cobrar': this.calcularTotalMonto(),
       } as any);
 
       const worksheet = XLSX.utils.json_to_sheet(datosExcel);
@@ -1235,12 +1216,10 @@ export class RutaCobroComponent implements OnInit {
       const tableData = this.datosReporte().map((item) => [
         this.getSeccionLabel(item.seccion),
         this.formatearFechaStr(item.fechaVencimiento),
-        item.nombreCliente,
         item.numeroCredito,
-        item.periodicidadPago,
-        item.numeroCuota,
-        `$${Number(item.cuotaTotal || 0).toFixed(2)}`,
-        `$${Number(item.saldoCuota || 0).toFixed(2)}`,
+        item.nombreCliente,
+        item.detalleCobro,
+        `$${Number(item.montoCobrar || 0).toFixed(2)}`,
       ]);
 
       // Fila de totales
@@ -1249,9 +1228,7 @@ export class RutaCobroComponent implements OnInit {
         '',
         '',
         'TOTALES',
-        '',
-        this.datosReporte().length as any,
-        `$${this.calcularTotalMonto().toFixed(2)}`,
+        `${this.datosReporte().length} préstamos`,
         `$${this.calcularTotalMonto().toFixed(2)}`,
       ]);
 
@@ -1260,17 +1237,15 @@ export class RutaCobroComponent implements OnInit {
         head: [
           [
             'Tipo',
-            'Fecha de Pago',
-            'Cliente',
+            'Fecha',
             'No. Préstamo',
-            'Periodicidad',
-            'No. Cuota',
-            'Cuota',
-            'Saldo',
+            'Cliente',
+            'Detalle',
+            'Monto a Cobrar',
           ],
         ],
         body: tableData,
-        styles: { fontSize: 7 },
+        styles: { fontSize: 8 },
         headStyles: { fillColor: [25, 118, 210], textColor: 255 },
         alternateRowStyles: { fillColor: [245, 245, 245] },
         didParseCell: (data) => {

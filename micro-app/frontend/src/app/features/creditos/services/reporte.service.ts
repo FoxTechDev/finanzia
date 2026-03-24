@@ -115,12 +115,10 @@ export interface DatosRutaCobro {
   fechaVencimiento: string;
   nombreCliente: string;
   numeroCredito: string;
-  numeroCuota: number;
-  cuotaTotal: number;
-  saldoCuota: number;
-  estado: string;
   periodicidadPago: string;
   seccion: SeccionRutaCobro;
+  montoCobrar: number;
+  detalleCobro: string;
 }
 
 /**
