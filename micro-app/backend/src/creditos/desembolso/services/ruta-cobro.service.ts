@@ -49,18 +49,10 @@ export class RutaCobroService {
       .andWhere(
         new Brackets((qb) => {
           qb
-            // Sección 1: Préstamos DIARIOS — siempre se muestran (cuotas pendientes hasta fechaHasta)
-            .where(
-              new Brackets((sub) => {
-                sub
-                  .where('prestamo.periodicidadPago = :diario', {
-                    diario: PeriodicidadPago.DIARIO,
-                  })
-                  .andWhere('planPago.fechaVencimiento <= :fechaHasta', {
-                    fechaHasta: fechaHastaStr,
-                  });
-              }),
-            )
+            // Sección 1: Préstamos DIARIOS — siempre se muestran
+            .where('prestamo.periodicidadPago = :diario', {
+              diario: PeriodicidadPago.DIARIO,
+            })
             // Sección 2: No diarios — cuotas dentro del rango de fechas
             .orWhere(
               new Brackets((sub) => {
