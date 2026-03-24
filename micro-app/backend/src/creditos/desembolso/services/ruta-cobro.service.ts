@@ -77,16 +77,12 @@ export class RutaCobroService {
                   );
               }),
             )
-            // Sección 3: No diarios — cuotas vencidas (antes del rango)
+            // Sección 3: Préstamos cuya fecha de vencimiento del crédito ya pasó
             .orWhere(
               new Brackets((sub) => {
-                sub
-                  .where('prestamo.periodicidadPago != :diario3', {
-                    diario3: PeriodicidadPago.DIARIO,
-                  })
-                  .andWhere('planPago.fechaVencimiento < :fechaDesde2', {
-                    fechaDesde2: fechaDesdeStr,
-                  });
+                sub.where('prestamo.fechaVencimiento < :fechaDesde2', {
+                  fechaDesde2: fechaDesdeStr,
+                });
               }),
             );
         }),
@@ -100,15 +96,15 @@ export class RutaCobroService {
     const cuotas: RutaCobroItemDto[] = cuotasRaw.map((planPago) => {
       const esDiario =
         planPago.prestamo?.periodicidadPago === PeriodicidadPago.DIARIO;
-      const fechaVenc = formatLocalDate(
-        parseLocalDate(String(planPago.fechaVencimiento)),
-      );
+      const fechaVencPrestamo = planPago.prestamo?.fechaVencimiento
+        ? formatLocalDate(parseLocalDate(String(planPago.prestamo.fechaVencimiento)))
+        : '';
 
       let seccion: SeccionRutaCobro;
-      if (esDiario) {
-        seccion = SeccionRutaCobro.DIARIO;
-      } else if (fechaVenc < fechaDesdeStr) {
+      if (fechaVencPrestamo && fechaVencPrestamo < fechaDesdeStr) {
         seccion = SeccionRutaCobro.VENCIDO;
+      } else if (esDiario) {
+        seccion = SeccionRutaCobro.DIARIO;
       } else {
         seccion = SeccionRutaCobro.EN_RANGO;
       }
@@ -120,7 +116,7 @@ export class RutaCobroService {
       const saldoCuota = Number(planPago.cuotaTotal) - pagado;
 
       return {
-        fechaVencimiento: fechaVenc,
+        fechaVencimiento: formatLocalDate(parseLocalDate(String(planPago.fechaVencimiento))),
         nombreCliente: planPago.prestamo?.persona
           ? `${planPago.prestamo.persona.nombre} ${planPago.prestamo.persona.apellido}`
           : '',
