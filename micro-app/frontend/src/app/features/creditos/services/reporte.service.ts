@@ -104,6 +104,11 @@ export interface FiltrosRutaCobro {
 }
 
 /**
+ * Secciones del reporte de ruta de cobro
+ */
+export type SeccionRutaCobro = 'DIARIO' | 'EN_RANGO' | 'VENCIDO';
+
+/**
  * Interface para cada cuota en el reporte de ruta de cobro
  */
 export interface DatosRutaCobro {
@@ -112,7 +117,20 @@ export interface DatosRutaCobro {
   numeroCredito: string;
   numeroCuota: number;
   cuotaTotal: number;
+  saldoCuota: number;
   estado: string;
+  periodicidadPago: string;
+  seccion: SeccionRutaCobro;
+}
+
+/**
+ * Resumen por sección del reporte
+ */
+export interface ResumenSeccionRutaCobro {
+  seccion: SeccionRutaCobro;
+  label: string;
+  totalCuotas: number;
+  totalMonto: number;
 }
 
 /**
@@ -123,6 +141,7 @@ export interface RespuestaRutaCobro {
   fechaHasta: string;
   totalCuotas: number;
   totalMonto: number;
+  resumenSecciones: ResumenSeccionRutaCobro[];
   cuotas: DatosRutaCobro[];
 }
 

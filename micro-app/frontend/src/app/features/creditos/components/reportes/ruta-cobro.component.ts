@@ -22,6 +22,8 @@ import {
   ReporteService,
   DatosRutaCobro,
   FiltrosRutaCobro,
+  ResumenSeccionRutaCobro,
+  SeccionRutaCobro,
 } from '../../services/reporte.service';
 
 @Component({
@@ -196,20 +198,28 @@ import {
             </mat-card-title>
           </mat-card-header>
           <mat-card-content>
-            <!-- Resumen -->
+            <!-- Resumen por sección -->
             <div class="summary">
-              <div class="summary-item">
-                <mat-icon>receipt</mat-icon>
-                <div>
-                  <span class="summary-label">Total de Cuotas</span>
-                  <span class="summary-value">{{ datosReporte().length }}</span>
-                </div>
-              </div>
+              @for (sec of resumenSecciones(); track sec.seccion) {
+                @if (sec.totalCuotas > 0) {
+                  <div class="summary-item" [class]="'seccion-' + sec.seccion.toLowerCase()">
+                    <mat-icon>{{ getSeccionIcon(sec.seccion) }}</mat-icon>
+                    <div>
+                      <span class="summary-label">{{ sec.label }}</span>
+                      <span class="summary-value">{{ sec.totalCuotas }} cuota(s)</span>
+                      <span class="summary-monto">
+                        {{ sec.totalMonto | currency:'USD':'symbol':'1.2-2' }}
+                      </span>
+                    </div>
+                  </div>
+                }
+              }
               <div class="summary-item primary">
                 <mat-icon>attach_money</mat-icon>
                 <div>
-                  <span class="summary-label">Total Monto a Cobrar</span>
-                  <span class="summary-value">
+                  <span class="summary-label">Total a Cobrar</span>
+                  <span class="summary-value">{{ datosReporte().length }} cuota(s)</span>
+                  <span class="summary-monto">
                     {{ calcularTotalMonto() | currency:'USD':'symbol':'1.2-2' }}
                   </span>
                 </div>
@@ -221,6 +231,16 @@ import {
             <!-- Tabla -->
             <div class="table-responsive">
               <table mat-table [dataSource]="datosPaginados()">
+                <!-- Sección -->
+                <ng-container matColumnDef="seccion">
+                  <th mat-header-cell *matHeaderCellDef>Tipo</th>
+                  <td mat-cell *matCellDef="let item">
+                    <span class="badge" [class]="'badge-' + item.seccion.toLowerCase()">
+                      {{ getSeccionLabel(item.seccion) }}
+                    </span>
+                  </td>
+                </ng-container>
+
                 <!-- Fecha de Pago -->
                 <ng-container matColumnDef="fechaVencimiento">
                   <th mat-header-cell *matHeaderCellDef>Fecha de Pago</th>
@@ -243,6 +263,12 @@ import {
                   </td>
                 </ng-container>
 
+                <!-- Periodicidad -->
+                <ng-container matColumnDef="periodicidadPago">
+                  <th mat-header-cell *matHeaderCellDef>Periodicidad</th>
+                  <td mat-cell *matCellDef="let item">{{ item.periodicidadPago }}</td>
+                </ng-container>
+
                 <!-- Cuota Total -->
                 <ng-container matColumnDef="cuotaTotal">
                   <th mat-header-cell *matHeaderCellDef>Cuota</th>
@@ -251,8 +277,17 @@ import {
                   </td>
                 </ng-container>
 
+                <!-- Saldo Cuota -->
+                <ng-container matColumnDef="saldoCuota">
+                  <th mat-header-cell *matHeaderCellDef>Saldo</th>
+                  <td mat-cell *matCellDef="let item">
+                    <strong>{{ +item.saldoCuota | currency:'USD':'symbol':'1.2-2' }}</strong>
+                  </td>
+                </ng-container>
+
                 <tr mat-header-row *matHeaderRowDef="columnasVisibles"></tr>
-                <tr mat-row *matRowDef="let row; columns: columnasVisibles"></tr>
+                <tr mat-row *matRowDef="let row; columns: columnasVisibles"
+                    [class]="'row-' + row.seccion.toLowerCase()"></tr>
               </table>
             </div>
 
@@ -297,30 +332,41 @@ import {
           <div class="recibo-fecha">Del {{ formatearFechaStr(formatearFecha(filtrosForm.value.fechaDesde)) }} al {{ formatearFechaStr(formatearFecha(filtrosForm.value.fechaHasta)) }}</div>
           <div class="separador">--------------------------------</div>
 
-          @for (item of datosReporte(); track item.numeroCredito + item.numeroCuota) {
-            <div class="cobro-item">
-              <div class="datos-linea">
-                <span class="label">Fecha:</span>
-                <span class="valor">{{ formatearFechaStr(item.fechaVencimiento) }}</span>
+          @for (seccion of seccionesConDatos(); track seccion.seccion) {
+            <div class="seccion-titulo">{{ seccion.label | uppercase }}</div>
+            <div class="separador">--------------------------------</div>
+
+            @for (item of getCuotasSeccion(seccion.seccion); track item.numeroCredito + item.numeroCuota) {
+              <div class="cobro-item">
+                <div class="datos-linea">
+                  <span class="label">Fecha:</span>
+                  <span class="valor">{{ formatearFechaStr(item.fechaVencimiento) }}</span>
+                </div>
+                <div class="datos-linea">
+                  <span class="label">Cliente:</span>
+                  <span class="valor">{{ item.nombreCliente }}</span>
+                </div>
+                <div class="datos-linea">
+                  <span class="label">Crédito:</span>
+                  <span class="valor">{{ item.numeroCredito }}</span>
+                </div>
+                <div class="datos-linea">
+                  <span class="label">Cuota #:</span>
+                  <span class="valor">{{ item.numeroCuota }}</span>
+                </div>
+                <div class="datos-linea">
+                  <span class="label">Saldo:</span>
+                  <span class="valor valor-destacado">$ {{ (+item.saldoCuota).toFixed(2) }}</span>
+                </div>
+                <div class="separador cobro-separador">- - - - - - - - - - - - - - - -</div>
               </div>
-              <div class="datos-linea">
-                <span class="label">Cliente:</span>
-                <span class="valor">{{ item.nombreCliente }}</span>
-              </div>
-              <div class="datos-linea">
-                <span class="label">Crédito:</span>
-                <span class="valor">{{ item.numeroCredito }}</span>
-              </div>
-              <div class="datos-linea">
-                <span class="label">Cuota #:</span>
-                <span class="valor">{{ item.numeroCuota }}</span>
-              </div>
-              <div class="datos-linea">
-                <span class="label">Monto:</span>
-                <span class="valor valor-destacado">$ {{ (+item.cuotaTotal).toFixed(2) }}</span>
-              </div>
-              <div class="separador cobro-separador">- - - - - - - - - - - - - - - -</div>
+            }
+
+            <div class="datos-linea subtotal-linea">
+              <span class="label">Subtotal:</span>
+              <span class="valor valor-destacado">$ {{ seccion.totalMonto.toFixed(2) }} ({{ seccion.totalCuotas }})</span>
             </div>
+            <div class="separador">--------------------------------</div>
           }
 
           <div class="separador-doble">================================</div>
@@ -485,10 +531,69 @@ import {
     }
 
     .summary-value {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 700;
       color: #333;
       margin-top: 4px;
+    }
+
+    .summary-monto {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1976d2;
+    }
+
+    .seccion-vencido {
+      background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%) !important;
+    }
+
+    .seccion-vencido mat-icon {
+      color: #c62828 !important;
+    }
+
+    .seccion-diario {
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
+    }
+
+    .seccion-diario mat-icon {
+      color: #2e7d32 !important;
+    }
+
+    .seccion-en_rango {
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%) !important;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-vencido {
+      background: #fce4ec;
+      color: #c62828;
+    }
+
+    .badge-diario {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .badge-en_rango {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    .row-vencido {
+      background-color: #fff8f8;
+    }
+
+    .row-vencido:hover {
+      background-color: #fce4ec !important;
     }
 
     .table-responsive {
@@ -684,6 +789,19 @@ import {
       font-size: 8pt;
     }
 
+    .seccion-titulo {
+      text-align: center;
+      font-weight: bold;
+      font-size: 10pt;
+      margin: 3mm 0 1mm 0;
+    }
+
+    .subtotal-linea {
+      font-weight: bold;
+      font-size: 9pt;
+      margin: 2mm 0;
+    }
+
     .info-pie {
       margin-top: 4mm;
       font-size: 8pt;
@@ -825,6 +943,7 @@ export class RutaCobroComponent implements OnInit {
   reporteGenerado = signal(false);
   datosReporte = signal<DatosRutaCobro[]>([]);
   datosPaginados = signal<DatosRutaCobro[]>([]);
+  resumenSecciones = signal<ResumenSeccionRutaCobro[]>([]);
   exportandoExcel = signal(false);
   exportandoPdf = signal(false);
 
@@ -832,15 +951,18 @@ export class RutaCobroComponent implements OnInit {
   filtrosForm!: FormGroup;
 
   // Paginación
-  tamanioPagina = 10;
+  tamanioPagina = 25;
   indicePagina = 0;
 
   // Columnas de la tabla
   columnasVisibles = [
+    'seccion',
     'fechaVencimiento',
     'nombreCliente',
     'numeroCredito',
+    'periodicidadPago',
     'cuotaTotal',
+    'saldoCuota',
   ];
 
   ngOnInit(): void {
@@ -891,6 +1013,7 @@ export class RutaCobroComponent implements OnInit {
     this.reporteService.getRutaCobro(filtros).subscribe({
       next: (respuesta) => {
         this.datosReporte.set(respuesta.cuotas);
+        this.resumenSecciones.set(respuesta.resumenSecciones || []);
         this.reporteGenerado.set(true);
         this.indicePagina = 0;
         this.actualizarDatosPaginados();
@@ -946,13 +1069,51 @@ export class RutaCobroComponent implements OnInit {
   }
 
   /**
-   * Calcula la suma de cuotaTotal de todos los registros del reporte
+   * Calcula la suma del saldo pendiente de todos los registros del reporte
    */
   calcularTotalMonto(): number {
     return this.datosReporte().reduce(
-      (sum, item) => sum + Number(item.cuotaTotal || 0),
+      (sum, item) => sum + Number(item.saldoCuota || 0),
       0
     );
+  }
+
+  /**
+   * Retorna el icono correspondiente a una sección
+   */
+  getSeccionIcon(seccion: SeccionRutaCobro): string {
+    const iconos: Record<SeccionRutaCobro, string> = {
+      VENCIDO: 'warning',
+      DIARIO: 'today',
+      EN_RANGO: 'date_range',
+    };
+    return iconos[seccion] || 'receipt';
+  }
+
+  /**
+   * Retorna la etiqueta corta de una sección
+   */
+  getSeccionLabel(seccion: SeccionRutaCobro): string {
+    const labels: Record<SeccionRutaCobro, string> = {
+      VENCIDO: 'Vencido',
+      DIARIO: 'Diario',
+      EN_RANGO: 'En rango',
+    };
+    return labels[seccion] || seccion;
+  }
+
+  /**
+   * Retorna las secciones que tienen datos (para la vista térmica)
+   */
+  seccionesConDatos(): ResumenSeccionRutaCobro[] {
+    return this.resumenSecciones().filter((s) => s.totalCuotas > 0);
+  }
+
+  /**
+   * Retorna las cuotas de una sección específica (para la vista térmica)
+   */
+  getCuotasSeccion(seccion: SeccionRutaCobro): DatosRutaCobro[] {
+    return this.datosReporte().filter((c) => c.seccion === seccion);
   }
 
   /**
@@ -970,21 +1131,27 @@ export class RutaCobroComponent implements OnInit {
 
     try {
       const datosExcel = this.datosReporte().map((item) => ({
+        'Tipo': this.getSeccionLabel(item.seccion),
         'Fecha de Pago': this.formatearFechaStr(item.fechaVencimiento),
         'Nombre del Cliente': item.nombreCliente,
         'No. Préstamo': item.numeroCredito,
+        'Periodicidad': item.periodicidadPago,
         'No. Cuota': item.numeroCuota,
         'Cuota': item.cuotaTotal,
+        'Saldo': item.saldoCuota,
         'Estado': item.estado,
       }));
 
       // Fila de totales al final
       datosExcel.push({
+        'Tipo': '',
         'Fecha de Pago': '',
         'Nombre del Cliente': '',
         'No. Préstamo': 'TOTALES',
+        'Periodicidad': '',
         'No. Cuota': this.datosReporte().length,
         'Cuota': this.calcularTotalMonto(),
+        'Saldo': this.calcularTotalMonto(),
         'Estado': '',
       } as any);
 
@@ -1066,45 +1233,58 @@ export class RutaCobroComponent implements OnInit {
 
       // Filas de datos para la tabla
       const tableData = this.datosReporte().map((item) => [
+        this.getSeccionLabel(item.seccion),
         this.formatearFechaStr(item.fechaVencimiento),
         item.nombreCliente,
         item.numeroCredito,
+        item.periodicidadPago,
         item.numeroCuota,
         `$${Number(item.cuotaTotal || 0).toFixed(2)}`,
-        item.estado,
+        `$${Number(item.saldoCuota || 0).toFixed(2)}`,
       ]);
 
       // Fila de totales
       tableData.push([
         '',
         '',
-        'TOTALES',
-        this.datosReporte().length,
-        `$${this.calcularTotalMonto().toFixed(2)}`,
         '',
+        'TOTALES',
+        '',
+        this.datosReporte().length as any,
+        `$${this.calcularTotalMonto().toFixed(2)}`,
+        `$${this.calcularTotalMonto().toFixed(2)}`,
       ]);
 
       autoTable(doc, {
         startY: 50,
         head: [
           [
+            'Tipo',
             'Fecha de Pago',
-            'Nombre del Cliente',
+            'Cliente',
             'No. Préstamo',
+            'Periodicidad',
             'No. Cuota',
             'Cuota',
-            'Estado',
+            'Saldo',
           ],
         ],
         body: tableData,
-        styles: { fontSize: 8 },
+        styles: { fontSize: 7 },
         headStyles: { fillColor: [25, 118, 210], textColor: 255 },
         alternateRowStyles: { fillColor: [245, 245, 245] },
         didParseCell: (data) => {
-          // Resaltar fila de totales con fondo diferenciado
+          // Resaltar fila de totales
           if (data.row.index === tableData.length - 1) {
             data.cell.styles.fontStyle = 'bold';
             data.cell.styles.fillColor = [255, 243, 224];
+          }
+          // Resaltar filas de vencidos
+          if (data.section === 'body' && data.row.index < tableData.length - 1) {
+            const tipo = tableData[data.row.index]?.[0];
+            if (tipo === 'Vencido') {
+              data.cell.styles.fillColor = [255, 235, 238];
+            }
           }
         },
       });

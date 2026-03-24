@@ -14,6 +14,15 @@ export class RutaCobroParamsDto {
 }
 
 /**
+ * Secciones del reporte de Ruta de Cobro
+ */
+export enum SeccionRutaCobro {
+  DIARIO = 'DIARIO',
+  EN_RANGO = 'EN_RANGO',
+  VENCIDO = 'VENCIDO',
+}
+
+/**
  * DTO para una fila del reporte de Ruta de Cobro
  */
 export class RutaCobroItemDto {
@@ -22,7 +31,20 @@ export class RutaCobroItemDto {
   numeroCredito: string;
   numeroCuota: number;
   cuotaTotal: number;
+  saldoCuota: number;
   estado: string;
+  periodicidadPago: string;
+  seccion: SeccionRutaCobro;
+}
+
+/**
+ * Resumen por sección
+ */
+export class RutaCobroSeccionResumenDto {
+  seccion: SeccionRutaCobro;
+  label: string;
+  totalCuotas: number;
+  totalMonto: number;
 }
 
 /**
@@ -33,5 +55,6 @@ export class RutaCobroResponseDto {
   fechaHasta: string;
   totalCuotas: number;
   totalMonto: number;
+  resumenSecciones: RutaCobroSeccionResumenDto[];
   cuotas: RutaCobroItemDto[];
 }
