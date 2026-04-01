@@ -636,9 +636,17 @@ export class SolicitudDetailComponent implements OnInit {
     const monto = sol.montoAprobado || sol.montoSolicitado;
     const plazo = sol.plazoAprobado || sol.plazoSolicitado;
     const tasa = sol.tasaInteresAprobada || sol.tasaInteresPropuesta;
-    const periodicidad = sol.periodicidadPago?.codigo || sol.tipoCredito?.periodicidadPago || 'MENSUAL';
-    // Usar tipoInteres de la solicitud, no del tipoCredito
-    const tipoInteres = sol.tipoInteres || sol.tipoCredito?.tipoCuota || 'FLAT';
+
+    // Normalizar periodicidad: el catálogo usa codigo en MAYUSCULAS (ej: 'MENSUAL'),
+    // pero tipoCredito.periodicidadPago puede venir en minúsculas (ej: 'mensual')
+    const periodicidadRaw = sol.periodicidadPago?.codigo || sol.tipoCredito?.periodicidadPago || 'MENSUAL';
+    const periodicidad = periodicidadRaw.toUpperCase();
+
+    // Normalizar tipoInteres: la solicitud usa 'FLAT'/'AMORTIZADO',
+    // pero tipoCredito.tipoCuota puede ser 'fija' (mapear a FLAT)
+    const tipoInteresRaw = sol.tipoInteres || sol.tipoCredito?.tipoCuota || 'FLAT';
+    const tipoCuotaMap: Record<string, string> = { 'fija': 'FLAT', 'variable': 'AMORTIZADO' };
+    const tipoInteres = tipoCuotaMap[tipoInteresRaw.toLowerCase()] || tipoInteresRaw.toUpperCase();
 
     // Determinar fecha de primera cuota según periodicidad
     let fechaPrimeraCuota: string | undefined;

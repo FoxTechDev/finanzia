@@ -687,8 +687,15 @@ export class DecisionComiteDialogComponent implements OnInit {
     const monto = this.solicitud.montoSolicitado;
     const plazo = this.solicitud.plazoSolicitado;
     const tasa = this.solicitud.tasaInteresPropuesta;
-    const periodicidad = this.solicitud.periodicidadPago?.codigo || this.solicitud.tipoCredito?.periodicidadPago || 'MENSUAL';
-    const tipoInteres = this.solicitud.tipoCredito?.tipoCuota || 'FLAT';
+
+    // Normalizar periodicidad a MAYUSCULAS (tipoCredito.periodicidadPago puede venir en minúsculas)
+    const periodicidadRaw = this.solicitud.periodicidadPago?.codigo || this.solicitud.tipoCredito?.periodicidadPago || 'MENSUAL';
+    const periodicidad = periodicidadRaw.toUpperCase();
+
+    // Normalizar tipoInteres: tipoCuota 'fija' -> 'FLAT', 'variable' -> 'AMORTIZADO'
+    const tipoInteresRaw = this.solicitud.tipoInteres || this.solicitud.tipoCredito?.tipoCuota || 'FLAT';
+    const tipoCuotaMap: Record<string, string> = { 'fija': 'FLAT', 'variable': 'AMORTIZADO' };
+    const tipoInteres = tipoCuotaMap[tipoInteresRaw.toLowerCase()] || tipoInteresRaw.toUpperCase();
 
     this.solicitudService.calcularPlanPago({
       monto,
