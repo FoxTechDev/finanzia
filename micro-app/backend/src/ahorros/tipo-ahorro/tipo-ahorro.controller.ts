@@ -7,12 +7,16 @@ import {
   Param,
   ParseIntPipe,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 import { TipoAhorroService } from './tipo-ahorro.service';
 import { CreateTipoAhorroDto } from './dto/create-tipo-ahorro.dto';
 import { UpdateTipoAhorroDto } from './dto/update-tipo-ahorro.dto';
 
 @Controller('ahorros/tipos-ahorro')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class TipoAhorroController {
   constructor(private readonly service: TipoAhorroService) {}
 

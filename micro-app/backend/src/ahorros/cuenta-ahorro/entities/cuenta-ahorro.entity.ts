@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   ManyToOne,
   JoinColumn,
   OneToMany,
@@ -116,6 +117,9 @@ export class CuentaAhorro {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @DeleteDateColumn({ nullable: true })
+  deletedAt: Date;
 
   @OneToMany(() => TransaccionAhorro, (t) => t.cuentaAhorro)
   transacciones: TransaccionAhorro[];

@@ -9,7 +9,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { DestinoCredito, TipoInteresSolicitud } from '../entities/solicitud.entity';
+import { DestinoCredito, TipoInteres } from '../entities/solicitud.entity';
 import { RecomendacionAsesor } from '../../garantia/enums/tipo-garantia.enum';
 
 export class CreateSolicitudDto {
@@ -45,6 +45,7 @@ export class CreateSolicitudDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(500)
   descripcionDestino?: string;
 
   @IsDateString()
@@ -52,11 +53,13 @@ export class CreateSolicitudDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(1000)
   observaciones?: string;
 
   // Campos de análisis del asesor (opcionales al crear)
   @IsString()
   @IsOptional()
+  @MaxLength(2000)
   analisisAsesor?: string;
 
   @IsEnum(RecomendacionAsesor)
@@ -71,6 +74,7 @@ export class CreateSolicitudDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(1000)
   antecedentesCliente?: string;
 
   // Campos de periodicidad de pago
@@ -80,9 +84,9 @@ export class CreateSolicitudDto {
   periodicidadPagoId?: number;
 
   // Tipo de interés para el plan de pago
-  @IsEnum(TipoInteresSolicitud)
+  @IsEnum(TipoInteres)
   @IsOptional()
-  tipoInteres?: TipoInteresSolicitud;
+  tipoInteres?: TipoInteres;
 
   @IsDateString()
   @IsOptional()

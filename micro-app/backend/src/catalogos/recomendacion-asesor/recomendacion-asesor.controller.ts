@@ -7,12 +7,16 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 import { RecomendacionAsesorService } from './recomendacion-asesor.service';
 import { CreateRecomendacionAsesorDto } from './dto/create-recomendacion-asesor.dto';
 import { UpdateRecomendacionAsesorDto } from './dto/update-recomendacion-asesor.dto';
 
 @Controller('catalogos/recomendacion-asesor')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class RecomendacionAsesorController {
   constructor(private readonly recomendacionAsesorService: RecomendacionAsesorService) {}
 

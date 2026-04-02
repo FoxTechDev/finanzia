@@ -13,6 +13,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Response } from 'express';
 import { CuentaAhorroService } from '../services/cuenta-ahorro.service';
 import { CuentaAhorroConsultaService } from '../services/cuenta-ahorro-consulta.service';
@@ -24,6 +25,7 @@ import { CreateCuentaAhorroDto } from '../dto/create-cuenta-ahorro.dto';
 import { FiltrosCuentaAhorroDto } from '../dto/filtros-cuenta-ahorro.dto';
 
 @Controller('ahorros/cuentas')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class CuentaAhorroController {
   constructor(
     private readonly cuentaService: CuentaAhorroService,
@@ -170,7 +172,6 @@ export class CuentaAhorroController {
     );
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post(':id/renovar')
   renovar(
     @Param('id', ParseIntPipe) id: number,

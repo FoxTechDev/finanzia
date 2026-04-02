@@ -7,12 +7,16 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 import { EstadoSolicitudService } from './estado-solicitud.service';
 import { CreateEstadoSolicitudDto } from './dto/create-estado-solicitud.dto';
 import { UpdateEstadoSolicitudDto } from './dto/update-estado-solicitud.dto';
 
 @Controller('catalogos/estado-solicitud')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class EstadoSolicitudController {
   constructor(private readonly estadoSolicitudService: EstadoSolicitudService) {}
 

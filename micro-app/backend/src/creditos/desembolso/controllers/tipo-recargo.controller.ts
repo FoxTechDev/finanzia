@@ -8,7 +8,10 @@ import {
   Param,
   ParseIntPipe,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TipoRecargo } from '../entities/tipo-recargo.entity';
@@ -18,6 +21,7 @@ import {
 } from '../dto/create-tipo-recargo.dto';
 
 @Controller('tipos-recargo')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class TipoRecargoController {
   constructor(
     @InjectRepository(TipoRecargo)

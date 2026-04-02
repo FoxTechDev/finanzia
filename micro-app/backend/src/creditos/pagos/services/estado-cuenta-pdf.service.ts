@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as PDFDocument from 'pdfkit';
@@ -39,6 +39,8 @@ function getLogoPath(): string | null {
   return null;
 }
 
+const fileLogger = new Logger('EstadoCuentaPdfService');
+
 /**
  * Convierte una imagen WebP a buffer PNG usando sharp
  */
@@ -49,7 +51,7 @@ async function convertWebpToPngBuffer(webpPath: string): Promise<Buffer | null> 
       .toBuffer();
     return pngBuffer;
   } catch (error) {
-    console.error('Error convirtiendo WebP a PNG:', error);
+    fileLogger.error('Error convirtiendo WebP a PNG:', error);
     return null;
   }
 }
@@ -59,6 +61,8 @@ let logoBufferCache: Buffer | null = null;
 
 @Injectable()
 export class EstadoCuentaPdfService {
+  private readonly logger = new Logger(EstadoCuentaPdfService.name);
+
   constructor(
     @InjectRepository(Prestamo)
     private prestamoRepository: Repository<Prestamo>,
@@ -292,7 +296,7 @@ export class EstadoCuentaPdfService {
         doc.image(logoBuffer, col1, startY, { width: 80 });
       }
     } catch (error) {
-      console.error('Error al cargar el logo:', error);
+      this.logger.error('Error al cargar el logo:', error);
     }
 
     // Columna 2: Nombre de la institución y título

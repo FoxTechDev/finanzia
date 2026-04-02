@@ -7,7 +7,10 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
 import {
   EstadoPrestamoService,
   CreateEstadoPrestamoDto,
@@ -19,6 +22,7 @@ import { EstadoPrestamo } from '../entities/estado-prestamo.entity';
  * Controlador para gestión de estados de préstamos
  */
 @Controller('estado-prestamo')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class EstadoPrestamoController {
   constructor(private readonly estadoService: EstadoPrestamoService) {}
 

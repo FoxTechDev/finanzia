@@ -329,8 +329,8 @@ export class DesembolsoService {
     await queryRunner.startTransaction();
 
     try {
-      // Generar número de crédito
-      const numeroCredito = await this.generarNumeroCredito();
+      // Generar número dentro de la transacción para que el FOR UPDATE sea atómico
+      const numeroCredito = await this.generarNumeroCredito(queryRunner);
 
       // Crear el préstamo - asegurar que todos los valores sean números válidos
       // IMPORTANTE: preview ya tiene valores convertidos, pero los de solicitud pueden ser strings
@@ -771,25 +771,26 @@ export class DesembolsoService {
   }
 
   /**
-   * Genera un número de crédito único
+   * Genera un número de crédito único de forma atómica.
+   * Debe ejecutarse dentro de una transacción activa para que el FOR UPDATE tenga efecto.
+   * Formato: CR2026000001 (prefix "CR2026" = 6 caracteres, SUBSTRING inicia en posición 7)
    */
-  private async generarNumeroCredito(): Promise<string> {
+  private async generarNumeroCredito(queryRunner: import('typeorm').QueryRunner): Promise<string> {
     const year = new Date().getFullYear();
+    // Formato: CR2026000001 (prefix tiene 6 caracteres: "CR2026")
     const prefix = `CR${year}`;
 
-    // Buscar el último número de crédito del año
-    const ultimoPrestamo = await this.prestamoRepository
-      .createQueryBuilder('prestamo')
-      .where('prestamo.numeroCredito LIKE :prefix', { prefix: `${prefix}%` })
-      .orderBy('prestamo.id', 'DESC')
-      .getOne();
+    // Consulta atómica con FOR UPDATE para bloquear las filas y evitar condiciones de carrera
+    // SUBSTRING empieza en la posición prefix.length + 1 para extraer solo el número secuencial
+    const result = await queryRunner.query(
+      `SELECT MAX(CAST(SUBSTRING(numeroCredito, ?) AS UNSIGNED)) as maxNum
+       FROM prestamo
+       WHERE numeroCredito LIKE ?
+       FOR UPDATE`,
+      [prefix.length + 1, `${prefix}%`],
+    );
 
-    let secuencia = 1;
-    if (ultimoPrestamo) {
-      const ultimoNumero = ultimoPrestamo.numeroCredito.replace(prefix, '');
-      secuencia = parseInt(ultimoNumero, 10) + 1;
-    }
-
+    const secuencia = (result[0]?.maxNum || 0) + 1;
     return `${prefix}${secuencia.toString().padStart(6, '0')}`;
   }
 

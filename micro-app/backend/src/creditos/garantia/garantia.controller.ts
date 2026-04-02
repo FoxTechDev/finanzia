@@ -13,9 +13,10 @@ import { GarantiaService } from './garantia.service';
 import { CreateGarantiaDto } from './dto/create-garantia.dto';
 import { UpdateGarantiaDto } from './dto/update-garantia.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 
 @Controller('garantias')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class GarantiaController {
   constructor(private readonly garantiaService: GarantiaService) {}
 

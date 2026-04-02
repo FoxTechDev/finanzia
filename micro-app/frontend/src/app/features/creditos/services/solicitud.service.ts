@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '@env/environment';
 import {
   Solicitud,
@@ -15,11 +15,18 @@ import {
 } from '@core/models/credito.model';
 
 export interface SolicitudFilters {
-  estadoId?: number; // Cambiado a ID del estado
+  estadoId?: number;
   personaId?: number;
   lineaCreditoId?: number;
   fechaDesde?: string;
   fechaHasta?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 @Injectable({
@@ -39,7 +46,10 @@ export class SolicitudService {
       if (filters.fechaDesde) params = params.set('fechaDesde', filters.fechaDesde);
       if (filters.fechaHasta) params = params.set('fechaHasta', filters.fechaHasta);
     }
-    return this.http.get<Solicitud[]>(this.apiUrl, { params });
+    // El backend ahora retorna { data, total, page, limit } - extraemos el array
+    return this.http.get<PaginatedResponse<Solicitud>>(this.apiUrl, { params }).pipe(
+      map(response => response.data)
+    );
   }
 
   /**

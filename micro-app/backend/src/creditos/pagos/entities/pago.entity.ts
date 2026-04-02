@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   ManyToOne,
   JoinColumn,
   OneToMany,
@@ -143,6 +144,9 @@ export class Pago {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @DeleteDateColumn({ nullable: true })
+  deletedAt: Date;
 
   // Relación con detalles de cuotas afectadas
   @OneToMany(() => PagoDetalleCuota, (detalle) => detalle.pago)

@@ -53,8 +53,9 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         // SSL configuration for production (Digital Ocean, Azure, AWS)
         ...(isProduction && this.configService.get<string>('DB_SSL') === 'true' ? {
           ssl: {
-            // Digital Ocean uses self-signed certificates, so we need to allow them
-            rejectUnauthorized: this.configService.get<string>('DB_SSL_REJECT_UNAUTHORIZED') === 'true',
+            // Seguro por defecto: rejectUnauthorized=true salvo que se deshabilite explícitamente
+            // Para Digital Ocean con certificados auto-firmados, establecer DB_SSL_REJECT_UNAUTHORIZED=false
+            rejectUnauthorized: this.configService.get<string>('DB_SSL_REJECT_UNAUTHORIZED') !== 'false',
           },
         } : {}),
       },
@@ -102,8 +103,9 @@ export const dataSourceOptions: DataSourceOptions = {
   // SSL for production (Digital Ocean, Azure, AWS RDS, etc.)
   extra: process.env.DB_SSL === 'true' ? {
     ssl: {
-      // Default to false for Digital Ocean self-signed certificates
-      rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true',
+      // Seguro por defecto: rejectUnauthorized=true salvo que se deshabilite explícitamente
+      // Para Digital Ocean con certificados auto-firmados, establecer DB_SSL_REJECT_UNAUTHORIZED=false
+      rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false',
     },
   } : {},
 };

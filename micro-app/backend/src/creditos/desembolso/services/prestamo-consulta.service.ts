@@ -13,6 +13,19 @@ import {
 import { ReciboDesembolsoDto } from '../dto/recibo-desembolso.dto';
 import { parseLocalDate } from '../../../common/utils/date.utils';
 
+// Whitelist de campos permitidos para ordenamiento (previene SQL injection)
+const ALLOWED_ORDER_FIELDS = [
+  'id',
+  'numeroCredito',
+  'fechaOtorgamiento',
+  'estado',
+  'montoAutorizado',
+  'saldoCapital',
+  'diasMora',
+  'createdAt',
+  'updatedAt',
+] as const;
+
 /**
  * Servicio especializado para consultas de préstamos
  * Proporciona métodos para listar, filtrar y obtener información detallada de préstamos
@@ -30,7 +43,13 @@ export class PrestamoConsultaService {
    * Lista todos los préstamos con filtros y paginación
    */
   async listarPrestamos(filtros: FiltrosPrestamoDto): Promise<PrestamoPaginadoDto> {
-    const { page = 1, limit = 10, orderBy = 'fechaOtorgamiento', orderDirection = 'DESC' } = filtros;
+    const { page = 1, limit = 10, orderDirection = 'DESC' } = filtros;
+
+    // Validar campo de ordenamiento contra whitelist para prevenir SQL injection
+    const rawOrderBy = filtros.orderBy ?? 'fechaOtorgamiento';
+    const orderBy: string = (ALLOWED_ORDER_FIELDS as readonly string[]).includes(rawOrderBy)
+      ? rawOrderBy
+      : 'createdAt';
 
     // Construir condiciones de filtrado
     const where = this.construirFiltros(filtros);

@@ -19,7 +19,7 @@ export enum EstadoCuota {
 
 @Entity('plan_pago')
 @Index(['prestamoId']) // Fast lookup by loan
-@Index(['prestamoId', 'numeroCuota']) // Composite index for specific installment
+@Index(['prestamoId', 'numeroCuota'], { unique: true }) // Unique constraint: a loan cannot have duplicate installment numbers
 @Index(['fechaVencimiento']) // Date-based queries (upcoming payments)
 @Index(['estado']) // Filter by payment status
 @Index(['prestamoId', 'estado']) // Composite for loan + status queries

@@ -8,7 +8,11 @@ import {
   ParseIntPipe,
   Res,
   StreamableFile,
+  UseGuards,
+  Logger,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Response } from 'express';
 import { PagoService, PreviewPagoResponse } from '../services/pago.service';
 import { PagoConsultaService, EstadoCuenta, PaginatedPagos } from '../services/pago-consulta.service';
@@ -23,7 +27,10 @@ import { ReciboDataDto } from '../dto/recibo-data.dto';
 import { Pago } from '../entities/pago.entity';
 
 @Controller('pagos')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class PagoController {
+  private readonly logger = new Logger(PagoController.name);
+
   constructor(
     private readonly pagoService: PagoService,
     private readonly pagoConsultaService: PagoConsultaService,
@@ -142,7 +149,7 @@ export class PagoController {
     });
 
     pdfDoc.on('error', (error) => {
-      console.error('Error generando PDF:', error);
+      this.logger.error('Error generando PDF:', error);
       res.status(500).json({ message: 'Error al generar el PDF' });
     });
   }

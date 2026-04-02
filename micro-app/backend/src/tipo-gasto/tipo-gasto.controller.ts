@@ -9,12 +9,16 @@ import {
   ParseIntPipe,
   HttpStatus,
   HttpCode,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { TipoGastoService } from './tipo-gasto.service';
 import { CreateTipoGastoDto } from './dto/create-tipo-gasto.dto';
 import { UpdateTipoGastoDto } from './dto/update-tipo-gasto.dto';
 
 @Controller('tipo-gasto')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class TipoGastoController {
   constructor(private readonly tipoGastoService: TipoGastoService) {}
 

@@ -8,7 +8,10 @@ import {
   Delete,
   ParseIntPipe,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 import { SolicitudService } from './solicitud.service';
 import { CreateSolicitudDto } from './dto/create-solicitud.dto';
 import { UpdateSolicitudDto } from './dto/update-solicitud.dto';
@@ -19,6 +22,7 @@ import { CalcularPlanPagoDto } from './dto/calcular-plan-pago.dto';
 import { GuardarPlanPagoDto } from './dto/guardar-plan-pago.dto';
 
 @Controller('solicitudes')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class SolicitudController {
   constructor(private readonly solicitudService: SolicitudService) {}
 
@@ -34,6 +38,8 @@ export class SolicitudController {
     @Query('lineaCreditoId') lineaCreditoId?: string,
     @Query('fechaDesde') fechaDesde?: string,
     @Query('fechaHasta') fechaHasta?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
     return this.solicitudService.findAll({
       estado,
@@ -41,6 +47,8 @@ export class SolicitudController {
       lineaCreditoId: lineaCreditoId ? parseInt(lineaCreditoId) : undefined,
       fechaDesde,
       fechaHasta,
+      page: page ? parseInt(page) : undefined,
+      limit: limit ? parseInt(limit) : undefined,
     });
   }
 

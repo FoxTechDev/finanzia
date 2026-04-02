@@ -6,7 +6,12 @@ import {
   Param,
   ParseIntPipe,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
+import { Roles } from '../../../auth/decorators/roles.decorator';
+import { RoleCodes } from '../../../auth/enums/roles.enum';
 import { DesembolsoService, PreviewResponse } from '../services/desembolso.service';
 import { PreviewDesembolsoDto } from '../dto/preview-desembolso.dto';
 import { CrearDesembolsoDto } from '../dto/crear-desembolso.dto';
@@ -15,6 +20,8 @@ import { PlanPago } from '../entities/plan-pago.entity';
 import { Solicitud } from '../../solicitud/entities/solicitud.entity';
 
 @Controller('desembolso')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(RoleCodes.ADMIN)
 export class DesembolsoController {
   constructor(private readonly desembolsoService: DesembolsoService) {}
 

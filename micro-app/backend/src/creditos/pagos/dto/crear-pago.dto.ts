@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsDateString, IsOptional, IsString, Min } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsDateString, IsOptional, IsString, Min, MaxLength } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CrearPagoDto {
@@ -19,6 +19,7 @@ export class CrearPagoDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
   observaciones?: string;
 
   @IsOptional()
@@ -28,6 +29,7 @@ export class CrearPagoDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(200)
   nombreUsuario?: string;
 
   /**

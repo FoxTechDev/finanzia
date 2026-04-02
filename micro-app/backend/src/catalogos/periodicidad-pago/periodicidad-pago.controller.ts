@@ -7,12 +7,16 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 import { PeriodicidadPagoService } from './periodicidad-pago.service';
 import { CreatePeriodicidadPagoDto } from './dto/create-periodicidad-pago.dto';
 import { UpdatePeriodicidadPagoDto } from './dto/update-periodicidad-pago.dto';
 
 @Controller('catalogos/periodicidad-pago')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class PeriodicidadPagoController {
   constructor(private readonly periodicidadPagoService: PeriodicidadPagoService) {}
 

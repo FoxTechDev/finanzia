@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   ManyToOne,
   JoinColumn,
   OneToMany,
@@ -19,11 +20,9 @@ import { EstadoSolicitud } from '../../../catalogos/estado-solicitud/entities/es
 import { PeriodicidadPago } from '../../../catalogos/periodicidad-pago/entities/periodicidad-pago.entity';
 import { PlanPagoSolicitud } from './plan-pago-solicitud.entity';
 import { RecargoSolicitud } from './recargo-solicitud.entity';
+import { TipoInteres } from '../../desembolso/entities/prestamo.entity';
 
-export enum TipoInteresSolicitud {
-  FLAT = 'FLAT',
-  AMORTIZADO = 'AMORTIZADO',
-}
+export { TipoInteres };
 
 export enum DestinoCredito {
   CAPITAL_TRABAJO = 'CAPITAL_TRABAJO',
@@ -86,7 +85,7 @@ export class Solicitud {
   @Column()
   plazoSolicitado: number; // en meses
 
-  @Column({ type: 'decimal', precision: 5, scale: 2 })
+  @Column({ type: 'decimal', precision: 8, scale: 4 })
   tasaInteresPropuesta: number;
 
   @Column({
@@ -114,7 +113,7 @@ export class Solicitud {
   @Column({ nullable: true })
   plazoAprobado: number;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 8, scale: 4, nullable: true })
   tasaInteresAprobada: number;
 
   // Fechas importantes
@@ -167,6 +166,9 @@ export class Solicitud {
   @UpdateDateColumn()
   updatedAt: Date;
 
+  @DeleteDateColumn({ nullable: true })
+  deletedAt: Date;
+
   @OneToMany(() => SolicitudHistorial, (historial) => historial.solicitud)
   historial: SolicitudHistorial[];
 
@@ -212,10 +214,10 @@ export class Solicitud {
   // Tipo de interés para el plan de pago
   @Column({
     type: 'enum',
-    enum: TipoInteresSolicitud,
+    enum: TipoInteres,
     nullable: true,
   })
-  tipoInteres: TipoInteresSolicitud;
+  tipoInteres: TipoInteres;
 
   // Campos para pago diario
   @Column({ type: 'date', nullable: true })

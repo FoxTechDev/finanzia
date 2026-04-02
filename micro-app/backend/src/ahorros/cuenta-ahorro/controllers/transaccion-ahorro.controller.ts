@@ -5,13 +5,17 @@ import {
   Param,
   ParseIntPipe,
   Request,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { TransaccionAhorroService } from '../services/transaccion-ahorro.service';
 import { DepositoAhorroDto, RetiroAhorroDto } from '../dto/transaccion-ahorro.dto';
 import { CapitalizacionService } from '../services/capitalizacion.service';
 import { ProvisionService } from '../services/provision.service';
 
 @Controller('ahorros/cuentas')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class TransaccionAhorroController {
   constructor(
     private readonly transService: TransaccionAhorroService,

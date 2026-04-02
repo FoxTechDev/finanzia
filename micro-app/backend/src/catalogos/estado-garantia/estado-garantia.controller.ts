@@ -7,12 +7,16 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 import { EstadoGarantiaService } from './estado-garantia.service';
 import { CreateEstadoGarantiaDto } from './dto/create-estado-garantia.dto';
 import { UpdateEstadoGarantiaDto } from './dto/update-estado-garantia.dto';
 
 @Controller('catalogos/estado-garantia')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class EstadoGarantiaController {
   constructor(private readonly estadoGarantiaService: EstadoGarantiaService) {}
 

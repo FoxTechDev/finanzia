@@ -9,12 +9,16 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { DependenciaFamiliarService } from './dependencia-familiar.service';
 import { CreateDependenciaFamiliarDto } from './dto/create-dependencia-familiar.dto';
 import { UpdateDependenciaFamiliarDto } from './dto/update-dependencia-familiar.dto';
 
 @Controller('personas/:personaId/dependencias')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class DependenciaFamiliarController {
   constructor(
     private readonly dependenciaFamiliarService: DependenciaFamiliarService,

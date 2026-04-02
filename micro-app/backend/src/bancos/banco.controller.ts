@@ -7,12 +7,16 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { BancoService } from './banco.service';
 import { CreateBancoDto } from './dto/create-banco.dto';
 import { UpdateBancoDto } from './dto/update-banco.dto';
 
 @Controller('bancos')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class BancoController {
   constructor(private readonly bancoService: BancoService) {}
 

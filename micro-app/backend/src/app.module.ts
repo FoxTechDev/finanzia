@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmConfigService } from './config/typeorm.config';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
@@ -29,6 +31,10 @@ import { BancosModule } from './bancos/banco.module';
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
     }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000,   // Ventana de 60 segundos
+      limit: 100,   // 100 peticiones por ventana (regla general)
+    }]),
     HealthModule,
     UsersModule,
     AuthModule,
@@ -48,6 +54,12 @@ import { BancosModule } from './bancos/banco.module';
     BancosModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    // Guard global de rate limiting - aplica a todos los endpoints
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

@@ -30,6 +30,7 @@ import { ReciboDesembolsoDto } from '../dto/recibo-desembolso.dto';
  * Endpoints para listar, filtrar y obtener información detallada de préstamos
  */
 @Controller('prestamos')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class PrestamoController {
   constructor(
     private readonly prestamoConsultaService: PrestamoConsultaService,
@@ -95,7 +96,6 @@ export class PrestamoController {
    * Solo ADMIN y COMITE
    */
   @Post(':id/plan-pago/preview')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleCodes.ADMIN, RoleCodes.COMITE)
   async previewPlanPago(
     @Param('id', ParseIntPipe) id: number,
@@ -110,7 +110,6 @@ export class PrestamoController {
    * Solo ADMIN y COMITE
    */
   @Put(':id/plan-pago')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleCodes.ADMIN, RoleCodes.COMITE)
   async modificarPlanPago(
     @Param('id', ParseIntPipe) id: number,

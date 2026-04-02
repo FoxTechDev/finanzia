@@ -8,12 +8,16 @@ import {
   Delete,
   ParseIntPipe,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { PersonaService } from './persona.service';
 import { CreatePersonaDto } from './dto/create-persona.dto';
 import { UpdatePersonaDto } from './dto/update-persona.dto';
 
 @Controller('personas')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class PersonaController {
   constructor(private readonly personaService: PersonaService) {}
 

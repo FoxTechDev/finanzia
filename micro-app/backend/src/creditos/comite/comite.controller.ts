@@ -6,12 +6,16 @@ import {
   Param,
   ParseIntPipe,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 import { ComiteService } from './comite.service';
 import { DecisionComiteDto } from './dto/decision-comite.dto';
 import { TipoDecisionComite } from './entities/decision-comite.entity';
 
 @Controller('comite')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ComiteController {
   constructor(private readonly comiteService: ComiteService) {}
 

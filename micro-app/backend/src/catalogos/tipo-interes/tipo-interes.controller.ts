@@ -7,12 +7,16 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 import { TipoInteresService } from './tipo-interes.service';
 import { CreateTipoInteresDto } from './dto/create-tipo-interes.dto';
 import { UpdateTipoInteresDto } from './dto/update-tipo-interes.dto';
 
 @Controller('catalogos/tipo-interes')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class TipoInteresController {
   constructor(private readonly tipoInteresService: TipoInteresService) {}
 

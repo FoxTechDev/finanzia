@@ -8,6 +8,7 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
 import { Rol } from '../../catalogos/rol/entities/rol.entity';
 
 @Entity('users')
@@ -21,6 +22,7 @@ export class User {
   @Column({ unique: true })
   email: string;
 
+  @Exclude()
   @Column()
   password: string;
 

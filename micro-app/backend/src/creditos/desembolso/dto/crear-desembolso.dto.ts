@@ -6,7 +6,9 @@ import {
   IsArray,
   ValidateNested,
   IsOptional,
+  IsString,
   Min,
+  MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PeriodicidadPago, TipoInteres } from '../entities/prestamo.entity';
@@ -59,5 +61,7 @@ export class CrearDesembolsoDto {
   usuarioDesembolsoId?: number;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(200)
   nombreUsuarioDesembolso?: string;
 }

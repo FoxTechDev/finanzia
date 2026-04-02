@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -28,6 +29,7 @@ import { parseLocalDate, formatLocalDate } from '../../common/utils/date.utils';
 
 @Injectable()
 export class SolicitudService {
+  private readonly logger = new Logger(SolicitudService.name);
   constructor(
     @InjectRepository(Solicitud)
     private readonly solicitudRepository: Repository<Solicitud>,
@@ -45,22 +47,22 @@ export class SolicitudService {
     private readonly dataSource: DataSource,
   ) {}
 
-  private async generarNumeroSolicitud(): Promise<string> {
+  private async generarNumeroSolicitud(queryRunner: import('typeorm').QueryRunner): Promise<string> {
     const year = new Date().getFullYear();
+    // Formato: SOL-2026-000001 (prefix tiene 9 caracteres: "SOL-2026-")
     const prefix = `SOL-${year}-`;
 
-    const lastSolicitud = await this.solicitudRepository
-      .createQueryBuilder('solicitud')
-      .where('solicitud.numeroSolicitud LIKE :prefix', { prefix: `${prefix}%` })
-      .orderBy('solicitud.id', 'DESC')
-      .getOne();
+    // Consulta atómica con FOR UPDATE para bloquear las filas y evitar condiciones de carrera
+    // SUBSTRING empieza en la posición prefix.length + 1 para extraer solo el número secuencial
+    const result = await queryRunner.query(
+      `SELECT MAX(CAST(SUBSTRING(numeroSolicitud, ?) AS UNSIGNED)) as maxNum
+       FROM solicitud
+       WHERE numeroSolicitud LIKE ?
+       FOR UPDATE`,
+      [prefix.length + 1, `${prefix}%`],
+    );
 
-    let nextNumber = 1;
-    if (lastSolicitud) {
-      const lastNumber = parseInt(lastSolicitud.numeroSolicitud.split('-')[2]);
-      nextNumber = lastNumber + 1;
-    }
-
+    const nextNumber = (result[0]?.maxNum || 0) + 1;
     return `${prefix}${nextNumber.toString().padStart(6, '0')}`;
   }
 
@@ -93,7 +95,8 @@ export class SolicitudService {
     await queryRunner.startTransaction();
 
     try {
-      const numeroSolicitud = await this.generarNumeroSolicitud();
+      // Generar número dentro de la transacción para que el FOR UPDATE sea atómico
+      const numeroSolicitud = await this.generarNumeroSolicitud(queryRunner);
 
       // Preparar datos de la solicitud con fechas convertidas a formato YYYY-MM-DD para MySQL DATE columns
       const solicitudData: any = {
@@ -146,7 +149,16 @@ export class SolicitudService {
     lineaCreditoId?: number;
     fechaDesde?: string;
     fechaHasta?: string;
-  }): Promise<Solicitud[]> {
+    page?: number;
+    limit?: number;
+  }): Promise<{ data: Solicitud[]; total: number; page: number; limit: number }> {
+    // Validación de rango de fechas
+    if (filters?.fechaDesde && filters?.fechaHasta) {
+      if (filters.fechaDesde > filters.fechaHasta) {
+        throw new BadRequestException('fechaDesde debe ser anterior o igual a fechaHasta');
+      }
+    }
+
     const queryBuilder = this.solicitudRepository
       .createQueryBuilder('solicitud')
       .leftJoinAndSelect('solicitud.persona', 'persona')
@@ -177,7 +189,15 @@ export class SolicitudService {
       });
     }
 
-    return queryBuilder.orderBy('solicitud.createdAt', 'DESC').getMany();
+    queryBuilder.orderBy('solicitud.createdAt', 'DESC');
+
+    const page = Math.max(1, filters?.page || 1);
+    const limit = Math.min(100, Math.max(1, filters?.limit || 20)); // máximo 100, por defecto 20
+    const total = await queryBuilder.getCount();
+    queryBuilder.skip((page - 1) * limit).take(limit);
+    const data = await queryBuilder.getMany();
+
+    return { data, total, page, limit };
   }
 
   async findOne(id: number): Promise<Solicitud> {
@@ -232,7 +252,7 @@ export class SolicitudService {
         planPago = resultadoCalculo;
       } catch (error) {
         // Si hay error al calcular el plan de pago, lo dejamos como null
-        console.error('Error al calcular plan de pago:', error.message);
+        this.logger.error('Error al calcular plan de pago:', error.message);
       }
     }
 
@@ -283,29 +303,31 @@ export class SolicitudService {
     id: number,
     cambioDto: CambiarEstadoSolicitudDto,
   ): Promise<Solicitud> {
-    // Cargar solicitud sin la relación historial para evitar problemas al guardar
-    const solicitud = await this.solicitudRepository.findOne({
-      where: { id },
-      relations: ['estado'],
-    });
-
-    if (!solicitud) {
-      throw new NotFoundException(`Solicitud con ID ${id} no encontrada`);
-    }
-
-    const estadoAnteriorCodigo = solicitud.estado.codigo;
-
-    // Obtener el nuevo estado de la base de datos
+    // Obtener el nuevo estado antes de la transacción (solo lectura de catálogo, sin race condition)
     const nuevoEstado = await this.estadoSolicitudService.findByCodigo(cambioDto.nuevoEstadoCodigo);
-
-    // Validar transiciones de estado permitidas
-    this.validarTransicionEstado(estadoAnteriorCodigo, nuevoEstado.codigo);
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
+      // Cargar la solicitud con pessimistic_write DENTRO de la transacción para evitar
+      // que dos solicitudes concurrentes lean el mismo estado y apliquen transiciones inválidas
+      const solicitud = await queryRunner.manager.findOne(Solicitud, {
+        where: { id },
+        relations: ['estado'],
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!solicitud) {
+        throw new NotFoundException(`Solicitud con ID ${id} no encontrada`);
+      }
+
+      const estadoAnteriorCodigo = solicitud.estado.codigo;
+
+      // Validar transiciones de estado permitidas (con datos frescos y bloqueados)
+      this.validarTransicionEstado(estadoAnteriorCodigo, nuevoEstado.codigo);
+
       // Preparar datos para actualizar
       const updateData: Partial<Solicitud> = {
         estadoId: nuevoEstado.id,

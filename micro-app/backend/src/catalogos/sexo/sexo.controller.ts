@@ -7,12 +7,16 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 import { SexoService } from './sexo.service';
 import { CreateSexoDto } from './dto/create-sexo.dto';
 import { UpdateSexoDto } from './dto/update-sexo.dto';
 
 @Controller('catalogos/sexo')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class SexoController {
   constructor(private readonly sexoService: SexoService) {}
 

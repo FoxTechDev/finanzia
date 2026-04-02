@@ -10,12 +10,16 @@ import {
   HttpStatus,
   HttpCode,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { IngresoClienteService } from './ingreso-cliente.service';
 import { CreateIngresoClienteDto } from './dto/create-ingreso-cliente.dto';
 import { UpdateIngresoClienteDto } from './dto/update-ingreso-cliente.dto';
 
 @Controller('ingreso-cliente')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class IngresoClienteController {
   constructor(private readonly ingresoClienteService: IngresoClienteService) {}
 

@@ -15,17 +15,22 @@ async function bootstrap() {
 
   // Run migrations automatically in production
   if (isProduction && process.env.RUN_MIGRATIONS === 'true') {
-    logger.log('🔄 Running database migrations...');
+    logger.log('Running database migrations...');
     try {
       const { dataSourceOptions } = await import('./config/typeorm.config');
       const dataSource = new DataSource(dataSourceOptions);
       await dataSource.initialize();
-      await dataSource.runMigrations();
-      logger.log('✅ Migrations completed successfully');
+      const migrations = await dataSource.runMigrations();
+      if (migrations.length > 0) {
+        logger.log(`${migrations.length} migrations applied successfully`);
+      } else {
+        logger.log('No pending migrations');
+      }
       await dataSource.destroy();
     } catch (error) {
-      logger.error('❌ Migration failed:', error);
-      // Continue anyway - migrations might already be applied
+      logger.error('Migration failed:', error.message);
+      // In production, fail fast if migrations can't run
+      throw error;
     }
   }
 
@@ -109,6 +114,7 @@ async function bootstrap() {
 }
 
 bootstrap().catch((error) => {
-  console.error('❌ Error starting application:', error);
+  const logger = new Logger('Bootstrap');
+  logger.error('Error starting application:', error.stack || error.message);
   process.exit(1);
 });

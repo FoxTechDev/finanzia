@@ -127,7 +127,9 @@ export class PersonaService {
     page: number;
     limit: number;
   }): Promise<{ data: Persona[]; total: number; page: number; limit: number }> {
-    const { nombre, dui, page, limit } = params;
+    const { nombre, dui } = params;
+    const page = Math.max(1, params.page || 1);
+    const limit = Math.min(100, Math.max(1, params.limit || 20)); // máximo 100, por defecto 20
 
     const queryBuilder = this.personaRepository.createQueryBuilder('persona');
 

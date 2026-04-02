@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   ManyToOne,
   JoinColumn,
   OneToMany,
@@ -193,7 +194,10 @@ export class Prestamo {
   })
   categoriaNCB022: CategoriaNCB022;
 
-  // Estado del préstamo - Relación con catálogo
+  /**
+   * Referencia al catálogo de estados (para UI y reportes).
+   * Debe mantenerse sincronizado con el campo `estado`.
+   */
   @Column({ nullable: true })
   estadoPrestamoId: number;
 
@@ -201,7 +205,10 @@ export class Prestamo {
   @JoinColumn({ name: 'estadoPrestamoId' })
   estadoPrestamoRelacion: EstadoPrestamoEntity;
 
-  // Estado del préstamo - Enum legacy (mantener compatibilidad)
+  /**
+   * Estado principal del préstamo (fuente autoritativa).
+   * Usar este campo para lógica de negocio.
+   */
   @Column({
     type: 'enum',
     enum: EstadoPrestamo,
@@ -232,6 +239,9 @@ export class Prestamo {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @DeleteDateColumn({ nullable: true })
+  deletedAt: Date;
 
   // Relaciones
   @OneToMany(() => PlanPago, (planPago) => planPago.prestamo)

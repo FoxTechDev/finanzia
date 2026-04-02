@@ -9,7 +9,10 @@ import {
   ParseIntPipe,
   UsePipes,
   ValidationPipe,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { ClasificacionPrestamoService } from '../services/clasificacion-prestamo.service';
 import { ClasificacionPrestamo } from '../entities/clasificacion-prestamo.entity';
 import { CreateClasificacionPrestamoDto } from '../dto/create-clasificacion-prestamo.dto';
@@ -19,6 +22,7 @@ import { UpdateClasificacionPrestamoDto } from '../dto/update-clasificacion-pres
  * Controlador para gestión de clasificaciones de préstamos NCB-022
  */
 @Controller('clasificacion-prestamo')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ClasificacionPrestamoController {
   constructor(
     private readonly clasificacionService: ClasificacionPrestamoService,

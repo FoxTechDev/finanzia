@@ -8,13 +8,17 @@ import {
   Param,
   ParseIntPipe,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { CatalogoGarantiaService } from '../services/catalogo-garantia.service';
 import { CreateTipoGarantiaCatalogoDto } from '../dto/create-tipo-garantia-catalogo.dto';
 import { CreateTipoInmuebleDto } from '../dto/create-tipo-inmueble.dto';
 import { CreateTipoDocumentoGarantiaDto } from '../dto/create-tipo-documento-garantia.dto';
 
 @Controller('catalogos-garantia')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class CatalogoGarantiaController {
   constructor(private readonly catalogoService: CatalogoGarantiaService) {}
 

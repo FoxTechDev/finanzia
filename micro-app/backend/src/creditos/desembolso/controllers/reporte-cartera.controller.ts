@@ -1,4 +1,6 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { ReporteCarteraService } from '../services/reporte-cartera.service';
 import { RutaCobroService } from '../services/ruta-cobro.service';
 import {
@@ -25,6 +27,7 @@ import { parseLocalDate } from '../../../common/utils/date.utils';
  *   GET /api/reportes/arqueo
  */
 @Controller('reportes')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ReporteCarteraController {
   constructor(
     private readonly reporteCarteraService: ReporteCarteraService,

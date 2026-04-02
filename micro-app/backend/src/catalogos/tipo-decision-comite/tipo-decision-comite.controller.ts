@@ -7,12 +7,16 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 import { TipoDecisionComiteService } from './tipo-decision-comite.service';
 import { CreateTipoDecisionComiteDto } from './dto/create-tipo-decision-comite.dto';
 import { UpdateTipoDecisionComiteDto } from './dto/update-tipo-decision-comite.dto';
 
 @Controller('catalogos/tipo-decision-comite')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class TipoDecisionComiteController {
   constructor(private readonly tipoDecisionComiteService: TipoDecisionComiteService) {}
 

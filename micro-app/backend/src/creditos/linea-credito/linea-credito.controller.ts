@@ -8,12 +8,16 @@ import {
   Delete,
   ParseIntPipe,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 import { LineaCreditoService } from './linea-credito.service';
 import { CreateLineaCreditoDto } from './dto/create-linea-credito.dto';
 import { UpdateLineaCreditoDto } from './dto/update-linea-credito.dto';
 
 @Controller('lineas-credito')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class LineaCreditoController {
   constructor(private readonly lineaCreditoService: LineaCreditoService) {}
 

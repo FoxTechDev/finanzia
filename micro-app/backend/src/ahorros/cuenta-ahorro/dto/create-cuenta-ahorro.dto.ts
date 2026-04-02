@@ -4,6 +4,8 @@ import {
   IsDateString,
   IsString,
   MaxLength,
+  Min,
+  Max,
 } from 'class-validator';
 
 export class CreateCuentaAhorroDto {
@@ -25,14 +27,18 @@ export class CreateCuentaAhorroDto {
   fechaVencimiento?: string;
 
   @IsNumber()
+  @Min(0.01, { message: 'El monto debe ser mayor a 0' })
   monto: number;
 
   @IsNumber()
   @IsOptional()
+  @Min(0)
   plazo?: number;
 
   @IsNumber()
   @IsOptional()
+  @Min(0)
+  @Max(100)
   tasaInteres?: number;
 
   @IsString()

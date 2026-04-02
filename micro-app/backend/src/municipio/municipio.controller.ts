@@ -1,8 +1,11 @@
-import { Controller, Get, Post, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, ParseIntPipe, Query, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { MunicipioService } from './municipio.service';
 import { CreateMunicipioDto } from './dto/create-municipio.dto';
 
 @Controller('municipios')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class MunicipioController {
   constructor(private readonly municipioService: MunicipioService) {}
 

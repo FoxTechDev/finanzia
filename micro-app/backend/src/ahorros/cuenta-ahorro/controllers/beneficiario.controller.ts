@@ -7,7 +7,10 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { BeneficiarioService } from '../services/beneficiario.service';
 import {
   CreateBeneficiarioDto,
@@ -15,6 +18,7 @@ import {
 } from '../dto/beneficiario.dto';
 
 @Controller('ahorros/cuentas/:cuentaId/beneficiarios')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class BeneficiarioController {
   constructor(private readonly service: BeneficiarioService) {}
 

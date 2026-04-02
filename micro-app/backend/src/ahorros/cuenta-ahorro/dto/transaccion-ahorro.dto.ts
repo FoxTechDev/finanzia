@@ -1,7 +1,8 @@
-import { IsNumber, IsOptional, IsDateString, IsString, MaxLength } from 'class-validator';
+import { IsNumber, IsOptional, IsDateString, IsString, MaxLength, Min } from 'class-validator';
 
 export class DepositoAhorroDto {
   @IsNumber()
+  @Min(0.01, { message: 'El monto debe ser mayor a 0' })
   monto: number;
 
   @IsDateString()
@@ -20,6 +21,7 @@ export class DepositoAhorroDto {
 
 export class RetiroAhorroDto {
   @IsNumber()
+  @Min(0.01, { message: 'El monto debe ser mayor a 0' })
   monto: number;
 
   @IsDateString()

@@ -66,24 +66,24 @@ export class Persona {
   @Column({ name: 'lugarEmisionDui', length: 120 })
   lugarEmisionDui: string;
 
-  @OneToOne(() => Direccion, (direccion) => direccion.persona, { cascade: true })
+  @OneToOne(() => Direccion, (direccion) => direccion.persona, { cascade: ['insert', 'update'] })
   direccion: Direccion;
 
-  @OneToOne(() => ActividadEconomica, (actividad) => actividad.persona, { cascade: true })
+  @OneToOne(() => ActividadEconomica, (actividad) => actividad.persona, { cascade: ['insert', 'update'] })
   actividadEconomica: ActividadEconomica;
 
-  @OneToMany(() => ReferenciaPersonal, (ref) => ref.persona, { cascade: true })
+  @OneToMany(() => ReferenciaPersonal, (ref) => ref.persona, { cascade: ['insert', 'update'] })
   referenciasPersonales: ReferenciaPersonal[];
 
-  @OneToMany(() => ReferenciaFamiliar, (ref) => ref.persona, { cascade: true })
+  @OneToMany(() => ReferenciaFamiliar, (ref) => ref.persona, { cascade: ['insert', 'update'] })
   referenciasFamiliares: ReferenciaFamiliar[];
 
-  @OneToMany(() => DependenciaFamiliar, (dep) => dep.persona, { cascade: true })
+  @OneToMany(() => DependenciaFamiliar, (dep) => dep.persona, { cascade: ['insert', 'update'] })
   dependenciasFamiliares: DependenciaFamiliar[];
 
-  @OneToMany(() => GastoCliente, (gasto) => gasto.persona, { cascade: true })
+  @OneToMany(() => GastoCliente, (gasto) => gasto.persona, { cascade: ['insert', 'update'] })
   gastos: GastoCliente[];
 
-  @OneToMany(() => IngresoCliente, (ingreso) => ingreso.persona, { cascade: true })
+  @OneToMany(() => IngresoCliente, (ingreso) => ingreso.persona, { cascade: ['insert', 'update'] })
   ingresos: IngresoCliente[];
 }
