@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, HttpCode } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
@@ -18,21 +18,36 @@ interface HealthStatus {
   };
 }
 
-@Controller('health')
+@Controller()
 export class HealthController {
   constructor(
     @InjectDataSource()
     private dataSource: DataSource,
   ) {}
 
-  @Get()
-  async check(): Promise<HealthStatus> {
+  /**
+   * Health check principal - usado por Digital Ocean App Platform
+   * Siempre devuelve 200 si la app está corriendo (sin depender de BD)
+   */
+  @Get('health')
+  @HttpCode(200)
+  healthCheck(): { status: string; timestamp: string } {
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Health check detallado con estado de BD y memoria
+   */
+  @Get('health/detail')
+  async detailedCheck(): Promise<HealthStatus> {
     const startTime = Date.now();
     let dbConnected = false;
     let dbResponseTime: number | undefined;
 
     try {
-      // Test database connection
       await this.dataSource.query('SELECT 1');
       dbConnected = true;
       dbResponseTime = Date.now() - startTime;
@@ -40,7 +55,6 @@ export class HealthController {
       dbConnected = false;
     }
 
-    // Get memory usage
     const memUsage = process.memoryUsage();
     const totalMemory = memUsage.heapTotal;
     const usedMemory = memUsage.heapUsed;
@@ -56,14 +70,14 @@ export class HealthController {
         responseTime: dbResponseTime,
       },
       memory: {
-        used: Math.round(usedMemory / 1024 / 1024), // MB
-        total: Math.round(totalMemory / 1024 / 1024), // MB
+        used: Math.round(usedMemory / 1024 / 1024),
+        total: Math.round(totalMemory / 1024 / 1024),
         percentage: Math.round(memoryPercentage),
       },
     };
   }
 
-  @Get('ping')
+  @Get('health/ping')
   ping(): { message: string; timestamp: string } {
     return {
       message: 'pong',

@@ -7,11 +7,6 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Debug: mostrar qué hay en el contexto
-RUN echo "=== PWD ===" && pwd
-COPY . /tmp/context-check
-RUN echo "=== Contexto de build ===" && ls -la /tmp/context-check/ && rm -rf /tmp/context-check
-
 # Copiar archivos de dependencias
 COPY --chown=nestjs:nodejs package*.json ./
 
@@ -21,15 +16,8 @@ RUN npm ci
 # Copiar código fuente
 COPY --chown=nestjs:nodejs . .
 
-# Debug: mostrar estructura antes del build
-RUN echo "=== Archivos en /app ===" && ls -la
-RUN echo "=== Archivos en src/ ===" && ls -la src/ || echo "No src/ directory"
-
 # Compilar la aplicación
-RUN npm run build
-
-# Verificar que el build existe
-RUN echo "=== Contenido de dist/src/ ===" && ls -la dist/src/ && test -f dist/src/main.js
+RUN npm run build && test -f dist/src/main.js
 
 # Reinstalar solo dependencias de producción
 RUN rm -rf node_modules && \
@@ -45,8 +33,8 @@ USER nestjs
 # Exponer puerto
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+# Health check - start-period largo para permitir arranque + conexion a BD
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
 
 # Comando de inicio
