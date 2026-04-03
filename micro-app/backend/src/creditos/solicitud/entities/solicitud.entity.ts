@@ -4,7 +4,6 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  DeleteDateColumn,
   ManyToOne,
   JoinColumn,
   OneToMany,
@@ -166,7 +165,7 @@ export class Solicitud {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @DeleteDateColumn({ nullable: true })
+  @Column({ type: 'datetime', nullable: true, default: null })
   deletedAt: Date;
 
   @OneToMany(() => SolicitudHistorial, (historial) => historial.solicitud)

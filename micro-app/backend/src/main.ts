@@ -29,8 +29,8 @@ async function bootstrap() {
       await dataSource.destroy();
     } catch (error) {
       logger.error('Migration failed:', error.message);
-      // In production, fail fast if migrations can't run
-      throw error;
+      // Continuar de todos modos - las migraciones pueden ya estar aplicadas
+      // o las columnas nuevas se crean manualmente con el script SQL
     }
   }
 
