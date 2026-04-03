@@ -50,10 +50,10 @@ async function bootstrap() {
   // Performance: Enable compression for all responses
   app.use(compression());
 
-  // Global prefix for all routes (only in development, Digital Ocean handles /api routing)
-  if (!isProduction) {
-    app.setGlobalPrefix('api');
-  }
+  // Global prefix /api para todas las rutas, excepto /health (usado por health checks de DO)
+  app.setGlobalPrefix('api', {
+    exclude: ['health', 'health/detail', 'health/ping'],
+  });
 
   // CORS Configuration: Dynamic origins based on environment
   const corsOrigins = process.env.CORS_ORIGINS
@@ -92,7 +92,7 @@ async function bootstrap() {
       app.useStaticAssets(publicPath);
       // Serve index.html for all non-API routes (SPA fallback)
       app.use((req: Request, res: Response, next: NextFunction) => {
-        if (!req.path.startsWith('/api') && !req.path.includes('.')) {
+        if (!req.path.startsWith('/api') && !req.path.startsWith('/health') && !req.path.includes('.')) {
           res.sendFile(join(publicPath, 'index.html'));
         } else {
           next();
@@ -108,7 +108,7 @@ async function bootstrap() {
 
   await app.listen(port, host);
 
-  logger.log(`🚀 Application is running on: http://${host}:${port}${isProduction ? '' : '/api'}`);
+  logger.log(`🚀 Application is running on: http://${host}:${port}/api`);
   logger.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.log(`🔒 CORS enabled for: ${corsOrigins.join(', ')}`);
 }
