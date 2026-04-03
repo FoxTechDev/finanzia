@@ -384,6 +384,7 @@ export class DpfAperturaComponent implements OnInit {
     const maxPorcentaje = 100 - this.getTotalPorcentaje();
     const dialogRef = this.dialog.open(BeneficiarioDialogComponent, {
       width: '550px',
+      maxWidth: '95vw',
       data: { maxPorcentaje },
     });
     dialogRef.afterClosed().subscribe((result) => {

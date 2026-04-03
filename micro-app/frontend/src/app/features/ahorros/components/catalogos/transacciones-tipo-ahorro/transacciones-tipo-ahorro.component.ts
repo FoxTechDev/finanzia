@@ -71,39 +71,41 @@ import { TipoAhorro, TipoTransaccionAhorro } from '@core/models/ahorro.model';
                 <div class="loading"><mat-spinner diameter="30"></mat-spinner></div>
               } @else {
                 @if (asignadas().length > 0) {
-                  <table mat-table [dataSource]="asignadas()" class="full-width">
-                    <ng-container matColumnDef="codigo">
-                      <th mat-header-cell *matHeaderCellDef>Código</th>
-                      <td mat-cell *matCellDef="let item">{{ item.codigo }}</td>
-                    </ng-container>
-                    <ng-container matColumnDef="nombre">
-                      <th mat-header-cell *matHeaderCellDef>Nombre</th>
-                      <td mat-cell *matCellDef="let item">{{ item.nombre }}</td>
-                    </ng-container>
-                    <ng-container matColumnDef="naturaleza">
-                      <th mat-header-cell *matHeaderCellDef>Naturaleza</th>
-                      <td mat-cell *matCellDef="let item">
-                        @if (item.naturaleza) {
-                          <mat-chip-set>
-                            <mat-chip [class.abono]="item.naturaleza.codigo === 'ABONO'"
-                                      [class.cargo]="item.naturaleza.codigo === 'CARGO'">
-                              {{ item.naturaleza.nombre }}
-                            </mat-chip>
-                          </mat-chip-set>
-                        }
-                      </td>
-                    </ng-container>
-                    <ng-container matColumnDef="acciones">
-                      <th mat-header-cell *matHeaderCellDef>Acciones</th>
-                      <td mat-cell *matCellDef="let item">
-                        <button mat-icon-button color="warn" (click)="desasignar(item)" matTooltip="Quitar">
-                          <mat-icon>remove_circle</mat-icon>
-                        </button>
-                      </td>
-                    </ng-container>
-                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-                  </table>
+                  <div class="table-responsive">
+                    <table mat-table [dataSource]="asignadas()" class="full-width">
+                      <ng-container matColumnDef="codigo">
+                        <th mat-header-cell *matHeaderCellDef>Código</th>
+                        <td mat-cell *matCellDef="let item">{{ item.codigo }}</td>
+                      </ng-container>
+                      <ng-container matColumnDef="nombre">
+                        <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                        <td mat-cell *matCellDef="let item">{{ item.nombre }}</td>
+                      </ng-container>
+                      <ng-container matColumnDef="naturaleza">
+                        <th mat-header-cell *matHeaderCellDef>Naturaleza</th>
+                        <td mat-cell *matCellDef="let item">
+                          @if (item.naturaleza) {
+                            <mat-chip-set>
+                              <mat-chip [class.abono]="item.naturaleza.codigo === 'ABONO'"
+                                        [class.cargo]="item.naturaleza.codigo === 'CARGO'">
+                                {{ item.naturaleza.nombre }}
+                              </mat-chip>
+                            </mat-chip-set>
+                          }
+                        </td>
+                      </ng-container>
+                      <ng-container matColumnDef="acciones">
+                        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                        <td mat-cell *matCellDef="let item">
+                          <button mat-icon-button color="warn" (click)="desasignar(item)" matTooltip="Quitar">
+                            <mat-icon>remove_circle</mat-icon>
+                          </button>
+                        </td>
+                      </ng-container>
+                      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+                    </table>
+                  </div>
                 } @else {
                   <div class="empty-small">
                     <mat-icon>info</mat-icon>

@@ -902,6 +902,7 @@ export class PagosListComponent implements OnInit {
   verDetalle(pago: Pago): void {
     this.dialog.open(DetallePagoDialogComponent, {
       width: '700px',
+      maxWidth: '95vw',
       maxHeight: '90vh',
       data: { pago },
     });
@@ -913,6 +914,7 @@ export class PagosListComponent implements OnInit {
   abrirAnularPago(pago: Pago): void {
     const dialogRef = this.dialog.open(AnularPagoDialogComponent, {
       width: '600px',
+      maxWidth: '95vw',
       maxHeight: '90vh',
       data: { pago },
     });

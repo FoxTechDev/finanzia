@@ -491,6 +491,7 @@ export class ClienteFormComponent implements OnInit {
   openReferenciaPersonalDialog(referencia?: ReferenciaPersonal, index?: number): void {
     const dialogRef = this.dialog.open(ReferenciaPersonalDialogComponent, {
       width: '400px',
+      maxWidth: '95vw',
       data: {
         referencia: referencia || null,
         relacionOptions: this.relacionOptions,
@@ -524,6 +525,7 @@ export class ClienteFormComponent implements OnInit {
   openReferenciaFamiliarDialog(referencia?: ReferenciaFamiliar, index?: number): void {
     const dialogRef = this.dialog.open(ReferenciaFamiliarDialogComponent, {
       width: '400px',
+      maxWidth: '95vw',
       data: {
         referencia: referencia || null,
         parentescoOptions: this.parentescoOptions,

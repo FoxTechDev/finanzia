@@ -47,45 +47,47 @@ import { LineaAhorro } from '@core/models/ahorro.model';
       } @else {
         <mat-card>
           <mat-card-content>
-            <table mat-table [dataSource]="lineas()" class="full-width">
-              <ng-container matColumnDef="codigo">
-                <th mat-header-cell *matHeaderCellDef>Código</th>
-                <td mat-cell *matCellDef="let item">{{ item.codigo }}</td>
-              </ng-container>
+            <div class="table-responsive">
+              <table mat-table [dataSource]="lineas()" class="full-width">
+                <ng-container matColumnDef="codigo">
+                  <th mat-header-cell *matHeaderCellDef>Código</th>
+                  <td mat-cell *matCellDef="let item">{{ item.codigo }}</td>
+                </ng-container>
 
-              <ng-container matColumnDef="nombre">
-                <th mat-header-cell *matHeaderCellDef>Nombre</th>
-                <td mat-cell *matCellDef="let item">{{ item.nombre }}</td>
-              </ng-container>
+                <ng-container matColumnDef="nombre">
+                  <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                  <td mat-cell *matCellDef="let item">{{ item.nombre }}</td>
+                </ng-container>
 
-              <ng-container matColumnDef="descripcion">
-                <th mat-header-cell *matHeaderCellDef>Descripción</th>
-                <td mat-cell *matCellDef="let item">{{ item.descripcion || '-' }}</td>
-              </ng-container>
+                <ng-container matColumnDef="descripcion">
+                  <th mat-header-cell *matHeaderCellDef>Descripción</th>
+                  <td mat-cell *matCellDef="let item">{{ item.descripcion || '-' }}</td>
+                </ng-container>
 
-              <ng-container matColumnDef="activo">
-                <th mat-header-cell *matHeaderCellDef>Estado</th>
-                <td mat-cell *matCellDef="let item">
-                  <mat-chip-set>
-                    <mat-chip [class.activo]="item.activo" [class.inactivo]="!item.activo">
-                      {{ item.activo ? 'Activo' : 'Inactivo' }}
-                    </mat-chip>
-                  </mat-chip-set>
-                </td>
-              </ng-container>
+                <ng-container matColumnDef="activo">
+                  <th mat-header-cell *matHeaderCellDef>Estado</th>
+                  <td mat-cell *matCellDef="let item">
+                    <mat-chip-set>
+                      <mat-chip [class.activo]="item.activo" [class.inactivo]="!item.activo">
+                        {{ item.activo ? 'Activo' : 'Inactivo' }}
+                      </mat-chip>
+                    </mat-chip-set>
+                  </td>
+                </ng-container>
 
-              <ng-container matColumnDef="acciones">
-                <th mat-header-cell *matHeaderCellDef>Acciones</th>
-                <td mat-cell *matCellDef="let item">
-                  <button mat-icon-button color="primary" (click)="openDialog(item)" matTooltip="Editar">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                </td>
-              </ng-container>
+                <ng-container matColumnDef="acciones">
+                  <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                  <td mat-cell *matCellDef="let item">
+                    <button mat-icon-button color="primary" (click)="openDialog(item)" matTooltip="Editar">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
 
-              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-            </table>
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+              </table>
+            </div>
 
             @if (lineas().length === 0) {
               <div class="empty">
@@ -141,6 +143,7 @@ export class LineasAhorroComponent implements OnInit {
   openDialog(linea?: LineaAhorro): void {
     const dialogRef = this.dialog.open(LineaAhorroDialogComponent, {
       width: '450px',
+      maxWidth: '95vw',
       data: linea || null,
     });
     dialogRef.afterClosed().subscribe((result) => {

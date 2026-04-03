@@ -417,6 +417,7 @@ export class BandejaDesembolsoComponent implements OnInit {
   abrirDialogDesembolso(solicitud: Solicitud): void {
     const dialogRef = this.dialog.open(CrearDesembolsoDialogComponent, {
       width: '900px',
+      maxWidth: '95vw',
       maxHeight: '90vh',
       data: { solicitud },
       disableClose: true,

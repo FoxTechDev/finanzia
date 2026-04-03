@@ -156,6 +156,7 @@ export class TiposAhorroComponent implements OnInit {
   openDialog(tipo?: TipoAhorro): void {
     const dialogRef = this.dialog.open(TipoAhorroDialogComponent, {
       width: '550px',
+      maxWidth: '95vw',
       data: tipo || null,
     });
     dialogRef.afterClosed().subscribe((result) => {

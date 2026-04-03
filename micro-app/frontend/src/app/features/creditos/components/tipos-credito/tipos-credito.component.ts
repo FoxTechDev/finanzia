@@ -245,6 +245,7 @@ export class TiposCreditoComponent implements OnInit {
   openDialog(tipo?: TipoCredito): void {
     const dialogRef = this.dialog.open(TipoCreditoDialogComponent, {
       width: '600px',
+      maxWidth: '95vw',
       maxHeight: '90vh',
       data: tipo || null,
     });

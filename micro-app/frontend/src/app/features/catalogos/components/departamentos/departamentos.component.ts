@@ -125,6 +125,7 @@ export class DepartamentosComponent implements OnInit {
   openDialog(departamento?: Departamento): void {
     const dialogRef = this.dialog.open(DepartamentoDialogComponent, {
       width: '400px',
+      maxWidth: '95vw',
       data: departamento || null,
     });
 

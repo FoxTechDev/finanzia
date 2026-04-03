@@ -488,6 +488,7 @@ export class HistorialPagosComponent implements OnInit {
 
     const dialogRef = this.dialog.open(RegistrarPagoDialogComponent, {
       width: '800px',
+      maxWidth: '95vw',
       maxHeight: '90vh',
       data: { prestamo: this.prestamo() },
     });
@@ -502,6 +503,7 @@ export class HistorialPagosComponent implements OnInit {
   verDetalle(pago: Pago): void {
     this.dialog.open(DetallePagoDialogComponent, {
       width: '600px',
+      maxWidth: '95vw',
       data: { pago },
     });
   }
@@ -509,6 +511,7 @@ export class HistorialPagosComponent implements OnInit {
   abrirAnularPago(pago: Pago): void {
     const dialogRef = this.dialog.open(AnularPagoDialogComponent, {
       width: '500px',
+      maxWidth: '95vw',
       data: { pago },
     });
 

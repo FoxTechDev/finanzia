@@ -141,7 +141,7 @@ interface DialogData {
         display: flex;
         flex-direction: column;
         gap: 8px;
-        min-width: 400px;
+        min-width: min(400px, 90vw);
       }
 
       .form-row {

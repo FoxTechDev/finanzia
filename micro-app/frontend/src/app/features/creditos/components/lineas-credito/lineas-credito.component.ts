@@ -178,6 +178,7 @@ export class LineasCreditoComponent implements OnInit {
   openDialog(linea?: LineaCredito): void {
     const dialogRef = this.dialog.open(LineaCreditoDialogComponent, {
       width: '450px',
+      maxWidth: '95vw',
       data: linea || null,
     });
 

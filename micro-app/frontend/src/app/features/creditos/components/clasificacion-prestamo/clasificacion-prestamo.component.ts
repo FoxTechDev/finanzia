@@ -493,6 +493,7 @@ export class ClasificacionPrestamoComponent implements OnInit {
   openDialog(clasificacion?: ClasificacionPrestamo): void {
     const dialogRef = this.dialog.open(ClasificacionPrestamoDialogComponent, {
       width: '600px',
+      maxWidth: '95vw',
       data: clasificacion || null,
       disableClose: true,
     });

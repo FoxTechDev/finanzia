@@ -1513,6 +1513,7 @@ export class PrestamoDetailComponent implements OnInit {
 
     const dialogRef = this.dialog.open(RegistrarPagoDialogComponent, {
       width: '800px',
+      maxWidth: '95vw',
       maxHeight: '90vh',
       disableClose: true,
       data: { prestamo },
@@ -1550,6 +1551,7 @@ export class PrestamoDetailComponent implements OnInit {
 
     const dialogRef = this.dialog.open(ModificarPlanPagoDialogComponent, {
       width: '950px',
+      maxWidth: '95vw',
       maxHeight: '90vh',
       disableClose: true,
       data: { prestamo, planPago: this.planPago() },

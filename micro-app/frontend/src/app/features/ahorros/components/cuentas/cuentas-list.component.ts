@@ -272,10 +272,12 @@ export class CuentasListComponent implements OnInit {
     if (this.lineaCodigo === 'DPF') {
       dialogRef = this.dialog.open(DpfAperturaComponent, {
         width: '600px',
+        maxWidth: '95vw',
       });
     } else {
       dialogRef = this.dialog.open(CuentaAperturaComponent, {
         width: '600px',
+        maxWidth: '95vw',
         data: { lineaCodigo: this.lineaCodigo },
       });
     }

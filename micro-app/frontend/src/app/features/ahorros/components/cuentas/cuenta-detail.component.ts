@@ -549,6 +549,7 @@ export class CuentaDetailComponent implements OnInit {
 
     const dialogRef = this.dialog.open(BeneficiarioDialogComponent, {
       width: '550px',
+      maxWidth: '95vw',
       data: { beneficiario, maxPorcentaje },
     });
 

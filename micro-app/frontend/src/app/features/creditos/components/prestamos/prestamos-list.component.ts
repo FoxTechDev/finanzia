@@ -957,6 +957,7 @@ export class PrestamosListComponent implements OnInit {
 
     const dialogRef = this.dialog.open(RegistrarPagoDialogComponent, {
       width: '800px',
+      maxWidth: '95vw',
       maxHeight: '90vh',
       data: { prestamo },
     });

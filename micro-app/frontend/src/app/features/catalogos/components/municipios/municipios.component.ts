@@ -163,6 +163,7 @@ export class MunicipiosComponent implements OnInit {
   openDialog(municipio?: Municipio): void {
     const dialogRef = this.dialog.open(MunicipioDialogComponent, {
       width: '400px',
+      maxWidth: '95vw',
       data: { municipio, departamentos: this.departamentos() },
     });
 
