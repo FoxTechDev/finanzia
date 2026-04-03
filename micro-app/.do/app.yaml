@@ -19,7 +19,7 @@ services:
   # Backend NestJS
   - name: backend
     dockerfile_path: backend/Dockerfile
-    source_dir: /
+    source_dir: /micro-app
     github:
       branch: main
       deploy_on_push: true
@@ -69,7 +69,7 @@ services:
   # Frontend Angular (como servicio con Nginx)
   - name: frontend
     dockerfile_path: frontend/Dockerfile
-    source_dir: /
+    source_dir: /micro-app
     github:
       branch: main
       deploy_on_push: true
