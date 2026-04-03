@@ -239,6 +239,9 @@ export class Prestamo {
   @UpdateDateColumn()
   updatedAt: Date;
 
+  @Column({ type: 'datetime', nullable: true, default: null })
+  deletedAt: Date;
+
   // Relaciones
   @OneToMany(() => PlanPago, (planPago) => planPago.prestamo)
   planPago: PlanPago[];

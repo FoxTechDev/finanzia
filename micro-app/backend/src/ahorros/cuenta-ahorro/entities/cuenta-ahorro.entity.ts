@@ -117,6 +117,9 @@ export class CuentaAhorro {
   @UpdateDateColumn()
   updatedAt: Date;
 
+  @Column({ type: 'datetime', nullable: true, default: null })
+  deletedAt: Date;
+
   @OneToMany(() => TransaccionAhorro, (t) => t.cuentaAhorro)
   transacciones: TransaccionAhorro[];
 

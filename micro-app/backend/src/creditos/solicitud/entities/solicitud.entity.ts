@@ -165,6 +165,9 @@ export class Solicitud {
   @UpdateDateColumn()
   updatedAt: Date;
 
+  @Column({ type: 'datetime', nullable: true, default: null })
+  deletedAt: Date;
+
   @OneToMany(() => SolicitudHistorial, (historial) => historial.solicitud)
   historial: SolicitudHistorial[];
 
