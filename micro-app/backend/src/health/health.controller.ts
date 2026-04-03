@@ -1,5 +1,5 @@
 import { Controller, Get, HttpCode } from '@nestjs/common';
-import { SkipThrottle } from '@nestjs/throttler';
+// import { SkipThrottle } from '@nestjs/throttler';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
@@ -19,8 +19,6 @@ interface HealthStatus {
   };
 }
 
-// Los health checks no deben limitarse por rate limiting (sondas de monitoreo)
-@SkipThrottle()
 @Controller()
 export class HealthController {
   constructor(
