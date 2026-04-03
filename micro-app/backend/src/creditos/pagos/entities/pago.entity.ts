@@ -144,9 +144,6 @@ export class Pago {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Column({ type: 'datetime', nullable: true, default: null })
-  deletedAt: Date;
-
   // Relación con detalles de cuotas afectadas
   @OneToMany(() => PagoDetalleCuota, (detalle) => detalle.pago)
   detallesCuota: PagoDetalleCuota[];
