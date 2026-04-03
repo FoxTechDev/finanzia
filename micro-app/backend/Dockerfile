@@ -13,10 +13,11 @@ COPY --chown=nestjs:nodejs package*.json ./
 # Instalar todas las dependencias (incluyendo devDependencies para compilar)
 RUN npm ci
 
-# Copiar código fuente
+# Copiar código fuente (invalidar cache cuando el código cambie)
 COPY --chown=nestjs:nodejs . .
 
-# Compilar la aplicación
+# Forzar rebuild: cambiar este comentario para invalidar cache de kaniko
+# build-version: 2026-04-03-v2
 RUN npm run build && test -f dist/src/main.js
 
 # Reinstalar solo dependencias de producción (--omit=dev para npm 10+)
