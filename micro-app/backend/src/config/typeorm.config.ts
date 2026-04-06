@@ -69,11 +69,8 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       // Drop schema on connection (NEVER in production)
       dropSchema: false,
 
-      // Cache queries for better performance
-      cache: isProduction ? {
-        type: 'database',
-        duration: 30000, // 30 seconds
-      } : false,
+      // Cache deshabilitado: requiere tabla 'query-result-cache' que no se crea con synchronize:false
+      cache: false,
     };
   }
 }

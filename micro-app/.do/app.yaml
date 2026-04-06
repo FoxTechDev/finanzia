@@ -6,14 +6,6 @@ name: finanzia
 # Región - Cambiar según ubicación de usuarios
 region: nyc
 
-# Base de datos MySQL
-databases:
-  - name: finanzia-db
-    engine: MYSQL
-    version: "8"
-    size: db-s-1vcpu-1gb
-    num_nodes: 1
-
 # Servicios
 services:
   # Backend NestJS
