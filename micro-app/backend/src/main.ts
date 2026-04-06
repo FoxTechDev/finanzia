@@ -50,10 +50,11 @@ async function bootstrap() {
   // Performance: Enable compression for all responses
   app.use(compression());
 
-  // Global prefix /api para todas las rutas, excepto /health (usado por health checks de DO)
-  app.setGlobalPrefix('api', {
-    exclude: ['health', 'health/detail', 'health/ping'],
-  });
+  // En desarrollo, usar prefijo /api para que coincida con el proxy del frontend
+  // En producción, DO App Platform stripea /api antes de enviar al backend
+  if (!isProduction) {
+    app.setGlobalPrefix('api');
+  }
 
   // CORS Configuration: Dynamic origins based on environment
   const corsOrigins = process.env.CORS_ORIGINS
@@ -108,7 +109,7 @@ async function bootstrap() {
 
   await app.listen(port, host);
 
-  logger.log(`🚀 Application is running on: http://${host}:${port}/api`);
+  logger.log(`🚀 Application is running on: http://${host}:${port}${isProduction ? '' : '/api'}`);
   logger.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.log(`🔒 CORS enabled for: ${corsOrigins.join(', ')}`);
 }
