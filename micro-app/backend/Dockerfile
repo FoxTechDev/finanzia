@@ -17,7 +17,7 @@ RUN npm ci
 COPY --chown=nestjs:nodejs . .
 
 # Forzar rebuild: cambiar este comentario para invalidar cache de kaniko
-# build-version: 2026-04-03-v2
+# build-version: 2026-04-05-v1
 RUN npm run build && test -f dist/src/main.js
 
 # Reinstalar solo dependencias de producción (--omit=dev para npm 10+)
