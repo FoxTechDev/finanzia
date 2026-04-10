@@ -198,7 +198,7 @@ import {
               <div class="cuadre-row"><span>Pagos recibidos ({{ datos()!.totalPagos }})</span><span class="ingreso-text">+ {{ datos()!.montoTotalPagos | currency:'USD':'symbol':'1.2-2' }}</span></div>
               <div class="cuadre-row"><span>Transferencias bancarias en desembolsos</span><span class="ingreso-text">+ {{ datos()!.totalTransferenciaBancaria | currency:'USD':'symbol':'1.2-2' }}</span></div>
               <div class="cuadre-row total-ingresos"><span>TOTAL INGRESOS</span><span>{{ datos()!.totalIngresos | currency:'USD':'symbol':'1.2-2' }}</span></div>
-              <div class="cuadre-row"><span>Fondos propios en desembolsos ({{ datos()!.totalDesembolsos }})</span><span class="retiro-text">- {{ datos()!.totalRetiros | currency:'USD':'symbol':'1.2-2' }}</span></div>
+              <div class="cuadre-row"><span>Desembolsos - F. Propios + Transferencias ({{ datos()!.totalDesembolsos }})</span><span class="retiro-text">- {{ datos()!.totalRetiros | currency:'USD':'symbol':'1.2-2' }}</span></div>
               <div class="cuadre-row total-entregar"><span>TOTAL A ENTREGAR</span><span>{{ datos()!.totalEntregar | currency:'USD':'symbol':'1.2-2' }}</span></div>
             </div>
           </mat-card-content>
@@ -241,7 +241,7 @@ import {
         <div class="t-line2"><span>Pagos recibidos</span><span>+\${{ datos()!.montoTotalPagos.toFixed(2) }}</span></div>
         <div class="t-line2"><span>Transferencias</span><span>+\${{ datos()!.totalTransferenciaBancaria.toFixed(2) }}</span></div>
         <div class="t-line2 bold"><span>TOTAL INGRESOS</span><span>\${{ datos()!.totalIngresos.toFixed(2) }}</span></div>
-        <div class="t-line2"><span>Fondos propios</span><span>-\${{ datos()!.totalRetiros.toFixed(2) }}</span></div>
+        <div class="t-line2"><span>Desembolsos (F.Prop + Transf.)</span><span>-\${{ datos()!.totalRetiros.toFixed(2) }}</span></div>
         <div class="t-sep">================================</div>
         <div class="t-line2 grande"><span>TOTAL A ENTREGAR</span><span>\${{ datos()!.totalEntregar.toFixed(2) }}</span></div>
         <div class="t-sep">================================</div>
@@ -450,7 +450,7 @@ export class ReporteArqueoComponent implements OnInit {
       ['Pagos recibidos', `+$${d.montoTotalPagos.toFixed(2)}`],
       ['Transferencias bancarias', `+$${d.totalTransferenciaBancaria.toFixed(2)}`],
       ['TOTAL INGRESOS', `$${d.totalIngresos.toFixed(2)}`],
-      ['Fondos propios (retiros)', `-$${d.totalRetiros.toFixed(2)}`],
+      ['Desembolsos - F. Propios + Transferencias', `-$${d.totalRetiros.toFixed(2)}`],
       ['TOTAL A ENTREGAR', `$${d.totalEntregar.toFixed(2)}`],
     ], styles: { fontSize: 9 }, headStyles: { fillColor: [15, 128, 140] }, columnStyles: { 1: { halign: 'right' } },
       didParseCell: (data) => {

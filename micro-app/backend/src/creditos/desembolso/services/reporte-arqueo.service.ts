@@ -119,7 +119,7 @@ export class ReporteArqueoService {
     );
 
     const totalIngresos = montoTotalPagos + totalTransferenciaBancaria;
-    const totalRetiros = totalFondosPropios;
+    const totalRetiros = totalFondosPropios + totalTransferenciaBancaria;
     const totalEntregar = totalIngresos - totalRetiros;
 
     return {
