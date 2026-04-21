@@ -790,7 +790,7 @@ export class DesembolsoService {
       [prefix.length + 1, `${prefix}%`],
     );
 
-    const secuencia = (result[0]?.maxNum || 0) + 1;
+    const secuencia = (parseInt(result[0]?.maxNum, 10) || 0) + 1;
     return `${prefix}${secuencia.toString().padStart(6, '0')}`;
   }
 

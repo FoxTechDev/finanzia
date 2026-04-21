@@ -62,7 +62,7 @@ export class SolicitudService {
       [prefix.length + 1, `${prefix}%`],
     );
 
-    const nextNumber = (result[0]?.maxNum || 0) + 1;
+    const nextNumber = (parseInt(result[0]?.maxNum, 10) || 0) + 1;
     return `${prefix}${nextNumber.toString().padStart(6, '0')}`;
   }
 
