@@ -235,4 +235,6 @@ export interface UpdateAnalisisAsesorRequest {
   recomendacionAsesor?: RecomendacionAsesor;
   capacidadPago?: number;
   antecedentesCliente?: string;
+  usuarioId?: number;
+  nombreUsuario?: string;
 }

@@ -88,7 +88,8 @@ export class PagoConsultaService {
       .leftJoinAndSelect('prestamo.persona', 'persona')
       .leftJoinAndSelect('prestamo.tipoCredito', 'tipoCredito')
       .leftJoinAndSelect('tipoCredito.lineaCredito', 'lineaCredito')
-      .leftJoinAndSelect('pago.detallesCuota', 'detalles');
+      .leftJoinAndSelect('pago.detallesCuota', 'detalles')
+      .leftJoinAndSelect('pago.formaPago', 'formaPago');
 
     // Aplicar filtros
     if (filtros.prestamoId) {

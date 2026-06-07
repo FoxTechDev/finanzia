@@ -25,6 +25,7 @@ import { LineaCreditoService } from '../../services/linea-credito.service';
 import { TipoCreditoService } from '../../services/tipo-credito.service';
 import { PersonaService } from '../../../clientes/services/persona.service';
 import { CatalogosService } from '../../../catalogos/services/catalogos.service';
+import { AuthService } from '@core/services/auth.service';
 import {
   LineaCredito,
   TipoCredito,
@@ -1046,6 +1047,7 @@ export class SolicitudFormComponent implements OnInit, OnDestroy {
   private catalogosService = inject(CatalogosService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private authService = inject(AuthService);
   private destroy$ = new Subject<void>();
 
   isLoading = signal(true);
@@ -1337,6 +1339,7 @@ export class SolicitudFormComponent implements OnInit, OnDestroy {
 
     this.isSaving.set(true);
 
+    const currentUser = this.authService.currentUser();
     // Para periodicidad DIARIA, el plazo ya está sincronizado con numeroDiasPago
     const data: CreateSolicitudRequest = {
       personaId: Number(this.clienteForm.value.personaId),
@@ -1352,6 +1355,8 @@ export class SolicitudFormComponent implements OnInit, OnDestroy {
       plazoSolicitado: Number(this.condicionesForm.value.plazoSolicitado),
       tasaInteresPropuesta: Number(this.condicionesForm.value.tasaInteresPropuesta),
       fechaSolicitud: this.condicionesForm.value.fechaSolicitud,
+      usuarioId: currentUser?.id ? Number(currentUser.id) : undefined,
+      nombreUsuario: currentUser ? `${currentUser.firstName ?? ''} ${currentUser.lastName ?? ''}`.trim() : undefined,
     };
 
     const request$ = this.savedSolicitud()

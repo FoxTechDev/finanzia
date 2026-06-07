@@ -3,11 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Pago } from '../../pagos/entities/pago.entity';
 import { Prestamo } from '../entities/prestamo.entity';
-import { parseLocalDate } from '../../../common/utils/date.utils';
 
 export interface ArqueoParams {
   fechaDesde: string;
   fechaHasta: string;
+  usuarioId?: number;
 }
 
 export interface ArqueoDiaPagos {
@@ -50,8 +50,10 @@ export class ReporteArqueoService {
   ) {}
 
   async generarReporte(params: ArqueoParams): Promise<ArqueoResponse> {
-    // 1. Pagos agrupados por día
-    const pagosAgrupados = await this.pagoRepository
+    const usuarioId = params.usuarioId ? Number(params.usuarioId) : undefined;
+
+    // 1. Pagos agrupados por día (solo forma de pago 1 y 2)
+    const pagosQuery = this.pagoRepository
       .createQueryBuilder('pago')
       .select('pago.fechaPago', 'fecha')
       .addSelect('COUNT(*)', 'cantidad')
@@ -61,6 +63,13 @@ export class ReporteArqueoService {
         hasta: params.fechaHasta,
       })
       .andWhere('pago.estado = :estado', { estado: 'APLICADO' })
+      .andWhere('pago.idFormaPago IN (:...formasPago)', { formasPago: [1, 2] });
+
+    if (usuarioId) {
+      pagosQuery.andWhere('pago.usuarioId = :usuarioId', { usuarioId });
+    }
+
+    const pagosAgrupados = await pagosQuery
       .groupBy('pago.fechaPago')
       .orderBy('pago.fechaPago', 'ASC')
       .getRawMany();
@@ -72,7 +81,7 @@ export class ReporteArqueoService {
     }));
 
     // 2. Desembolsos agrupados por día
-    const desembolsosAgrupados = await this.prestamoRepository
+    const desembolsosQuery = this.prestamoRepository
       .createQueryBuilder('prestamo')
       .select('prestamo.fechaOtorgamiento', 'fecha')
       .addSelect('COUNT(*)', 'cantidad')
@@ -82,7 +91,18 @@ export class ReporteArqueoService {
       .where('prestamo.fechaOtorgamiento BETWEEN :desde AND :hasta', {
         desde: params.fechaDesde,
         hasta: params.fechaHasta,
-      })
+      });
+
+    if (usuarioId) {
+      desembolsosQuery
+        .leftJoin('prestamo.solicitud', 'solicitud')
+        .andWhere(
+          '(solicitud.analistaId = :usuarioId OR solicitud.registradoPorId = :usuarioId)',
+          { usuarioId },
+        );
+    }
+
+    const desembolsosAgrupados = await desembolsosQuery
       .groupBy('prestamo.fechaOtorgamiento')
       .orderBy('prestamo.fechaOtorgamiento', 'ASC')
       .getRawMany();
@@ -141,7 +161,9 @@ export class ReporteArqueoService {
   }
 
   async generarColectaDiaria(params: ArqueoParams): Promise<ColectaDiariaResponse> {
-    const pagosRaw = await this.pagoRepository
+    const usuarioId = params.usuarioId ? Number(params.usuarioId) : undefined;
+
+    const pagosQuery = this.pagoRepository
       .createQueryBuilder('pago')
       .leftJoinAndSelect('pago.prestamo', 'prestamo')
       .leftJoinAndSelect('prestamo.persona', 'persona')
@@ -150,6 +172,13 @@ export class ReporteArqueoService {
         hasta: params.fechaHasta,
       })
       .andWhere('pago.estado = :estado', { estado: 'APLICADO' })
+      .andWhere('pago.idFormaPago IN (:...formasPago)', { formasPago: [1, 2] });
+
+    if (usuarioId) {
+      pagosQuery.andWhere('pago.usuarioId = :usuarioId', { usuarioId });
+    }
+
+    const pagosRaw = await pagosQuery
       .orderBy('pago.fechaPago', 'ASC')
       .addOrderBy('pago.numeroPago', 'ASC')
       .getMany();

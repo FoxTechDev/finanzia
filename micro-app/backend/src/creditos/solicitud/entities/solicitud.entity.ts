@@ -131,6 +131,13 @@ export class Solicitud {
   @Column({ type: 'date', nullable: true })
   fechaVencimiento: Date; // Fecha límite para desembolso
 
+  // Usuario que registró la solicitud
+  @Column({ nullable: true })
+  registradoPorId: number;
+
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  registradoPorNombre: string;
+
   // Analista y aprobador asignados
   @Column({ nullable: true })
   analistaId: number;

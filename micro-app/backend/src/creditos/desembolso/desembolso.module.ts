@@ -15,6 +15,7 @@ import { SolicitudHistorial } from '../solicitud/entities/solicitud-historial.en
 import { Pago } from '../pagos/entities/pago.entity';
 import { PagoDetalleCuota } from '../pagos/entities/pago-detalle-cuota.entity';
 import { PlanPagoHistorial } from './entities/plan-pago-historial.entity';
+import { FormaPago } from '../../catalogos/forma-pago/entities/forma-pago.entity';
 import { EstadoSolicitudModule } from '../../catalogos/estado-solicitud/estado-solicitud.module';
 
 // Services
@@ -54,6 +55,7 @@ import { ReporteCarteraController } from './controllers/reporte-cartera.controll
       Pago,
       PagoDetalleCuota,
       PlanPagoHistorial,
+      FormaPago,
     ]),
     EstadoSolicitudModule,
   ],

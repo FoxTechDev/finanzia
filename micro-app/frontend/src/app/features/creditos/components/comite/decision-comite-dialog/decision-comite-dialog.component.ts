@@ -17,6 +17,7 @@ import { ComiteService } from '../../../services/comite.service';
 import { GarantiaService } from '../../../services/garantia.service';
 import { SolicitudService } from '../../../services/solicitud.service';
 import { PersonaService } from '../../../../clientes/services/persona.service';
+import { AuthService } from '@core/services/auth.service';
 import {
   Solicitud,
   TipoDecisionComite,
@@ -582,6 +583,7 @@ export class DecisionComiteDialogComponent implements OnInit {
   private personaService = inject(PersonaService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
 
   solicitud = this.data.solicitud;
   garantias = signal<Garantia[]>([]);
@@ -778,6 +780,7 @@ export class DecisionComiteDialogComponent implements OnInit {
 
     this.isSubmitting.set(true);
     const formValue = this.form.value;
+    const currentUser = this.authService.currentUser();
 
     const decision = {
       tipoDecision: formValue.tipoDecision as TipoDecisionComite,
@@ -786,6 +789,8 @@ export class DecisionComiteDialogComponent implements OnInit {
       montoAutorizado: formValue.tipoDecision === 'AUTORIZADA' ? Number(formValue.montoAutorizado) : undefined,
       plazoAutorizado: formValue.tipoDecision === 'AUTORIZADA' ? Number(formValue.plazoAutorizado) : undefined,
       tasaAutorizada: formValue.tipoDecision === 'AUTORIZADA' ? Number(formValue.tasaAutorizada) : undefined,
+      usuarioId: currentUser?.id ? Number(currentUser.id) : undefined,
+      nombreUsuario: currentUser ? `${currentUser.firstName ?? ''} ${currentUser.lastName ?? ''}`.trim() : undefined,
     };
 
     this.comiteService.registrarDecision(this.solicitud.id, decision).subscribe({

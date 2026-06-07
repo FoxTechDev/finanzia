@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -13,6 +13,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSelectModule } from '@angular/material/select';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -20,7 +21,9 @@ import {
   ReporteService,
   ArqueoResponse,
   FiltrosReporteArqueo,
+  UsuarioResumen,
 } from '../../services/reporte.service';
+import { AuthService } from '@core/services/auth.service';
 
 @Component({
   selector: 'app-reporte-arqueo',
@@ -40,6 +43,7 @@ import {
     MatNativeDateModule,
     MatDividerModule,
     MatTooltipModule,
+    MatSelectModule,
     CurrencyPipe,
     DatePipe,
   ],
@@ -70,6 +74,23 @@ import {
                 <mat-datepicker-toggle matSuffix [for]="pickerHasta"></mat-datepicker-toggle>
                 <mat-datepicker #pickerHasta></mat-datepicker>
               </mat-form-field>
+              @if (!esAsesor()) {
+                <mat-form-field appearance="outline">
+                  <mat-label>Usuario</mat-label>
+                  <mat-select [(value)]="selectedUsuarioId">
+                    <mat-option [value]="null">Todos los usuarios</mat-option>
+                    @for (u of usuarios(); track u.id) {
+                      <mat-option [value]="u.id">{{ nombreUsuario(u) }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              }
+              @if (esAsesor()) {
+                <mat-form-field appearance="outline">
+                  <mat-label>Usuario</mat-label>
+                  <input matInput [value]="nombreUsuarioActual()" readonly>
+                </mat-form-field>
+              }
             </div>
             <div class="filter-actions">
               <button mat-raised-button color="primary" (click)="generarReporte()" [disabled]="filtrosForm.invalid || isLoading()">
@@ -213,7 +234,7 @@ import {
     <!-- Térmica -->
     @if (datos()) {
       <div class="recibo-termica print-only">
-        <div class="t-center"><strong>FINANZIA S.C. DE R.L. DE C.V.</strong><br>ARQUEO DE CAJA<br>Del {{ fmtFecha(datos()!.fechaDesde) }} al {{ fmtFecha(datos()!.fechaHasta) }}</div>
+        <div class="t-center"><strong>FINANZIA S.C. DE R.L. DE C.V.</strong><br>ARQUEO DE CAJA<br>Del {{ fmtFecha(datos()!.fechaDesde) }} al {{ fmtFecha(datos()!.fechaHasta) }}<br>{{ etiquetaUsuario }}</div>
         <div class="t-sep">================================</div>
         <div class="t-center"><strong>PAGOS RECIBIDOS ({{ datos()!.totalPagos }})</strong></div>
         <div class="t-sep">--------------------------------</div>
@@ -364,11 +385,21 @@ export class ReporteArqueoComponent implements OnInit {
   private fb = inject(FormBuilder);
   private reporteService = inject(ReporteService);
   private snackBar = inject(MatSnackBar);
+  private authService = inject(AuthService);
 
   isLoading = signal(false);
   reporteGenerado = signal(false);
   datos = signal<ArqueoResponse | null>(null);
+  usuarios = signal<UsuarioResumen[]>([]);
+  selectedUsuarioId: number | null = null;
   hoy = new Date();
+
+  esAsesor = computed(() => this.authService.isAsesor());
+  nombreUsuarioActual = computed(() => {
+    const u = this.authService.currentUser();
+    if (!u) return '';
+    return [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email;
+  });
 
   filtrosForm!: FormGroup;
   colPagos = ['fecha', 'cantidad', 'monto'];
@@ -376,6 +407,14 @@ export class ReporteArqueoComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
+    if (this.esAsesor()) {
+      const u = this.authService.currentUser();
+      this.selectedUsuarioId = u ? Number(u.id) : null;
+    } else {
+      this.reporteService.getUsuariosParaReportes().subscribe({
+        next: (data) => this.usuarios.set(data),
+      });
+    }
   }
 
   private initForm(): void {
@@ -395,6 +434,7 @@ export class ReporteArqueoComponent implements OnInit {
     const filtros: FiltrosReporteArqueo = {
       fechaDesde: this.fmtDate(v.fechaDesde),
       fechaHasta: this.fmtDate(v.fechaHasta),
+      usuarioId: this.selectedUsuarioId ?? undefined,
     };
     this.reporteService.getReporteArqueo(filtros).subscribe({
       next: (data) => { this.datos.set(data); this.reporteGenerado.set(true); this.isLoading.set(false); },
@@ -402,8 +442,19 @@ export class ReporteArqueoComponent implements OnInit {
     });
   }
 
-  limpiarFiltros(): void { this.initForm(); this.datos.set(null); this.reporteGenerado.set(false); }
+  limpiarFiltros(): void {
+    this.initForm();
+    this.datos.set(null);
+    this.reporteGenerado.set(false);
+    if (!this.esAsesor()) {
+      this.selectedUsuarioId = null;
+    }
+  }
   imprimir(): void { window.print(); }
+
+  nombreUsuario(u: UsuarioResumen): string {
+    return [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email;
+  }
 
   exportarPDF(): void {
     const d = this.datos();
@@ -417,9 +468,10 @@ export class ReporteArqueoComponent implements OnInit {
     doc.text('ARQUEO DE CAJA', w / 2, 26, { align: 'center' });
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
     doc.text(`Del ${this.fmtFecha(d.fechaDesde)} al ${this.fmtFecha(d.fechaHasta)}`, w / 2, 33, { align: 'center' });
-    doc.text(`Generado: ${new Date().toLocaleDateString('es-SV')}`, w / 2, 39, { align: 'center' });
+    doc.text(`Asesor/Usuario: ${this.etiquetaUsuario}`, w / 2, 39, { align: 'center' });
+    doc.text(`Generado: ${new Date().toLocaleDateString('es-SV')}`, w / 2, 45, { align: 'center' });
 
-    let y = 48;
+    let y = 54;
 
     // Pagos
     doc.setFontSize(12); doc.setFont('helvetica', 'bold');
@@ -462,6 +514,13 @@ export class ReporteArqueoComponent implements OnInit {
     const v2 = this.filtrosForm.value;
     doc.save(`arqueo-${this.fmtDate(v2.fechaDesde)}-${this.fmtDate(v2.fechaHasta)}.pdf`);
     this.snackBar.open('PDF generado', 'Cerrar', { duration: 3000 });
+  }
+
+  get etiquetaUsuario(): string {
+    if (this.esAsesor()) return this.nombreUsuarioActual();
+    if (!this.selectedUsuarioId) return 'Todos los usuarios';
+    const u = this.usuarios().find(u => u.id === this.selectedUsuarioId);
+    return u ? this.nombreUsuario(u) : 'Todos los usuarios';
   }
 
   fmtDate(fecha: Date): string {

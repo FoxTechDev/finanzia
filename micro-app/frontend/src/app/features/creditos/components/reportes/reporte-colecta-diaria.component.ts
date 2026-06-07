@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -12,12 +12,15 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSelectModule } from '@angular/material/select';
 
 import {
   ReporteService,
   ColectaDiariaResponse,
   FiltrosReporteArqueo,
+  UsuarioResumen,
 } from '../../services/reporte.service';
+import { AuthService } from '@core/services/auth.service';
 
 @Component({
   selector: 'app-reporte-colecta-diaria',
@@ -36,6 +39,7 @@ import {
     MatDatepickerModule,
     MatNativeDateModule,
     MatDividerModule,
+    MatSelectModule,
     CurrencyPipe,
     DatePipe,
   ],
@@ -66,6 +70,23 @@ import {
                 <mat-datepicker-toggle matSuffix [for]="pickerHasta"></mat-datepicker-toggle>
                 <mat-datepicker #pickerHasta></mat-datepicker>
               </mat-form-field>
+              @if (!esAsesor()) {
+                <mat-form-field appearance="outline">
+                  <mat-label>Usuario</mat-label>
+                  <mat-select [(value)]="selectedUsuarioId">
+                    <mat-option [value]="null">Todos los usuarios</mat-option>
+                    @for (u of usuarios(); track u.id) {
+                      <mat-option [value]="u.id">{{ nombreUsuario(u) }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              }
+              @if (esAsesor()) {
+                <mat-form-field appearance="outline">
+                  <mat-label>Usuario</mat-label>
+                  <input matInput [value]="nombreUsuarioActual()" readonly>
+                </mat-form-field>
+              }
             </div>
             <div class="filter-actions">
               <button mat-raised-button color="primary" (click)="generarReporte()" [disabled]="filtrosForm.invalid || isLoading()">
@@ -163,7 +184,7 @@ import {
     <!-- Térmica -->
     @if (datos()) {
       <div class="recibo-termica print-only">
-        <div class="t-center"><strong>FINANZIA S.C. DE R.L. DE C.V.</strong><br>COLECTA DIARIA<br>Del {{ fmtFecha(datos()!.fechaDesde) }} al {{ fmtFecha(datos()!.fechaHasta) }}</div>
+        <div class="t-center"><strong>FINANZIA S.C. DE R.L. DE C.V.</strong><br>COLECTA DIARIA<br>Del {{ fmtFecha(datos()!.fechaDesde) }} al {{ fmtFecha(datos()!.fechaHasta) }}<br>{{ etiquetaUsuario }}</div>
         <div class="t-sep">================================</div>
         @for (dia of datos()!.dias; track dia.fecha) {
           <div class="t-center"><strong>{{ fmtFecha(dia.fecha) }}</strong></div>
@@ -294,17 +315,35 @@ export class ReporteColectaDiariaComponent implements OnInit {
   private fb = inject(FormBuilder);
   private reporteService = inject(ReporteService);
   private snackBar = inject(MatSnackBar);
+  private authService = inject(AuthService);
 
   isLoading = signal(false);
   reporteGenerado = signal(false);
   datos = signal<ColectaDiariaResponse | null>(null);
+  usuarios = signal<UsuarioResumen[]>([]);
+  selectedUsuarioId: number | null = null;
   hoy = new Date();
+
+  esAsesor = computed(() => this.authService.isAsesor());
+  nombreUsuarioActual = computed(() => {
+    const u = this.authService.currentUser();
+    if (!u) return '';
+    return [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email;
+  });
 
   filtrosForm!: FormGroup;
   columnas = ['numeroPago', 'nombreCliente', 'montoPagado'];
 
   ngOnInit(): void {
     this.initForm();
+    if (this.esAsesor()) {
+      const u = this.authService.currentUser();
+      this.selectedUsuarioId = u ? Number(u.id) : null;
+    } else {
+      this.reporteService.getUsuariosParaReportes().subscribe({
+        next: (data) => this.usuarios.set(data),
+      });
+    }
   }
 
   private initForm(): void {
@@ -323,6 +362,7 @@ export class ReporteColectaDiariaComponent implements OnInit {
     const filtros: FiltrosReporteArqueo = {
       fechaDesde: this.fmtDate(v.fechaDesde),
       fechaHasta: this.fmtDate(v.fechaHasta),
+      usuarioId: this.selectedUsuarioId ?? undefined,
     };
     this.reporteService.getColectaDiaria(filtros).subscribe({
       next: (data) => { this.datos.set(data); this.reporteGenerado.set(true); this.isLoading.set(false); },
@@ -330,8 +370,26 @@ export class ReporteColectaDiariaComponent implements OnInit {
     });
   }
 
-  limpiarFiltros(): void { this.initForm(); this.datos.set(null); this.reporteGenerado.set(false); }
+  limpiarFiltros(): void {
+    this.initForm();
+    this.datos.set(null);
+    this.reporteGenerado.set(false);
+    if (!this.esAsesor()) {
+      this.selectedUsuarioId = null;
+    }
+  }
   imprimir(): void { window.print(); }
+
+  nombreUsuario(u: UsuarioResumen): string {
+    return [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email;
+  }
+
+  get etiquetaUsuario(): string {
+    if (this.esAsesor()) return this.nombreUsuarioActual();
+    if (!this.selectedUsuarioId) return 'Todos los usuarios';
+    const u = this.usuarios().find(u => u.id === this.selectedUsuarioId);
+    return u ? this.nombreUsuario(u) : 'Todos los usuarios';
+  }
 
   fmtDate(fecha: Date): string {
     if (!fecha) return '';

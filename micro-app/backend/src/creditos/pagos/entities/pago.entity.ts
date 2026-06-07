@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { Prestamo } from '../../desembolso/entities/prestamo.entity';
 import { PagoDetalleCuota } from './pago-detalle-cuota.entity';
+import { FormaPago } from '../../../catalogos/forma-pago/entities/forma-pago.entity';
 
 export enum TipoPago {
   CUOTA_COMPLETA = 'CUOTA_COMPLETA',
@@ -127,6 +128,14 @@ export class Pago {
 
   @Column({ type: 'varchar', length: 150, nullable: true })
   nombreUsuarioAnulacion: string;
+
+  // Forma de pago
+  @Column({ nullable: true })
+  idFormaPago: number;
+
+  @ManyToOne(() => FormaPago, { nullable: true })
+  @JoinColumn({ name: 'idFormaPago' })
+  formaPago: FormaPago;
 
   // Auditoría
   @Column({ nullable: true })

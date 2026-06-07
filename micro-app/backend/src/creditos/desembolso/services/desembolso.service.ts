@@ -14,6 +14,7 @@ import { TipoRecargo } from '../entities/tipo-recargo.entity';
 import { Solicitud } from '../../solicitud/entities/solicitud.entity';
 import { SolicitudHistorial } from '../../solicitud/entities/solicitud-historial.entity';
 import { Pago, TipoPago, EstadoPago } from '../../pagos/entities/pago.entity';
+import { FormaPago } from '../../../catalogos/forma-pago/entities/forma-pago.entity';
 import { EstadoSolicitudService } from '../../../catalogos/estado-solicitud/estado-solicitud.service';
 import {
   PreviewDesembolsoDto,
@@ -101,6 +102,8 @@ export class DesembolsoService {
     private solicitudRepository: Repository<Solicitud>,
     @InjectRepository(SolicitudHistorial)
     private historialRepository: Repository<SolicitudHistorial>,
+    @InjectRepository(FormaPago)
+    private formaPagoRepository: Repository<FormaPago>,
     private estadoSolicitudService: EstadoSolicitudService,
     private dataSource: DataSource,
     private calculoInteresService: CalculoInteresService,
@@ -683,6 +686,11 @@ export class DesembolsoService {
       );
     }
 
+    // Buscar la forma de pago "Transferencia Interna"
+    const formaPago = await this.formaPagoRepository.findOne({
+      where: { formaPago: 'Transferencia Interna' },
+    });
+
     // Calcular saldo total
     const saldoTotal = this.redondear(
       Number(prestamoACancelar.saldoCapital) +
@@ -717,6 +725,7 @@ export class DesembolsoService {
       estado: EstadoPago.APLICADO,
       usuarioId,
       nombreUsuario,
+      idFormaPago: formaPago?.idFormaPago ?? undefined,
       observaciones: `Cancelación por refinanciamiento. Nuevo préstamo ID: ${prestamoNuevoId}`,
     });
 

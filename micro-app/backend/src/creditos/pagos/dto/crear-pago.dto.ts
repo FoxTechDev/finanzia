@@ -41,4 +41,9 @@ export class CrearPagoDto {
   @IsNumber()
   @Min(0, { message: 'El recargo no puede ser negativo' })
   recargoManual?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  idFormaPago?: number;
 }

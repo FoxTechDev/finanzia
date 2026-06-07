@@ -100,4 +100,15 @@ export class CreateSolicitudDto {
   @IsOptional()
   @Type(() => Number)
   diasCalculados?: number;
+
+  // Usuario que registra la solicitud
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  usuarioId?: number;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(150)
+  nombreUsuario?: string;
 }

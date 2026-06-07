@@ -20,6 +20,7 @@ import { MatChipsModule } from '@angular/material/chips';
 
 import { DesembolsoService } from '../../../services/desembolso.service';
 import { SolicitudService } from '../../../services/solicitud.service';
+import { AuthService } from '@core/services/auth.service';
 import {
   Solicitud,
   TipoDeduccion,
@@ -955,6 +956,7 @@ export class CrearDesembolsoDialogComponent implements OnInit {
   private desembolsoService = inject(DesembolsoService);
   private solicitudService = inject(SolicitudService);
   private snackBar = inject(MatSnackBar);
+  private authService = inject(AuthService);
   dialogRef = inject(MatDialogRef<CrearDesembolsoDialogComponent>);
   data = inject<{ solicitud: Solicitud }>(MAT_DIALOG_DATA);
 
@@ -1363,6 +1365,7 @@ export class CrearDesembolsoDialogComponent implements OnInit {
       ? formatLocalDate(fechaPrimeraCuota)
       : fechaPrimeraCuota;
 
+    const currentUser = this.authService.currentUser();
     const request: CrearDesembolsoRequest = {
       solicitudId: this.data.solicitud.id,
       periodicidadPago: this.configForm.get('periodicidadPago')?.value,
@@ -1373,6 +1376,8 @@ export class CrearDesembolsoDialogComponent implements OnInit {
       transferenciaBancaria: Number(this.configForm.get('transferenciaBancaria')?.value) || 0,
       deducciones: this.transformarDeducciones(),
       recargos: this.transformarRecargos(),
+      usuarioDesembolsoId: currentUser?.id ? Number(currentUser.id) : undefined,
+      nombreUsuarioDesembolso: currentUser ? `${currentUser.firstName ?? ''} ${currentUser.lastName ?? ''}`.trim() : undefined,
     };
 
     this.desembolsoService.crear(request).subscribe({

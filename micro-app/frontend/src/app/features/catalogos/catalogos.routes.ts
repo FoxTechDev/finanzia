@@ -160,6 +160,13 @@ export const CATALOGOS_ROUTES: Routes = [
             (m) => m.TiposDeduccionComponent
           ),
       },
+      {
+        path: 'forma-pago',
+        loadComponent: () =>
+          import('./components/forma-pago/forma-pago.component').then(
+            (m) => m.FormaPagoComponent
+          ),
+      },
     ],
   },
 ];

@@ -167,6 +167,8 @@ export interface CreateSolicitudRequest {
   destinoCredito: DestinoCredito;
   descripcionDestino?: string;
   fechaSolicitud: string;
+  usuarioId?: number;
+  nombreUsuario?: string;
 }
 
 export interface CambiarEstadoSolicitudRequest {
@@ -865,6 +867,7 @@ export interface CrearPagoRequest {
   usuarioId?: number;
   nombreUsuario?: string;
   recargoManual?: number;  // Recargo manual editable (solo cuando el tipo de crédito lo requiere)
+  idFormaPago?: number;
 }
 
 export interface AnularPagoRequest {

@@ -1,4 +1,4 @@
-import { Component, inject, Input, Output, EventEmitter, signal, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, inject, Input, Output, EventEmitter, signal, OnInit, OnChanges, SimpleChanges, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { GarantiaService } from '../../../services/garantia.service';
+import { AuthService } from '@core/services/auth.service';
 import {
   RecomendacionAsesor,
   RECOMENDACION_ASESOR_LABELS,
@@ -230,6 +231,9 @@ export class AnalisisAsesorStepComponent implements OnInit, OnChanges {
   private fb = inject(FormBuilder);
   private garantiaService = inject(GarantiaService);
   private snackBar = inject(MatSnackBar);
+  private authService = inject(AuthService);
+
+  private currentUser = computed(() => this.authService.currentUser());
 
   @Input() solicitud!: Solicitud;
   @Output() analisisUpdated = new EventEmitter<Solicitud>();
@@ -282,11 +286,14 @@ export class AnalisisAsesorStepComponent implements OnInit, OnChanges {
 
     this.isSaving.set(true);
 
+    const user = this.currentUser();
     const data: UpdateAnalisisAsesorRequest = {
       analisisAsesor: this.analisisForm.value.analisisAsesor || undefined,
       recomendacionAsesor: this.analisisForm.value.recomendacionAsesor || undefined,
       capacidadPago: this.analisisForm.value.capacidadPago || undefined,
       antecedentesCliente: this.analisisForm.value.antecedentesCliente || undefined,
+      usuarioId: user?.id ? Number(user.id) : undefined,
+      nombreUsuario: user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() : undefined,
     };
 
     this.garantiaService.actualizarAnalisisAsesor(this.solicitud.id, data).subscribe({

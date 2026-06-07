@@ -60,6 +60,8 @@ export interface DatosReportePagos {
   saldoAnterior: number;
   saldoNuevo: number;
   estado: string;
+  formaPago: string;
+  nombreUsuario: string;
 }
 
 /**
@@ -149,6 +151,14 @@ export interface RespuestaRutaCobro {
 export interface FiltrosReporteArqueo {
   fechaDesde: string;
   fechaHasta: string;
+  usuarioId?: number;
+}
+
+export interface UsuarioResumen {
+  id: number;
+  firstName?: string;
+  lastName?: string;
+  email: string;
 }
 
 /**
@@ -345,7 +355,9 @@ export class ReporteService {
       interesMoratorioAplicado: Number(pago.interesMoratorioAplicado) || 0,
       saldoAnterior: Number(pago.saldoCapitalAnterior) || 0,
       saldoNuevo: Number(pago.saldoCapitalPosterior) || 0,
-      estado: pago.estado || 'N/A'
+      estado: pago.estado || 'N/A',
+      formaPago: pago.formaPago?.formaPago || 'N/A',
+      nombreUsuario: pago.nombreUsuario || 'N/A',
     };
   }
 
@@ -380,6 +392,9 @@ export class ReporteService {
     let params = new HttpParams();
     params = params.set('fechaDesde', filtros.fechaDesde);
     params = params.set('fechaHasta', filtros.fechaHasta);
+    if (filtros.usuarioId) {
+      params = params.set('usuarioId', filtros.usuarioId.toString());
+    }
 
     return this.http.get<ArqueoResponse>(`${environment.apiUrl}/reportes/arqueo`, { params });
   }
@@ -388,7 +403,14 @@ export class ReporteService {
     let params = new HttpParams();
     params = params.set('fechaDesde', filtros.fechaDesde);
     params = params.set('fechaHasta', filtros.fechaHasta);
+    if (filtros.usuarioId) {
+      params = params.set('usuarioId', filtros.usuarioId.toString());
+    }
 
     return this.http.get<ColectaDiariaResponse>(`${environment.apiUrl}/reportes/colecta-diaria`, { params });
+  }
+
+  getUsuariosParaReportes(): Observable<UsuarioResumen[]> {
+    return this.http.get<UsuarioResumen[]>(`${environment.apiUrl}/users/for-reports`);
   }
 }

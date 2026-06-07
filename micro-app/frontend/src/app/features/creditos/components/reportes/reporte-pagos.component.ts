@@ -331,6 +331,18 @@ import { ESTADO_PAGO_LABELS, EstadoPago } from '@core/models/credito.model';
                   </td>
                 </ng-container>
 
+                <!-- Forma de Pago -->
+                <ng-container matColumnDef="formaPago">
+                  <th mat-header-cell *matHeaderCellDef>Forma de Pago</th>
+                  <td mat-cell *matCellDef="let item">{{ item.formaPago }}</td>
+                </ng-container>
+
+                <!-- Usuario -->
+                <ng-container matColumnDef="nombreUsuario">
+                  <th mat-header-cell *matHeaderCellDef>Usuario</th>
+                  <td mat-cell *matCellDef="let item">{{ item.nombreUsuario }}</td>
+                </ng-container>
+
                 <tr mat-header-row *matHeaderRowDef="columnasVisibles"></tr>
                 <tr mat-row *matRowDef="let row; columns: columnasVisibles"></tr>
               </table>
@@ -678,6 +690,8 @@ export class ReportePagosComponent implements OnInit {
     'distribucion',
     'saldoAnterior',
     'saldoNuevo',
+    'formaPago',
+    'nombreUsuario',
   ];
 
   ngOnInit(): void {
@@ -873,6 +887,8 @@ export class ReportePagosComponent implements OnInit {
         'Mora Aplicada': item.interesMoratorioAplicado,
         'Saldo Anterior': item.saldoAnterior,
         'Nuevo Saldo': item.saldoNuevo,
+        'Forma de Pago': item.formaPago,
+        'Usuario': item.nombreUsuario,
       }));
 
       // Agregar fila de totales
@@ -889,6 +905,8 @@ export class ReportePagosComponent implements OnInit {
         'Mora Aplicada': this.calcularTotalMora(),
         'Saldo Anterior': '',
         'Nuevo Saldo': '',
+        'Forma de Pago': '',
+        'Usuario': '',
       } as any);
 
       // Crear worksheet
@@ -983,6 +1001,8 @@ export class ReportePagosComponent implements OnInit {
         Number(item.interesMoratorioAplicado || 0) > 0 ? `$${Number(item.interesMoratorioAplicado).toFixed(2)}` : '-',
         `$${Number(item.saldoAnterior || 0).toFixed(2)}`,
         `$${Number(item.saldoNuevo || 0).toFixed(2)}`,
+        item.formaPago,
+        item.nombreUsuario,
       ]);
 
       // Agregar fila de totales
@@ -996,6 +1016,8 @@ export class ReportePagosComponent implements OnInit {
         `$${this.calcularTotalCapital().toFixed(2)}`,
         `$${this.calcularTotalInteres().toFixed(2)}`,
         `$${this.calcularTotalMora().toFixed(2)}`,
+        '',
+        '',
         '',
         '',
       ]);
@@ -1016,6 +1038,8 @@ export class ReportePagosComponent implements OnInit {
             'Mora',
             'Saldo Ant.',
             'Saldo Nuevo',
+            'Forma Pago',
+            'Usuario',
           ],
         ],
         body: tableData,

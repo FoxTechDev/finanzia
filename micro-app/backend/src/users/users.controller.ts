@@ -36,6 +36,12 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @Get('for-reports')
+  @Roles(RoleCodes.COMITE)
+  findForReports() {
+    return this.usersService.findAll();
+  }
+
   @Get(':id')
   @Roles(RoleCodes.ADMIN)
   findOne(@Param('id') id: string) {

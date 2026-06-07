@@ -12,6 +12,7 @@ import { TipoInteresModule } from './tipo-interes/tipo-interes.module';
 import { PeriodicidadPagoModule } from './periodicidad-pago/periodicidad-pago.module';
 import { TipoCalculoModule } from './tipo-calculo/tipo-calculo.module';
 import { RolModule } from './rol/rol.module';
+import { FormaPagoModule } from './forma-pago/forma-pago.module';
 
 /**
  * Módulo principal de catálogos
@@ -35,6 +36,7 @@ import { RolModule } from './rol/rol.module';
     PeriodicidadPagoModule,
     TipoCalculoModule,
     RolModule,
+    FormaPagoModule,
   ],
   exports: [
     EstadoGarantiaModule,
@@ -50,6 +52,7 @@ import { RolModule } from './rol/rol.module';
     PeriodicidadPagoModule,
     TipoCalculoModule,
     RolModule,
+    FormaPagoModule,
   ],
 })
 export class CatalogosModule {}

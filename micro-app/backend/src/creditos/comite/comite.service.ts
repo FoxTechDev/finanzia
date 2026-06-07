@@ -233,6 +233,12 @@ export class ComiteService {
           updateData.plazoAprobado = decisionDto.plazoAutorizado || solicitud.plazoSolicitado;
           updateData.tasaInteresAprobada = decisionDto.tasaAutorizada || solicitud.tasaInteresPropuesta;
           updateData.fechaAprobacion = new Date();
+          if (decisionDto.usuarioId) {
+            updateData.aprobadorId = decisionDto.usuarioId;
+            if (decisionDto.nombreUsuario) {
+              updateData.nombreAprobador = decisionDto.nombreUsuario;
+            }
+          }
           break;
         case TipoDecisionComite.DENEGADA:
           nuevoEstadoCodigo = 'DENEGADA';

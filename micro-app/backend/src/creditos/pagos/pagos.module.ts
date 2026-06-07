@@ -6,6 +6,7 @@ import { Pago } from './entities/pago.entity';
 import { PagoDetalleCuota } from './entities/pago-detalle-cuota.entity';
 import { Prestamo } from '../desembolso/entities/prestamo.entity';
 import { PlanPago } from '../desembolso/entities/plan-pago.entity';
+import { FormaPago } from '../../catalogos/forma-pago/entities/forma-pago.entity';
 
 // Services
 import { PagoService } from './services/pago.service';
@@ -27,6 +28,7 @@ import { DesembolsoModule } from '../desembolso/desembolso.module';
       PagoDetalleCuota,
       Prestamo,
       PlanPago,
+      FormaPago,
     ]),
     DesembolsoModule, // Para usar CalculoInteresService
   ],

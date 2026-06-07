@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
@@ -18,6 +19,8 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { Router } from '@angular/router';
 
 import { PagoService } from '../../../services/pago.service';
+import { FormaPagoService, FormaPago } from '../../../services/forma-pago.service';
+import { AuthService } from '@core/services/auth.service';
 import {
   Prestamo,
   PreviewPagoResponse,
@@ -38,6 +41,7 @@ import {
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatButtonModule,
     MatIconModule,
     MatTableModule,
@@ -64,11 +68,7 @@ import {
         </div>
         <div class="info-row">
           <span class="label">Cliente:</span>
-          <span class="value">
-            @if (data.prestamo.persona) {
-              {{ data.prestamo.persona.nombre }} {{ data.prestamo.persona.apellido }}
-            }
-          </span>
+          <span class="value">{{ nombreCliente() }}</span>
         </div>
         <div class="info-row">
           <span class="label">Saldo Capital:</span>
@@ -116,6 +116,18 @@ import {
             </mat-form-field>
           </div>
         }
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Forma de Pago</mat-label>
+          <mat-select formControlName="idFormaPago">
+            @for (fp of formasPago(); track fp.idFormaPago) {
+              <mat-option [value]="fp.idFormaPago">{{ fp.formaPago }}</mat-option>
+            }
+          </mat-select>
+          @if (pagoForm.get('idFormaPago')?.invalid && pagoForm.get('idFormaPago')?.touched) {
+            <mat-error>Seleccione una forma de pago</mat-error>
+          }
+        </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Observaciones (opcional)</mat-label>
@@ -508,6 +520,8 @@ import {
 export class RegistrarPagoDialogComponent implements OnInit {
   private fb = inject(FormBuilder);
   private pagoService = inject(PagoService);
+  private formaPagoService = inject(FormaPagoService);
+  private authService = inject(AuthService);
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
   dialogRef = inject(MatDialogRef<RegistrarPagoDialogComponent>);
@@ -517,30 +531,51 @@ export class RegistrarPagoDialogComponent implements OnInit {
   loadingPreview = signal(false);
   procesando = signal(false);
   pagoCreado = signal<Pago | null>(null);
+  formasPago = signal<FormaPago[]>([]);
 
   cuotasColumns = ['numeroCuota', 'capitalAplicado', 'interesAplicado', 'interesMoratorioAplicado', 'estadoPosterior'];
 
   pagoForm: FormGroup;
 
-  // Computed signal para determinar si mostrar el campo de recargo manual
   mostrarRecargoManual = computed(() => {
     const prev = this.preview();
     if (!prev) return false;
     return prev.resumenAdeudo.recargoManual?.aplica && prev.resumenAdeudo.recargoManual?.tieneAtraso;
   });
 
+  nombreCliente = computed(() => {
+    const p = this.data.prestamo;
+    const c = (p as any).cliente;
+    const pers = (p as any).persona;
+    if (c) {
+      return c.nombreCompleto || `${c.nombre || ''} ${c.apellido || ''}`.trim();
+    }
+    if (pers) {
+      return `${pers.nombre || ''} ${pers.apellido || ''}`.trim();
+    }
+    return '';
+  });
+
   constructor() {
     this.pagoForm = this.fb.group({
       fechaPago: [new Date(), Validators.required],
       montoPagar: [null, [Validators.required, Validators.min(0.01)]],
+      idFormaPago: [null, Validators.required],
       observaciones: [''],
       recargoManual: [0, [Validators.min(0)]],
     });
   }
 
   ngOnInit(): void {
-    // Cargar resumen inicial
     this.cargarResumenInicial();
+    this.cargarFormasPago();
+  }
+
+  cargarFormasPago(): void {
+    this.formaPagoService.getAll().subscribe({
+      next: (formas) => this.formasPago.set(formas),
+      error: () => this.snackBar.open('No se pudieron cargar las formas de pago', 'Cerrar', { duration: 3000 }),
+    });
   }
 
   cargarResumenInicial(): void {
@@ -581,6 +616,13 @@ export class RegistrarPagoDialogComponent implements OnInit {
     });
   }
 
+  private getUsuarioActual(): { usuarioId?: number; nombreUsuario?: string } {
+    const user = this.authService.currentUser();
+    if (!user) return {};
+    const nombre = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
+    return { usuarioId: Number(user.id), nombreUsuario: nombre };
+  }
+
   confirmarPago(): void {
     if (!this.preview() || this.pagoForm.invalid) {
       return;
@@ -590,6 +632,7 @@ export class RegistrarPagoDialogComponent implements OnInit {
     const fechaPago = this.pagoForm.get('fechaPago')?.value;
     const fechaStr = this.formatDate(fechaPago);
     const recargoManualValue = this.pagoForm.get('recargoManual')?.value;
+    const { usuarioId, nombreUsuario } = this.getUsuarioActual();
 
     this.pagoService.crear({
       prestamoId: this.data.prestamo.id,
@@ -599,6 +642,9 @@ export class RegistrarPagoDialogComponent implements OnInit {
       recargoManual: recargoManualValue !== null && recargoManualValue !== undefined
         ? Number(recargoManualValue)
         : undefined,
+      idFormaPago: this.pagoForm.get('idFormaPago')?.value ?? undefined,
+      usuarioId,
+      nombreUsuario,
     }).subscribe({
       next: (pago) => {
         this.procesando.set(false);

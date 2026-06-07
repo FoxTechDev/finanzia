@@ -209,6 +209,7 @@ export class PagoService {
         usuarioId: dto.usuarioId,
         nombreUsuario: dto.nombreUsuario,
         observaciones: dto.observaciones,
+        idFormaPago: dto.idFormaPago ?? undefined,
       });
 
       const pagoGuardado = await queryRunner.manager.save(pago);

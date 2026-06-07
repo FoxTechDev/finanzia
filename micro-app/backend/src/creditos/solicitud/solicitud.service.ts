@@ -99,10 +99,14 @@ export class SolicitudService {
       const numeroSolicitud = await this.generarNumeroSolicitud(queryRunner);
 
       // Preparar datos de la solicitud con fechas convertidas a formato YYYY-MM-DD para MySQL DATE columns
+      // Excluir usuarioId/nombreUsuario del spread (son campos del DTO, no de la entidad)
+      const { usuarioId: creadorId, nombreUsuario: creadorNombre, ...dtoSinUsuario } = createDto as any;
       const solicitudData: any = {
-        ...createDto,
+        ...dtoSinUsuario,
         numeroSolicitud,
         estadoId: estadoRegistrada.id,
+        registradoPorId: creadorId || undefined,
+        registradoPorNombre: creadorNombre || undefined,
       };
 
       // Convertir fechaDesdePago si viene como ISO timestamp
@@ -130,6 +134,8 @@ export class SolicitudService {
         estadoAnterior: estadoRegistrada.codigo,
         estadoNuevo: estadoRegistrada.codigo,
         observacion: 'Solicitud creada',
+        usuarioId: creadorId || undefined,
+        nombreUsuario: creadorNombre || undefined,
       });
       await queryRunner.manager.save(SolicitudHistorial, historial);
 
@@ -479,10 +485,15 @@ export class SolicitudService {
       const estadoAnteriorCodigo = solicitud.estado.codigo;
       const debeCambiarEstado = estadoAnteriorCodigo === 'REGISTRADA';
 
+      // Extraer campos del DTO que no son campos de la entidad
+      const { usuarioId: analistaId, nombreUsuario: nombreAnalista, ...analisisData } = updateDto as any;
+
       // Preparar datos para actualizar
       const updateData: Partial<Solicitud> = {
-        ...updateDto,
+        ...analisisData,
         fechaAnalisis: new Date(),
+        analistaId: analistaId || undefined,
+        nombreAnalista: nombreAnalista || undefined,
       };
 
       // Si está en estado REGISTRADA, cambiar automáticamente a ANALIZADA
@@ -501,6 +512,8 @@ export class SolicitudService {
           estadoAnterior: estadoAnteriorCodigo,
           estadoNuevo: 'ANALIZADA',
           observacion: 'Análisis del asesor ingresado - cambio automático a ANALIZADA',
+          usuarioId: analistaId || undefined,
+          nombreUsuario: nombreAnalista || undefined,
         });
         await queryRunner.manager.save(SolicitudHistorial, historial);
       }
