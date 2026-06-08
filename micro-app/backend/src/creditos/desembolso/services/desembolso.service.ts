@@ -782,12 +782,12 @@ export class DesembolsoService {
   /**
    * Genera un número de crédito único de forma atómica.
    * Debe ejecutarse dentro de una transacción activa para que el FOR UPDATE tenga efecto.
-   * Formato: CR2026000001 (prefix "CR2026" = 6 caracteres, SUBSTRING inicia en posición 7)
+   * Formato: PR2026000001 (prefix "PR2026" = 6 caracteres, SUBSTRING inicia en posición 7)
    */
   private async generarNumeroCredito(queryRunner: import('typeorm').QueryRunner): Promise<string> {
     const year = new Date().getFullYear();
-    // Formato: CR2026000001 (prefix tiene 6 caracteres: "CR2026")
-    const prefix = `CR${year}`;
+    // Formato: PR2026000001 (prefix tiene 6 caracteres: "PR2026")
+    const prefix = `PR${year}`;
 
     // Consulta atómica con FOR UPDATE para bloquear las filas y evitar condiciones de carrera
     // SUBSTRING empieza en la posición prefix.length + 1 para extraer solo el número secuencial

@@ -276,6 +276,18 @@ export interface PagoInteresDpf {
   montoInteres: number;
 }
 
+// ===== Vencimiento DPF (Reporte) =====
+export interface VencimientoDpf {
+  id: number;
+  noCuenta: string;
+  nombreCompleto: string;
+  fechaVencimiento: string;
+  saldo: number;
+  tasaInteres: number;
+  plazo: number;
+  estado: string;
+}
+
 // ===== Paginación =====
 export interface PaginatedResponse<T> {
   data: T[];

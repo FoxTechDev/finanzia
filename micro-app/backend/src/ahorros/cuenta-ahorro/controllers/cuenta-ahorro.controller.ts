@@ -92,6 +92,14 @@ export class CuentaAhorroController {
     );
   }
 
+  @Get('reportes/vencimiento-dpf')
+  findVencimientoDpf(
+    @Query('fechaInicio') fechaInicio: string,
+    @Query('fechaFin') fechaFin: string,
+  ) {
+    return this.consultaService.findVencimientoDpf(fechaInicio, fechaFin);
+  }
+
   @Get(':id/contrato-dpf')
   async getContratoDpf(
     @Param('id', ParseIntPipe) id: number,

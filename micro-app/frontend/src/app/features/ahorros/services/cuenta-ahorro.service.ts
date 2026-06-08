@@ -11,6 +11,7 @@ import {
   PlanCapitalizacion,
   InteresCapitalizacion,
   PagoInteresDpf,
+  VencimientoDpf,
 } from '@core/models/ahorro.model';
 
 @Injectable({ providedIn: 'root' })
@@ -88,5 +89,11 @@ export class CuentaAhorroService {
     const params: Record<string, string> = { fechaDesde, fechaHasta };
     if (cuentaId) params['cuentaId'] = cuentaId.toString();
     return this.http.get(`${this.apiUrl}/reportes/pago-intereses-dpf`, { params });
+  }
+
+  getVencimientoDpf(fechaInicio: string, fechaFin: string): Observable<VencimientoDpf[]> {
+    return this.http.get<VencimientoDpf[]>(`${this.apiUrl}/reportes/vencimiento-dpf`, {
+      params: { fechaInicio, fechaFin },
+    });
   }
 }

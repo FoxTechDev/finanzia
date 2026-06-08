@@ -127,6 +127,16 @@ export const AHORROS_ROUTES: Routes = [
         data: { roles: [RoleCodes.ADMIN, RoleCodes.COMITE] },
       },
       {
+        path: 'reportes/vencimiento-dpf',
+        loadComponent: () =>
+          import('./components/reportes/reporte-vencimiento-dpf.component').then(
+            (m) => m.ReporteVencimientoDpfComponent,
+          ),
+        title: 'Vencimiento DPF',
+        canActivate: [roleGuard],
+        data: { roles: [RoleCodes.ADMIN, RoleCodes.COMITE] },
+      },
+      {
         path: 'lineas',
         loadComponent: () =>
           import(

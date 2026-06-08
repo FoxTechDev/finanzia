@@ -310,4 +310,48 @@ export class CuentaAhorroConsultaService {
       order: { createdAt: 'DESC' },
     });
   }
+
+  async findVencimientoDpf(
+    fechaInicio: string,
+    fechaFin: string,
+  ): Promise<{
+    id: number;
+    noCuenta: string;
+    nombreCompleto: string;
+    fechaVencimiento: string;
+    saldo: number;
+    tasaInteres: number;
+    plazo: number;
+    estado: string;
+  }[]> {
+    const cuentas = await this.cuentaRepo
+      .createQueryBuilder('cuenta')
+      .leftJoinAndSelect('cuenta.persona', 'persona')
+      .leftJoinAndSelect('cuenta.tipoAhorro', 'tipoAhorro')
+      .leftJoinAndSelect('tipoAhorro.lineaAhorro', 'lineaAhorro')
+      .leftJoinAndSelect('cuenta.estado', 'estado')
+      .where('lineaAhorro.codigo = :lineaCodigo', { lineaCodigo: 'DPF' })
+      .andWhere(
+        'cuenta.fechaVencimiento BETWEEN :fechaInicio AND :fechaFin',
+        { fechaInicio, fechaFin },
+      )
+      .andWhere('cuenta.deletedAt IS NULL')
+      .orderBy('cuenta.fechaVencimiento', 'ASC')
+      .getMany();
+
+    return cuentas.map((c) => ({
+      id: c.id,
+      noCuenta: c.noCuenta,
+      nombreCompleto: c.persona
+        ? `${c.persona.nombre} ${c.persona.apellido}`
+        : '',
+      fechaVencimiento: c.fechaVencimiento
+        ? String(c.fechaVencimiento)
+        : '',
+      saldo: Number(c.saldo),
+      tasaInteres: Number(c.tasaInteres),
+      plazo: c.plazo ?? 0,
+      estado: c.estado?.nombre || c.estado?.codigo || '',
+    }));
+  }
 }
