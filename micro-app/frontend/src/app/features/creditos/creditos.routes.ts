@@ -243,6 +243,16 @@ export const CREDITOS_ROUTES: Routes = [
         canActivate: [roleGuard],
         data: { roles: [RoleCodes.ADMIN, RoleCodes.ASESOR, RoleCodes.COMITE] },
       },
+      {
+        path: 'reportes/prestamos-a-renovar',
+        loadComponent: () =>
+          import('./components/reportes/reporte-prestamos-a-renovar.component').then(
+            (m) => m.ReportePrestamosARenovarComponent,
+          ),
+        title: 'Préstamos a Renovar',
+        canActivate: [roleGuard],
+        data: { roles: [RoleCodes.ADMIN, RoleCodes.ASESOR, RoleCodes.COMITE] },
+      },
     ],
   },
 ];

@@ -321,6 +321,52 @@ export class PrestamoConsultaService {
   }
 
   /**
+   * Obtiene los préstamos próximos a renovar:
+   * préstamos VIGENTE o MORA que tienen 1 o menos cuotas pendientes (PENDIENTE o PARCIAL),
+   * filtrados por fechaVencimiento de esas cuotas dentro del rango indicado.
+   */
+  async findPrestamosARenovar(fechaIni: string, fechaFin: string): Promise<{
+    fechaPago: string;
+    numeroCredito: string;
+    nombreCliente: string;
+    saldoPendiente: number;
+    cuota: number;
+    fechaVencimiento: string;
+  }[]> {
+    const raw = await this.planPagoRepository.query(
+      `SELECT
+         pp.fechaVencimiento          AS fechaPago,
+         p.numeroCredito              AS numeroCredito,
+         CONCAT(per.nombre, ' ', per.apellido) AS nombreCliente,
+         (p.saldoCapital + p.saldoInteres)     AS saldoPendiente,
+         pp.cuotaTotal                AS cuota,
+         p.fechaVencimiento           AS fechaVencimiento
+       FROM plan_pago pp
+       INNER JOIN prestamo p   ON p.id = pp.prestamoId AND p.deletedAt IS NULL
+       INNER JOIN persona per  ON per.idPersona = p.personaId
+       WHERE pp.estado IN ('PENDIENTE', 'PARCIAL')
+         AND pp.fechaVencimiento BETWEEN ? AND ?
+         AND p.estado IN ('VIGENTE', 'MORA')
+         AND (
+               SELECT COUNT(*) FROM plan_pago pp2
+               WHERE pp2.prestamoId = p.id
+                 AND pp2.estado IN ('PENDIENTE', 'PARCIAL')
+             ) <= 1
+       ORDER BY pp.fechaVencimiento ASC`,
+      [fechaIni, fechaFin],
+    );
+
+    return raw.map((r: any) => ({
+      fechaPago:        String(r.fechaPago).substring(0, 10),
+      numeroCredito:    r.numeroCredito ?? '',
+      nombreCliente:    r.nombreCliente ?? '',
+      saldoPendiente:   Math.round(Number(r.saldoPendiente) * 100) / 100,
+      cuota:            Math.round(Number(r.cuota) * 100) / 100,
+      fechaVencimiento: String(r.fechaVencimiento).substring(0, 10),
+    }));
+  }
+
+  /**
    * Construye las condiciones de filtrado
    */
   private construirFiltros(filtros: FiltrosPrestamoDto): FindOptionsWhere<Prestamo> {

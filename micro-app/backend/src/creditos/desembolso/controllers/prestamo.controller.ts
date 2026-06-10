@@ -47,6 +47,20 @@ export class PrestamoController {
   }
 
   /**
+   * GET /api/prestamos/reportes/prestamos-a-renovar
+   * Préstamos VIGENTE o MORA con 1 o menos cuotas pendientes,
+   * cuya fechaVencimiento de cuota cae en el rango indicado.
+   * Query params: fechaIni (YYYY-MM-DD), fechaFin (YYYY-MM-DD)
+   */
+  @Get('reportes/prestamos-a-renovar')
+  findPrestamosARenovar(
+    @Query('fechaIni') fechaIni: string,
+    @Query('fechaFin') fechaFin: string,
+  ) {
+    return this.prestamoConsultaService.findPrestamosARenovar(fechaIni, fechaFin);
+  }
+
+  /**
    * GET /api/prestamos/:id/recibo-desembolso
    * Obtiene los datos formateados para imprimir el recibo de desembolso en impresora térmica
    */
