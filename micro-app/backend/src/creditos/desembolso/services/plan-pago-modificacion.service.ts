@@ -9,6 +9,7 @@ import { Prestamo, EstadoPrestamo } from '../entities/prestamo.entity';
 import { PlanPago, EstadoCuota } from '../entities/plan-pago.entity';
 import { PlanPagoHistorial } from '../entities/plan-pago-historial.entity';
 import { PagoDetalleCuota } from '../../pagos/entities/pago-detalle-cuota.entity';
+import { Pago, EstadoPago } from '../../pagos/entities/pago.entity';
 import { ModificarPlanPagoDto, PreviewPlanPagoDto } from '../dto/modificar-plan-pago.dto';
 import { CalculoInteresService } from './calculo-interes.service';
 import { PlanPagoService, CuotaPlanPago } from './plan-pago.service';
@@ -167,12 +168,10 @@ export class PlanPagoModificacionService {
         order: { numeroCuota: 'ASC' },
       });
 
-      const cuotasNoPagadas = todasLasCuotas.filter(c => c.estado !== EstadoCuota.PAGADA);
-
-      // 6. Copiar cuotas no-PAGADA a historial
+      // 6. Copiar TODAS las cuotas a historial (snapshot completo del plan anterior)
       const loteModificacion = `MOD-${dto.prestamoId}-${Date.now()}`;
 
-      for (const cuota of cuotasNoPagadas) {
+      for (const cuota of todasLasCuotas) {
         const historial = new PlanPagoHistorial();
         historial.prestamoId = cuota.prestamoId;
         historial.loteModificacion = loteModificacion;
@@ -198,10 +197,10 @@ export class PlanPagoModificacionService {
         await queryRunner.manager.save(PlanPagoHistorial, historial);
       }
 
-      // 7. DELETE detalles de pago vinculados a cuotas que se van a eliminar,
-      //    luego DELETE cuotas no-PAGADA.
-      //    Los pagos (tabla pago) se mantienen intactos con sus totales.
-      const idsAEliminar = cuotasNoPagadas.map(c => c.id);
+      // 7. DELETE TODOS los detalles de pago y TODAS las cuotas del plan anterior.
+      //    Los registros Pago se mantienen intactos; la redistribución los re-vincula
+      //    con las cuotas del nuevo plan en el paso 9.5.
+      const idsAEliminar = todasLasCuotas.map(c => c.id);
       if (idsAEliminar.length > 0) {
         await queryRunner.manager
           .createQueryBuilder()
@@ -213,17 +212,12 @@ export class PlanPagoModificacionService {
         await queryRunner.manager.delete(PlanPago, idsAEliminar);
       }
 
-      // 8. Determinar numero de cuota inicial (despues de las pagadas)
-      const cuotasPagadas = todasLasCuotas.filter(c => c.estado === EstadoCuota.PAGADA);
-      const ultimaCuotaPagada = cuotasPagadas.length > 0
-        ? Math.max(...cuotasPagadas.map(c => c.numeroCuota))
-        : 0;
-
-      // 9. INSERT nuevas cuotas
+      // 9. INSERT nuevas cuotas (numeroCuota empieza en 1;
+      //    la redistribución marcará las ya cubiertas por pagos previos)
       for (const cuota of nuevasCuotas) {
         const nuevaCuota = new PlanPago();
         nuevaCuota.prestamoId = dto.prestamoId;
-        nuevaCuota.numeroCuota = ultimaCuotaPagada + cuota.numeroCuota;
+        nuevaCuota.numeroCuota = cuota.numeroCuota;
         nuevaCuota.fechaVencimiento = cuota.fechaVencimiento;
         nuevaCuota.capital = cuota.capital;
         nuevaCuota.interes = cuota.interes;
@@ -241,6 +235,13 @@ export class PlanPagoModificacionService {
         await queryRunner.manager.save(PlanPago, nuevaCuota);
       }
 
+      // 9.5 Redistribuir SIEMPRE los pagos existentes sobre el nuevo plan.
+      //     Independientemente de usarSaldoActual, los pagos ya registrados deben
+      //     aplicarse al nuevo plan para que los saldos queden correctos.
+      const saldos = await this.redistribuirPagosEnNuevoPlan(dto.prestamoId, queryRunner);
+      const nuevoSaldoCapital = saldos.saldoCapital;
+      const nuevoSaldoInteres = saldos.saldoInteres;
+
       // 10. Actualizar prestamo
       const fechaVencimiento = nuevasCuotas.length > 0
         ? nuevasCuotas[nuevasCuotas.length - 1].fechaVencimiento
@@ -254,13 +255,15 @@ export class PlanPagoModificacionService {
         totalPagar: this.round(montoBase + resultado.totalInteres),
         cuotaNormal: resultado.cuotaNormal,
         cuotaTotal: resultado.cuotaNormal,
-        numeroCuotas: ultimaCuotaPagada + totalNuevoCuotas,
+        numeroCuotas: totalNuevoCuotas,
         tasaInteres: dto.tasaInteres,
         periodicidadPago: dto.periodicidadPago,
         tipoInteres: dto.tipoInteres,
         plazoAutorizado: dto.plazo,
         fechaPrimeraCuota: parseLocalDate(dto.fechaPrimeraCuota),
         fechaVencimiento: fechaVencimiento,
+        saldoCapital: nuevoSaldoCapital,
+        saldoInteres: nuevoSaldoInteres,
       });
 
       await queryRunner.commitTransaction();
@@ -308,6 +311,163 @@ export class PlanPagoModificacionService {
     }
 
     return Array.from(lotes.values());
+  }
+
+  /**
+   * Re-aplica los pagos APLICADOS existentes sobre las cuotas del nuevo plan
+   * (de menor a mayor numeroCuota) usando la misma prioridad que el proceso de cobro:
+   * interés → recargos → capital.
+   *
+   * Crea nuevos registros PagoDetalleCuota vinculando cada Pago con las cuotas
+   * del nuevo plan que "cubre", y actualiza el estado de las cuotas afectadas.
+   *
+   * Retorna los saldos pendientes (capital e interés) que quedan en el nuevo plan
+   * después de aplicar todos los pagos históricos.
+   */
+  private async redistribuirPagosEnNuevoPlan(
+    prestamoId: number,
+    queryRunner: any,
+  ): Promise<{ saldoCapital: number; saldoInteres: number }> {
+    // Pagos válidos en orden cronológico
+    const pagosAplicados: Pago[] = await queryRunner.manager.find(Pago, {
+      where: { prestamoId, estado: EstadoPago.APLICADO },
+      order: { fechaPago: 'ASC', id: 'ASC' },
+    });
+
+    // Cuotas recién insertadas del nuevo plan
+    const nuevasCuotas: PlanPago[] = await queryRunner.manager.find(PlanPago, {
+      where: { prestamoId },
+      order: { numeroCuota: 'ASC' },
+    });
+
+    if (nuevasCuotas.length === 0) return { saldoCapital: 0, saldoInteres: 0 };
+
+    if (pagosAplicados.length === 0) {
+      return {
+        saldoCapital: this.round(nuevasCuotas.reduce((s, c) => s + Number(c.capital), 0)),
+        saldoInteres: this.round(nuevasCuotas.reduce((s, c) => s + Number(c.interes), 0)),
+      };
+    }
+
+    // Seguimiento de cuánto queda por cubrir en cada cuota
+    const cuotasSaldo = nuevasCuotas.map(c => ({
+      cuota: c,
+      capitalRestante: this.round(Number(c.capital)),
+      interesRestante: this.round(Number(c.interes)),
+      recargosRestante: this.round(Number(c.recargos)),
+      capitalPagado: 0,
+      interesPagado: 0,
+      recargosPagado: 0,
+    }));
+
+    let cuotaIdx = 0;
+
+    for (const pago of pagosAplicados) {
+      let disponible = this.round(Number(pago.montoPagado));
+
+      const detallesPago: Array<{
+        cuotaId: number;
+        numeroCuota: number;
+        capitalAplicado: number;
+        interesAplicado: number;
+        recargosAplicado: number;
+      }> = [];
+
+      while (disponible > 0.005 && cuotaIdx < cuotasSaldo.length) {
+        const cs = cuotasSaldo[cuotaIdx];
+
+        // 1) Interés
+        const interesAplicar = this.round(Math.min(disponible, cs.interesRestante));
+        cs.interesRestante = this.round(cs.interesRestante - interesAplicar);
+        cs.interesPagado   = this.round(cs.interesPagado   + interesAplicar);
+        disponible         = this.round(disponible - interesAplicar);
+
+        // 2) Recargos
+        const recargosAplicar = this.round(Math.min(disponible, cs.recargosRestante));
+        cs.recargosRestante = this.round(cs.recargosRestante - recargosAplicar);
+        cs.recargosPagado   = this.round(cs.recargosPagado   + recargosAplicar);
+        disponible          = this.round(disponible - recargosAplicar);
+
+        // 3) Capital
+        const capitalAplicar = this.round(Math.min(disponible, cs.capitalRestante));
+        cs.capitalRestante = this.round(cs.capitalRestante - capitalAplicar);
+        cs.capitalPagado   = this.round(cs.capitalPagado   + capitalAplicar);
+        disponible         = this.round(disponible - capitalAplicar);
+
+        if (capitalAplicar > 0 || interesAplicar > 0 || recargosAplicar > 0) {
+          detallesPago.push({
+            cuotaId: cs.cuota.id,
+            numeroCuota: cs.cuota.numeroCuota,
+            capitalAplicado: capitalAplicar,
+            interesAplicado: interesAplicar,
+            recargosAplicado: recargosAplicar,
+          });
+        }
+
+        // Si la cuota quedó cubierta, avanzar a la siguiente
+        if (cs.capitalRestante < 0.005 && cs.interesRestante < 0.005 && cs.recargosRestante < 0.005) {
+          cs.capitalRestante  = 0;
+          cs.interesRestante  = 0;
+          cs.recargosRestante = 0;
+          cuotaIdx++;
+        }
+        // Si no está cubierta, el disponible ya es 0 y el while terminará
+      }
+
+      // Registrar cómo este pago se aplicó a las cuotas del nuevo plan
+      for (const d of detallesPago) {
+        const det = new PagoDetalleCuota();
+        det.pagoId                     = pago.id;
+        det.planPagoId                 = d.cuotaId;
+        det.numeroCuota                = d.numeroCuota;
+        det.capitalAplicado            = d.capitalAplicado;
+        det.interesAplicado            = d.interesAplicado;
+        det.recargosAplicado           = d.recargosAplicado;
+        det.interesMoratorioAplicado   = 0;
+        det.estadoCuotaAnterior        = EstadoCuota.PENDIENTE;
+        det.capitalPagadoAnterior      = 0;
+        det.interesPagadoAnterior      = 0;
+        det.recargosPagadoAnterior     = 0;
+        det.interesMoratorioPagadoAnterior = 0;
+        det.diasMoraAnterior           = 0;
+        det.estadoCuotaPosterior       = EstadoCuota.PENDIENTE; // se corrige más abajo
+        await queryRunner.manager.save(PagoDetalleCuota, det);
+      }
+    }
+
+    // Actualizar estado y montos pagados en cada cuota
+    for (const cs of cuotasSaldo) {
+      const cubierta = cs.capitalRestante < 0.005 && cs.interesRestante < 0.005;
+      const conPago  = cs.capitalPagado > 0.001 || cs.interesPagado > 0.001;
+
+      const estadoFinal = cubierta
+        ? EstadoCuota.PAGADA
+        : conPago
+        ? EstadoCuota.PARCIAL
+        : EstadoCuota.PENDIENTE;
+
+      if (estadoFinal !== EstadoCuota.PENDIENTE) {
+        await queryRunner.manager.update(PlanPago, cs.cuota.id, {
+          capitalPagado:  cs.capitalPagado,
+          interesPagado:  cs.interesPagado,
+          recargosPagado: cs.recargosPagado,
+          estado:         estadoFinal,
+        });
+
+        // Actualizar estado posterior en los detalles de pago de esta cuota
+        await queryRunner.manager
+          .createQueryBuilder()
+          .update(PagoDetalleCuota)
+          .set({ estadoCuotaPosterior: estadoFinal })
+          .where('planPagoId = :id', { id: cs.cuota.id })
+          .execute();
+      }
+    }
+
+    return {
+      saldoCapital: this.round(cuotasSaldo.reduce((s, cs) => s + cs.capitalRestante, 0)),
+      saldoInteres: this.round(cuotasSaldo.reduce((s, cs) => s + cs.interesRestante, 0)),
+    };
   }
 
   private round(value: number): number {
