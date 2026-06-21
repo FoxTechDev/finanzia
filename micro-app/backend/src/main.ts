@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { ValidationPipe, Logger, ClassSerializerInterceptor } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import * as compression from 'compression';
@@ -10,6 +11,12 @@ import { Request, Response, NextFunction } from 'express';
 import { DataSource } from 'typeorm';
 
 async function bootstrap() {
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret || jwtSecret.length < 32 || jwtSecret.toUpperCase().includes('CHANGE') || jwtSecret.toUpperCase().includes('SECRET-KEY')) {
+    console.error('FATAL: JWT_SECRET no está configurado correctamente. Debe ser un valor aleatorio de al menos 32 caracteres.');
+    process.exit(1);
+  }
+
   const logger = new Logger('Bootstrap');
   const isProduction = process.env.NODE_ENV === 'production';
 
@@ -57,9 +64,10 @@ async function bootstrap() {
   }
 
   // CORS Configuration: Dynamic origins based on environment
-  const corsOrigins = process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(',')
-    : ['http://localhost:4200'];
+  const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:4200')
+    .split(',')
+    .map(o => o.trim())
+    .filter(o => o !== '*' && o.length > 0);
 
   app.enableCors({
     origin: corsOrigins,
@@ -82,6 +90,9 @@ async function bootstrap() {
       disableErrorMessages: isProduction,
     }),
   );
+
+  // Global serializer interceptor: applies @Exclude() and @Expose() decorators on entities
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   // Graceful shutdown
   app.enableShutdownHooks();

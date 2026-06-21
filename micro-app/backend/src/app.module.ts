@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-// import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-// import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmConfigService } from './config/typeorm.config';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
@@ -31,10 +31,7 @@ import { BancosModule } from './bancos/banco.module';
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
     }),
-    // ThrottlerModule.forRoot([{
-    //   ttl: 60000,
-    //   limit: 100,
-    // }]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     HealthModule,
     UsersModule,
     AuthModule,
@@ -55,11 +52,7 @@ import { BancosModule } from './bancos/banco.module';
   ],
   controllers: [],
   providers: [
-    // Rate limiting deshabilitado temporalmente para diagnóstico de deploy
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: ThrottlerGuard,
-    // },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
 export class AppModule {}

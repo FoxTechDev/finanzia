@@ -25,7 +25,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: JwtPayload) {
     // Cargar usuario con su rol
     const user = await this.usersService.findOneWithRole(+payload.sub);
-    if (!user) {
+    if (!user || !user.isActive) {
       throw new UnauthorizedException();
     }
     return user;
