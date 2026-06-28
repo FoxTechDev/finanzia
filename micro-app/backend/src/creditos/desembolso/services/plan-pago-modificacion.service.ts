@@ -54,7 +54,7 @@ export class PlanPagoModificacionService {
 
     const montoBase = dto.usarSaldoActual
       ? Number(prestamo.saldoCapital)
-      : Number(prestamo.montoDesembolsado);
+      : Number(prestamo.montoAutorizado);
 
     if (montoBase <= 0) {
       throw new BadRequestException('El monto base para el calculo debe ser mayor a 0');
@@ -129,7 +129,7 @@ export class PlanPagoModificacionService {
       // 2. Determinar monto base
       const montoBase = dto.usarSaldoActual
         ? Number(prestamo.saldoCapital)
-        : Number(prestamo.montoDesembolsado);
+        : Number(prestamo.montoAutorizado);
 
       if (montoBase <= 0) {
         throw new BadRequestException('El monto base para el calculo debe ser mayor a 0');
