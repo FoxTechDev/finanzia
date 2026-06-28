@@ -67,7 +67,7 @@ import {
         </div>
         <div class="info-row">
           <span class="label">Monto Otorgado:</span>
-          <span class="value amount">{{ data.prestamo.montoDesembolsado | currency:'USD' }}</span>
+          <span class="value amount">{{ data.prestamo.montoAutorizado | currency:'USD' }}</span>
         </div>
         <div class="info-row">
           <span class="label">Saldo Capital Actual:</span>
@@ -86,7 +86,7 @@ import {
           <label class="param-label">Monto base para el calculo:</label>
           <mat-radio-group [(ngModel)]="usarSaldoActual" class="radio-group">
             <mat-radio-button [value]="false">
-              Monto otorgado ({{ data.prestamo.montoDesembolsado | currency:'USD' }})
+              Monto otorgado ({{ data.prestamo.montoAutorizado | currency:'USD' }})
             </mat-radio-button>
             <mat-radio-button [value]="true">
               Saldo actual ({{ data.prestamo.saldoCapital | currency:'USD' }})
@@ -424,7 +424,7 @@ export class ModificarPlanPagoDialogComponent implements OnInit {
   data = inject<{ prestamo: Prestamo; planPago: PlanPago[] }>(MAT_DIALOG_DATA);
 
   // Parametros del formulario
-  usarSaldoActual = true;
+  usarSaldoActual = false;
   tasaInteres = 0;
   tipoInteres = TipoInteres.FLAT;
   plazo = 12;
