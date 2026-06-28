@@ -152,6 +152,14 @@ export class PagoService {
           : resumenAdeudo.recargoManual.montoSugerido;
       }
 
+      // Validar que el monto no supere el total adeudado
+      const totalMaximoPago = this.redondear(resumenAdeudo.totales.totalAdeudado + recargoManual);
+      if (dto.montoPagar > totalMaximoPago) {
+        throw new BadRequestException(
+          `El monto a pagar ($${dto.montoPagar.toFixed(2)}) supera el total adeudado ($${totalMaximoPago.toFixed(2)})`,
+        );
+      }
+
       const distribucion = this.pagoCalculoService.calcularDistribucion(
         dto.montoPagar,
         resumenAdeudo.cuotasPendientes,

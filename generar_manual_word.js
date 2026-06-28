@@ -1,755 +1,773 @@
-const { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, BorderStyle, AlignmentType, PageBreak, ImageRun } = require('docx');
-const fs = require('fs');
-const path = require('path');
+const docx = require("docx");
+const fs = require("fs");
 
-// Directorio de capturas
-const screenshotsDir = path.join(__dirname, 'capturas_manual');
+const {
+  Document,
+  Paragraph,
+  TextRun,
+  HeadingLevel,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  BorderStyle,
+  AlignmentType,
+  ShadingType,
+  PageBreak,
+} = docx;
 
-// Función para cargar imagen si existe
-function loadImageIfExists(filename) {
-    const imagePath = path.join(screenshotsDir, filename);
-    if (fs.existsSync(imagePath)) {
-        return fs.readFileSync(imagePath);
-    }
-    return null;
+// Colores
+const COLOR_PRIMARY = "1565C0";
+const COLOR_ACCENT = "0D47A1";
+const COLOR_GRAY = "666666";
+const COLOR_LIGHT_GRAY = "F5F5F5";
+const COLOR_GREEN = "2E7D32";
+const COLOR_RED = "C62828";
+const COLOR_ORANGE = "EF6C00";
+const COLOR_PURPLE = "6A1B9A";
+const COLOR_CYAN = "00838F";
+
+// Helpers
+function heading(text, level) {
+  return new Paragraph({
+    text,
+    heading: level,
+    spacing: { before: level === HeadingLevel.HEADING_1 ? 400 : 240, after: 120 },
+  });
 }
 
-// Función para crear párrafo de imagen o placeholder
-function createImageOrPlaceholder(filename, caption) {
-    const imageData = loadImageIfExists(filename);
-    if (imageData) {
-        return [
-            new Paragraph({
-                children: [
-                    new ImageRun({
-                        data: imageData,
-                        transformation: { width: 500, height: 300 },
-                    }),
-                ],
-                alignment: AlignmentType.CENTER,
-            }),
-            new Paragraph({
-                children: [new TextRun({ text: caption, italics: true, size: 20 })],
-                alignment: AlignmentType.CENTER,
-                spacing: { after: 200 },
-            }),
-        ];
-    }
-    return [
-        new Paragraph({
-            children: [
-                new TextRun({
-                    text: `[INSERTAR CAPTURA: ${caption}]`,
-                    italics: true,
-                    color: "888888",
-                    size: 22
-                })
-            ],
-            alignment: AlignmentType.CENTER,
-            spacing: { before: 200, after: 200 },
-            border: {
-                top: { style: BorderStyle.DASHED, size: 1, color: "CCCCCC" },
-                bottom: { style: BorderStyle.DASHED, size: 1, color: "CCCCCC" },
-                left: { style: BorderStyle.DASHED, size: 1, color: "CCCCCC" },
-                right: { style: BorderStyle.DASHED, size: 1, color: "CCCCCC" },
-            },
-        }),
-    ];
+function para(text, options = {}) {
+  const runs = [];
+  if (typeof text === "string") {
+    runs.push(new TextRun({ text, size: 22, font: "Calibri", ...options }));
+  } else {
+    runs.push(...text);
+  }
+  return new Paragraph({
+    children: runs,
+    spacing: { after: 100 },
+    alignment: options.alignment,
+  });
 }
 
-// Función para crear tabla
-function createTable(headers, rows) {
-    return new Table({
-        width: { size: 100, type: WidthType.PERCENTAGE },
-        rows: [
-            new TableRow({
-                children: headers.map(h => new TableCell({
-                    children: [new Paragraph({
-                        children: [new TextRun({ text: h, bold: true, size: 22 })],
-                        alignment: AlignmentType.CENTER
-                    })],
-                    shading: { fill: "1976D2" },
-                })),
-                tableHeader: true,
-            }),
-            ...rows.map((row, idx) => new TableRow({
-                children: row.map(cell => new TableCell({
-                    children: [new Paragraph({
-                        children: [new TextRun({ text: cell, size: 22 })],
-                    })],
-                    shading: { fill: idx % 2 === 0 ? "FFFFFF" : "F5F5F5" },
-                })),
-            })),
-        ],
-    });
+function bold(text, opts = {}) {
+  return new TextRun({ text, bold: true, size: 22, font: "Calibri", ...opts });
 }
 
-// Crear documento
+function normal(text, opts = {}) {
+  return new TextRun({ text, size: 22, font: "Calibri", ...opts });
+}
+
+function note(text) {
+  return new Paragraph({
+    children: [
+      new TextRun({ text: "Nota: ", bold: true, size: 22, font: "Calibri", color: COLOR_ORANGE }),
+      new TextRun({ text, size: 22, font: "Calibri", color: COLOR_GRAY }),
+    ],
+    spacing: { before: 60, after: 100 },
+    indent: { left: 300 },
+  });
+}
+
+function important(text) {
+  return new Paragraph({
+    children: [
+      new TextRun({ text: "Importante: ", bold: true, size: 22, font: "Calibri", color: COLOR_RED }),
+      new TextRun({ text, size: 22, font: "Calibri" }),
+    ],
+    spacing: { before: 60, after: 100 },
+    indent: { left: 300 },
+  });
+}
+
+function bullet(text, level = 0) {
+  const children = typeof text === "string"
+    ? [new TextRun({ text, size: 22, font: "Calibri" })]
+    : text;
+  return new Paragraph({
+    children,
+    bullet: { level },
+    spacing: { after: 40 },
+  });
+}
+
+function numberedItem(number, text) {
+  return new Paragraph({
+    children: [
+      new TextRun({ text: `${number}. `, bold: true, size: 22, font: "Calibri", color: COLOR_PRIMARY }),
+      ...(typeof text === "string" ? [new TextRun({ text, size: 22, font: "Calibri" })] : text),
+    ],
+    spacing: { after: 60 },
+    indent: { left: 300 },
+  });
+}
+
+function makeTable(headers, rows, colWidths) {
+  const headerRow = new TableRow({
+    tableHeader: true,
+    children: headers.map((h, i) =>
+      new TableCell({
+        children: [new Paragraph({ children: [bold(h, { color: "FFFFFF" })], alignment: AlignmentType.CENTER })],
+        shading: { type: ShadingType.SOLID, color: COLOR_PRIMARY },
+        width: colWidths ? { size: colWidths[i], type: WidthType.PERCENTAGE } : undefined,
+        verticalAlign: "center",
+      })
+    ),
+  });
+
+  const dataRows = rows.map((row, ri) =>
+    new TableRow({
+      children: row.map((cell, ci) => {
+        const children = typeof cell === "string"
+          ? [new Paragraph({ children: [normal(cell)], spacing: { before: 30, after: 30 } })]
+          : [new Paragraph({ children: cell, spacing: { before: 30, after: 30 } })];
+        return new TableCell({
+          children,
+          shading: ri % 2 === 1 ? { type: ShadingType.SOLID, color: COLOR_LIGHT_GRAY } : undefined,
+          width: colWidths ? { size: colWidths[ci], type: WidthType.PERCENTAGE } : undefined,
+          verticalAlign: "center",
+        });
+      }),
+    })
+  );
+
+  return new Table({
+    rows: [headerRow, ...dataRows],
+    width: { size: 100, type: WidthType.PERCENTAGE },
+  });
+}
+
+function spacer() {
+  return new Paragraph({ text: "", spacing: { after: 80 } });
+}
+
+function pageBreak() {
+  return new Paragraph({ children: [new PageBreak()] });
+}
+
+// ==================== DOCUMENTO ====================
+
+const children = [];
+
+// --- PORTADA ---
+children.push(
+  new Paragraph({ text: "", spacing: { after: 2000 } }),
+  new Paragraph({
+    children: [new TextRun({ text: "MANUAL DE USUARIO", size: 56, bold: true, font: "Calibri", color: COLOR_PRIMARY })],
+    alignment: AlignmentType.CENTER,
+    spacing: { after: 200 },
+  }),
+  new Paragraph({
+    children: [new TextRun({ text: "Solicitud de Credito", size: 44, font: "Calibri", color: COLOR_ACCENT })],
+    alignment: AlignmentType.CENTER,
+    spacing: { after: 600 },
+  }),
+  new Paragraph({
+    children: [new TextRun({ text: "Sistema MICRO", size: 28, font: "Calibri", color: COLOR_GRAY })],
+    alignment: AlignmentType.CENTER,
+    spacing: { after: 100 },
+  }),
+  new Paragraph({
+    children: [new TextRun({ text: "Sistema de Gestion de Microcreditos", size: 24, font: "Calibri", color: COLOR_GRAY })],
+    alignment: AlignmentType.CENTER,
+    spacing: { after: 1200 },
+  }),
+  new Paragraph({
+    children: [new TextRun({ text: "Febrero 2026", size: 24, font: "Calibri", color: COLOR_GRAY })],
+    alignment: AlignmentType.CENTER,
+  }),
+  pageBreak()
+);
+
+// --- INDICE ---
+children.push(
+  heading("Indice", HeadingLevel.HEADING_1),
+  spacer(),
+  numberedItem(1, "Acceso al modulo"),
+  numberedItem(2, "Crear nueva solicitud"),
+  new Paragraph({
+    children: [normal("Paso 1: Seleccion de Cliente")],
+    indent: { left: 720 },
+    spacing: { after: 40 },
+  }),
+  new Paragraph({
+    children: [normal("Paso 2: Tipo de Credito")],
+    indent: { left: 720 },
+    spacing: { after: 40 },
+  }),
+  new Paragraph({
+    children: [normal("Paso 3: Condiciones y Plan de Pago")],
+    indent: { left: 720 },
+    spacing: { after: 40 },
+  }),
+  new Paragraph({
+    children: [normal("Paso 4: Garantias")],
+    indent: { left: 720 },
+    spacing: { after: 40 },
+  }),
+  new Paragraph({
+    children: [normal("Paso 5: Analisis del Asesor")],
+    indent: { left: 720 },
+    spacing: { after: 40 },
+  }),
+  numberedItem(3, "Consultar solicitudes"),
+  numberedItem(4, "Detalle de una solicitud"),
+  numberedItem(5, "Flujo de estados"),
+  numberedItem(6, "Preguntas frecuentes"),
+  pageBreak()
+);
+
+// ===========================================
+// SECCION 1: ACCESO AL MODULO
+// ===========================================
+children.push(
+  heading("1. Acceso al modulo", HeadingLevel.HEADING_1),
+  para("Desde el menu lateral, ingrese a:"),
+  spacer(),
+  new Paragraph({
+    children: [bold("Creditos -> Solicitudes de Credito", { size: 26, color: COLOR_PRIMARY })],
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 100, after: 200 },
+  }),
+  para("Se mostrara el listado de todas las solicitudes registradas. Para crear una nueva, haga clic en el boton \"Nueva Solicitud\"."),
+  pageBreak()
+);
+
+// ===========================================
+// SECCION 2: CREAR NUEVA SOLICITUD
+// ===========================================
+children.push(
+  heading("2. Crear nueva solicitud", HeadingLevel.HEADING_1),
+  para("El formulario de solicitud se compone de 5 pasos secuenciales. Debe completar cada paso antes de avanzar al siguiente."),
+  spacer(),
+  makeTable(
+    ["Paso 1", "Paso 2", "Paso 3", "Paso 4", "Paso 5"],
+    [["Cliente", "Tipo de Credito", "Condiciones y Plan de Pago", "Garantias (si aplica)", "Analisis del Asesor"]],
+    [20, 20, 25, 20, 15]
+  ),
+  spacer(),
+  spacer()
+);
+
+// --- PASO 1 ---
+children.push(
+  heading("Paso 1: Seleccion de Cliente", HeadingLevel.HEADING_2),
+  para("En este paso se selecciona al cliente que solicita el credito."),
+  spacer(),
+  makeTable(
+    ["Campo", "Descripcion"],
+    [["Buscar cliente", "Escriba el DUI, nombre o apellido del cliente. Se requieren al menos 2 caracteres."]],
+    [30, 70]
+  ),
+  spacer(),
+  para([bold("Como usarlo:")]),
+  spacer(),
+  numberedItem(1, [normal("Escriba en el campo de busqueda el DUI (ej: "), bold("00000000-0"), normal(") o el nombre del cliente (ej: "), bold("Juan Perez"), normal(").")]),
+  numberedItem(2, "Aparecera una lista desplegable con los resultados encontrados mostrando el DUI y nombre completo."),
+  numberedItem(3, "Seleccione al cliente deseado haciendo clic sobre el."),
+  numberedItem(4, "Se mostraran los datos del cliente seleccionado: nombre completo, DUI, telefono y correo."),
+  numberedItem(5, "Si desea cambiar de cliente, borre la seleccion y busque nuevamente."),
+  spacer(),
+  note("El cliente debe estar previamente registrado en el sistema. Si no aparece en la busqueda, debe registrarlo primero en el modulo de Clientes."),
+  spacer(),
+  para("Haga clic en \"Siguiente\" para continuar."),
+  spacer()
+);
+
+// --- PASO 2 ---
+children.push(
+  heading("Paso 2: Tipo de Credito", HeadingLevel.HEADING_2),
+  para("En este paso se define que producto crediticio se le ofrecera al cliente."),
+  spacer(),
+  makeTable(
+    ["Campo", "Obligatorio", "Descripcion"],
+    [
+      ["Linea de Credito", "Si", "Seleccione la linea de credito (ej: Microcredito, Consumo, etc.)"],
+      ["Tipo de Credito", "Si", "Seleccione el tipo de credito. Las opciones se filtran segun la linea seleccionada. Si aparece un icono de candado, el producto requiere garantia."],
+      ["Destino del Credito", "Si", "Seleccione el proposito del credito."],
+      ["Descripcion del destino", "No", "Detalle adicional sobre el uso que se dara al credito."],
+    ],
+    [30, 15, 55]
+  ),
+  spacer(),
+  para([bold("Opciones de Destino del Credito:")]),
+  spacer()
+);
+
+const destinos = [
+  "Capital de Trabajo", "Activo Fijo", "Consumo Personal", "Vivienda Nueva",
+  "Vivienda Usada", "Mejora de Vivienda", "Consolidacion de Deudas",
+  "Educacion", "Salud", "Vehiculo", "Otro"
+];
+destinos.forEach(d => children.push(bullet(d)));
+
+children.push(
+  spacer(),
+  para([bold("Informacion del producto:")]),
+  para("Al seleccionar un tipo de credito, el sistema muestra los parametros permitidos del producto:"),
+  spacer(),
+  makeTable(
+    ["Parametro", "Ejemplo"],
+    [
+      ["Monto", "$100.00 - $5,000.00"],
+      ["Plazo", "1 - 24 meses"],
+      ["Tasa", "5% - 15%"],
+      ["Garantia", "Requerida / No requerida"],
+    ],
+    [30, 70]
+  ),
+  spacer(),
+  para("Estos rangos son los limites que debe respetar en el siguiente paso."),
+  para("Haga clic en \"Siguiente\" para continuar."),
+  pageBreak()
+);
+
+// --- PASO 3 ---
+children.push(
+  heading("Paso 3: Condiciones y Plan de Pago", HeadingLevel.HEADING_2),
+  para("Este es el paso mas importante. Aqui se definen los terminos financieros del credito y se calcula el plan de pagos."),
+  spacer(),
+
+  // Campos principales
+  heading("Campos principales", HeadingLevel.HEADING_3),
+  spacer(),
+  makeTable(
+    ["Campo", "Obligatorio", "Descripcion"],
+    [
+      ["Periodicidad de Pago", "Si", "Frecuencia con la que el cliente realizara los pagos."],
+      ["Monto Solicitado ($)", "Si", "Cantidad de dinero que solicita el cliente. Debe estar dentro del rango del producto."],
+      ["Plazo (meses)", "Si", "Duracion del credito en meses. Debe estar dentro del rango del producto."],
+      ["Tasa Propuesta (%)", "Si", "Tasa de interes propuesta. Debe estar dentro del rango del producto."],
+      ["Numero de Cuotas", "Depende", "Se calcula automaticamente, excepto para periodicidad diaria."],
+      ["Tipo de Interes", "Si", "Metodo de calculo de intereses (Flat o Amortizado)."],
+      ["Fecha de Solicitud", "Si", "Fecha de la solicitud. Por defecto es la fecha actual."],
+    ],
+    [28, 15, 57]
+  ),
+  spacer(),
+
+  // Periodicidades
+  heading("Periodicidades disponibles", HeadingLevel.HEADING_3),
+  spacer(),
+  makeTable(
+    ["Periodicidad", "Calculo de cuotas", "Ejemplo"],
+    [
+      ["Diario", "El usuario ingresa manualmente (1-365)", "Usuario define: 45 cuotas"],
+      ["Semanal", "Plazo x 4", "3 meses = 12 cuotas"],
+      ["Quincenal", "Plazo x 2", "3 meses = 6 cuotas"],
+      ["Mensual", "Igual al plazo", "12 meses = 12 cuotas"],
+      ["Trimestral", "Plazo / 3", "12 meses = 4 cuotas"],
+      ["Semestral", "Plazo / 6", "12 meses = 2 cuotas"],
+      ["Anual", "Plazo / 12", "12 meses = 1 cuota"],
+    ],
+    [25, 45, 30]
+  ),
+  spacer(),
+  note("Para todas las periodicidades excepto Diario, el numero de cuotas se calcula automaticamente y no se puede editar."),
+  spacer(),
+
+  // Tipos de interes
+  heading("Tipos de interes", HeadingLevel.HEADING_3),
+  spacer(),
+  makeTable(
+    ["Tipo", "Descripcion", "Uso comun"],
+    [
+      ["Flat", "El interes se calcula sobre el monto original durante todo el plazo. Todas las cuotas son iguales.", "Microcreditos"],
+      ["Amortizado (Sistema Frances)", "El interes se calcula sobre el saldo pendiente. La cuota es fija, pero la proporcion de capital e interes varia.", "Creditos de consumo, vivienda"],
+    ],
+    [25, 55, 20]
+  ),
+  spacer(),
+  para([bold("Ejemplo comparativo"), normal(" para $1,000 a 12 meses al 10% mensual:")]),
+  spacer(),
+  makeTable(
+    ["Concepto", "Flat", "Amortizado"],
+    [
+      ["Cuota mensual", "$183.33 (fija)", "Varia (cuota fija pero composicion diferente)"],
+      ["Total interes", "$1,200.00", "Menor que flat"],
+      ["Total a pagar", "$2,200.00", "Menor que flat"],
+    ],
+    [30, 35, 35]
+  ),
+  spacer(),
+
+  // Recargos
+  heading("Recargos opcionales", HeadingLevel.HEADING_3),
+  para("Puede agregar cargos adicionales a las cuotas (comisiones, seguros, etc.):"),
+  spacer(),
+  numberedItem(1, "Haga clic en \"Agregar Recargo\"."),
+  numberedItem(2, "Complete los campos:"),
+  spacer(),
+  makeTable(
+    ["Campo", "Descripcion"],
+    [
+      ["Nombre", "Nombre del cargo (ej: \"Comision de procesamiento\")"],
+      ["Tipo", "Fijo (monto en dolares) o Porcentaje (% sobre la cuota)"],
+      ["Valor", "Monto o porcentaje del cargo"],
+      ["Desde cuota", "Cuota a partir de la cual aplica (opcional, por defecto: 1)"],
+      ["Hasta cuota", "Cuota hasta la cual aplica (opcional, por defecto: ultima)"],
+    ],
+    [25, 75]
+  ),
+  spacer(),
+  numberedItem(3, "Los recargos agregados aparecen como etiquetas que puede eliminar haciendo clic en la X."),
+  spacer(),
+
+  // Calcular plan
+  heading("Calcular el plan de pago", HeadingLevel.HEADING_3),
+  para("Una vez completados todos los campos:"),
+  spacer(),
+  numberedItem(1, [bold("Haga clic en el boton \"Calcular Cuota y Plan de Pago\".")]),
+  numberedItem(2, "El sistema calculara y mostrara:"),
+  spacer(),
+  bullet([bold("Cuota: "), normal("Monto de cada cuota.")]),
+  bullet([bold("Total Interes: "), normal("Suma total de intereses.")]),
+  bullet([bold("Total a Pagar: "), normal("Suma total incluyendo capital e intereses.")]),
+  bullet([bold("Numero de Cuotas: "), normal("Cantidad total de cuotas.")]),
+  spacer(),
+  numberedItem(3, "Se desplegara una tabla con el plan de pagos detallado:"),
+  spacer(),
+  makeTable(
+    ["Columna", "Descripcion"],
+    [
+      ["#", "Numero de cuota"],
+      ["Fecha", "Fecha de vencimiento"],
+      ["Capital", "Monto de capital en la cuota"],
+      ["Interes", "Monto de interes en la cuota"],
+      ["Recargos", "Monto de recargos (si aplica)"],
+      ["Cuota", "Monto total de la cuota"],
+      ["Saldo", "Saldo pendiente despues del pago"],
+    ],
+    [20, 80]
+  ),
+  spacer(),
+  numberedItem(4, "Revise que el plan sea correcto. Si necesita ajustar algun valor, modifiquelo y vuelva a calcular."),
+  numberedItem(5, [bold("Haga clic en \"Guardar y Continuar\"."), normal(" Se guardara la solicitud junto con el plan de pagos.")]),
+  spacer(),
+  important("Si no calcula el plan de pago, solo se guardaran los datos de la solicitud sin plan."),
+  pageBreak()
+);
+
+// --- PASO 4 ---
+children.push(
+  heading("Paso 4: Garantias (Condicional)", HeadingLevel.HEADING_2),
+  para([normal("Este paso "), bold("solo aparece"), normal(" si el tipo de credito seleccionado requiere garantia (indicado con el icono de candado en el paso 2).")]),
+  spacer(),
+  para([bold("Tipos de garantia disponibles:")]),
+  spacer(),
+  makeTable(
+    ["Tipo", "Descripcion"],
+    [
+      ["Prenda", "Bien mueble como respaldo"],
+      ["Hipoteca", "Bien inmueble como respaldo"],
+      ["Fianza", "Persona que respalda el credito"],
+      ["Aval", "Persona garante"],
+      ["Otro", "Otro tipo de garantia"],
+    ],
+    [25, 75]
+  ),
+  spacer(),
+  para([bold("Como agregar una garantia:")]),
+  spacer(),
+  numberedItem(1, "Haga clic en \"Agregar Garantia\"."),
+  numberedItem(2, "Complete los datos requeridos segun el tipo de garantia."),
+  numberedItem(3, "Las garantias agregadas se muestran en una lista con la opcion de eliminarlas."),
+  numberedItem(4, "El numero de garantias se muestra en un indicador azul."),
+  spacer(),
+  note("Si el tipo de credito no requiere garantia, este paso se omite automaticamente."),
+  spacer()
+);
+
+// --- PASO 5 ---
+children.push(
+  heading("Paso 5: Analisis del Asesor", HeadingLevel.HEADING_2),
+  para("En este paso, el asesor de credito registra su evaluacion del cliente y la solicitud."),
+  spacer(),
+  makeTable(
+    ["Campo", "Obligatorio", "Descripcion"],
+    [
+      ["Analisis del Asesor", "No", "Evaluacion detallada del negocio, ingresos y situacion del cliente."],
+      ["Recomendacion", "No", "Seleccione: Aprobar, Rechazar o Pendiente."],
+      ["Capacidad de Pago", "No", "Monto estimado que el cliente puede pagar periodicamente (en dolares)."],
+      ["Antecedentes del Cliente", "No", "Historial crediticio, relacion con la institucion, observaciones relevantes."],
+    ],
+    [28, 15, 57]
+  ),
+  spacer(),
+  para("Al guardar este paso:"),
+  bullet([normal("La solicitud cambia de estado "), bold("REGISTRADA"), normal(" a "), bold("ANALIZADA"), normal(".")]),
+  bullet("Se registra la fecha de analisis automaticamente."),
+  spacer(),
+  para([normal("Haga clic en "), bold("\"Finalizar\""), normal(" para completar la solicitud.")]),
+  pageBreak()
+);
+
+// ===========================================
+// SECCION 3: CONSULTAR SOLICITUDES
+// ===========================================
+children.push(
+  heading("3. Consultar solicitudes", HeadingLevel.HEADING_1),
+  para("En el listado de solicitudes puede filtrar y buscar solicitudes existentes."),
+  spacer(),
+  para([bold("Filtros disponibles:")]),
+  spacer(),
+  makeTable(
+    ["Filtro", "Descripcion"],
+    [
+      ["Estado", "Filtra por estado de la solicitud"],
+      ["Linea de Credito", "Filtra por linea de credito"],
+      ["Desde", "Fecha inicial del rango de busqueda"],
+      ["Hasta", "Fecha final del rango de busqueda"],
+    ],
+    [30, 70]
+  ),
+  spacer(),
+  para([bold("Columnas del listado:")]),
+  spacer(),
+  makeTable(
+    ["Columna", "Descripcion"],
+    [
+      ["No. Solicitud", "Numero unico (formato: SOL-AAAA-NNNNNN)"],
+      ["Fecha", "Fecha de la solicitud"],
+      ["Cliente", "Nombre del cliente"],
+      ["Tipo", "Tipo de credito"],
+      ["Monto", "Monto solicitado"],
+      ["Plazo", "Plazo en meses"],
+      ["Estado", "Estado actual (con color indicativo)"],
+      ["Acciones", "Opciones disponibles"],
+    ],
+    [25, 75]
+  ),
+  spacer(),
+  para([bold("Acciones disponibles por solicitud:")]),
+  spacer(),
+  makeTable(
+    ["Accion", "Disponible cuando"],
+    [
+      ["Ver detalle", "Siempre"],
+      ["Editar", "Estado REGISTRADA u OBSERVADA"],
+      ["Trasladar a Comite", "Estado ANALIZADA u OBSERVADA"],
+    ],
+    [30, 70]
+  ),
+  pageBreak()
+);
+
+// ===========================================
+// SECCION 4: DETALLE DE UNA SOLICITUD
+// ===========================================
+children.push(
+  heading("4. Detalle de una solicitud", HeadingLevel.HEADING_1),
+  para("Al hacer clic en \"Ver detalle\", se muestra toda la informacion organizada en pestanas:"),
+  spacer(),
+
+  heading("Pestana: Informacion General", HeadingLevel.HEADING_2),
+  para("Muestra los datos de la solicitud agrupados en tarjetas:"),
+  spacer(),
+  bullet([bold("Datos del Cliente: "), normal("Nombre completo y DUI.")]),
+  bullet([bold("Tipo de Credito: "), normal("Linea, tipo, destino y descripcion.")]),
+  bullet([bold("Condiciones Solicitadas: "), normal("Monto, plazo y tasa propuesta.")]),
+  bullet([bold("Condiciones Aprobadas: "), normal("Monto, plazo y tasa aprobada (solo si fue aprobada).")]),
+  bullet([bold("Fechas: "), normal("Solicitud, analisis, aprobacion, denegacion, traslado y decision de comite.")]),
+  bullet([bold("Observaciones: "), normal("Observaciones generales, motivo de denegacion y observaciones del comite.")]),
+  bullet([bold("Analisis del Asesor: "), normal("Analisis, capacidad de pago y antecedentes.")]),
+  spacer(),
+
+  heading("Pestana: Plan de Pago", HeadingLevel.HEADING_2),
+  para("Muestra el resumen del plan y la tabla detallada de cuotas:"),
+  spacer(),
+  makeTable(
+    ["Dato", "Descripcion"],
+    [
+      ["Periodicidad de Pago", "Frecuencia de las cuotas"],
+      ["Numero de Cuotas", "Total de cuotas"],
+      ["Cuota Normal", "Monto de cada cuota"],
+      ["Total Interes", "Suma de intereses"],
+      ["Total a Pagar", "Monto total del credito"],
+    ],
+    [35, 65]
+  ),
+  spacer(),
+
+  heading("Pestana: Historial", HeadingLevel.HEADING_2),
+  para("Muestra el registro de auditoria con todos los cambios de estado:"),
+  spacer(),
+  makeTable(
+    ["Columna", "Descripcion"],
+    [
+      ["Fecha", "Fecha y hora del cambio"],
+      ["Estado Anterior", "Estado antes del cambio"],
+      ["Estado Nuevo", "Estado despues del cambio"],
+      ["Usuario", "Quien realizo el cambio"],
+      ["Observacion", "Comentario del cambio"],
+    ],
+    [25, 75]
+  ),
+  pageBreak()
+);
+
+// ===========================================
+// SECCION 5: FLUJO DE ESTADOS
+// ===========================================
+children.push(
+  heading("5. Flujo de estados", HeadingLevel.HEADING_1),
+  para("Cada solicitud sigue un flujo de aprobacion definido. A continuacion se describe cada estado y las transiciones posibles."),
+  spacer(),
+
+  heading("Diagrama de flujo", HeadingLevel.HEADING_2),
+  spacer(),
+
+  new Paragraph({
+    children: [bold("REGISTRADA", { color: COLOR_PRIMARY, size: 24 }), normal("  (Nueva solicitud)", { size: 20, color: COLOR_GRAY })],
+    alignment: AlignmentType.CENTER,
+    spacing: { after: 40 },
+  }),
+  new Paragraph({
+    children: [normal("v  El asesor completa su analisis", { size: 20, color: COLOR_GRAY })],
+    alignment: AlignmentType.CENTER,
+    spacing: { after: 40 },
+  }),
+  new Paragraph({
+    children: [bold("ANALIZADA", { color: COLOR_ORANGE, size: 24 }), normal("  (Evaluacion del asesor completada)", { size: 20, color: COLOR_GRAY })],
+    alignment: AlignmentType.CENTER,
+    spacing: { after: 40 },
+  }),
+  new Paragraph({
+    children: [normal("v  El asesor envia al comite", { size: 20, color: COLOR_GRAY })],
+    alignment: AlignmentType.CENTER,
+    spacing: { after: 40 },
+  }),
+  new Paragraph({
+    children: [bold("EN COMITE", { color: COLOR_PURPLE, size: 24 }), normal("  (Esperando decision del comite)", { size: 20, color: COLOR_GRAY })],
+    alignment: AlignmentType.CENTER,
+    spacing: { after: 40 },
+  }),
+  new Paragraph({
+    children: [normal("v  El comite toma una decision", { size: 20, color: COLOR_GRAY })],
+    alignment: AlignmentType.CENTER,
+    spacing: { after: 80 },
+  }),
+
+  makeTable(
+    ["OBSERVADA", "DENEGADA", "APROBADA"],
+    [
+      [
+        [normal("Requiere correcciones.", { size: 20 }), normal(" El asesor edita y re-envia.", { size: 20, color: COLOR_GRAY })],
+        [normal("Rechazada por el comite.", { size: 20 }), normal(" Estado final.", { size: 20, color: COLOR_GRAY })],
+        [normal("Lista para desembolso.", { size: 20 }), normal(" -> DESEMBOLSADA", { size: 20, color: COLOR_GRAY })],
+      ]
+    ],
+    [34, 33, 33]
+  ),
+
+  spacer(),
+  spacer(),
+
+  heading("Resumen de estados", HeadingLevel.HEADING_2),
+  spacer(),
+  makeTable(
+    ["Estado", "Color", "Descripcion", "Se puede editar?"],
+    [
+      [[bold("REGISTRADA", { color: COLOR_PRIMARY })], "Azul", "Solicitud recien creada", "Si"],
+      [[bold("ANALIZADA", { color: COLOR_ORANGE })], "Naranja", "El asesor completo su evaluacion", "No"],
+      [[bold("EN COMITE", { color: COLOR_PURPLE })], "Morado", "Enviada al comite de credito", "No"],
+      [[bold("OBSERVADA", { color: "E65100" })], "Rojo-naranja", "El comite solicita correcciones", "Si"],
+      [[bold("DENEGADA", { color: COLOR_RED })], "Rojo", "Rechazada por el comite (estado final)", "No"],
+      [[bold("APROBADA", { color: COLOR_GREEN })], "Verde", "Aprobada por el comite", "No"],
+      [[bold("DESEMBOLSADA", { color: COLOR_CYAN })], "Cian", "Credito desembolsado (estado final)", "No"],
+    ],
+    [22, 15, 43, 20]
+  ),
+  pageBreak()
+);
+
+// ===========================================
+// SECCION 6: PREGUNTAS FRECUENTES
+// ===========================================
+children.push(
+  heading("6. Preguntas frecuentes", HeadingLevel.HEADING_1),
+  spacer(),
+
+  para([bold("Puedo editar una solicitud despues de crearla?", { color: COLOR_ACCENT })]),
+  para("Solo si esta en estado REGISTRADA u OBSERVADA. Una vez que se envia al comite, no se puede modificar hasta que el comite la devuelva con observaciones."),
+  spacer(),
+
+  para([bold("Que hago si el comite devuelve la solicitud con observaciones?", { color: COLOR_ACCENT })]),
+  numberedItem(1, "Abra la solicitud (estara en estado OBSERVADA)."),
+  numberedItem(2, "Haga clic en \"Editar\"."),
+  numberedItem(3, "Realice las correcciones necesarias."),
+  numberedItem(4, "Si modifico las condiciones, recalcule el plan de pago."),
+  numberedItem(5, "Guarde los cambios."),
+  numberedItem(6, "Actualice el analisis del asesor si es necesario."),
+  numberedItem(7, "Haga clic en \"Trasladar a Comite\" para re-enviarla."),
+  spacer(),
+
+  para([bold("Puedo cambiar el cliente despues de crear la solicitud?", { color: COLOR_ACCENT })]),
+  para("Si, siempre y cuando la solicitud este en estado REGISTRADA u OBSERVADA."),
+  spacer(),
+
+  para([bold("Que pasa si no calculo el plan de pago?", { color: COLOR_ACCENT })]),
+  para("La solicitud se guarda sin plan de pagos. Puede editarla despues para calcular y guardar el plan antes de enviarla al comite."),
+  spacer(),
+
+  para([bold("Cual es la diferencia entre interes Flat y Amortizado?", { color: COLOR_ACCENT })]),
+  bullet([bold("Flat: "), normal("El interes se calcula sobre el monto original durante todo el plazo. Resulta en un costo total mayor para el cliente. Recomendado para microcreditos de corto plazo.")]),
+  bullet([bold("Amortizado: "), normal("El interes se calcula sobre el saldo pendiente, que va disminuyendo. Resulta en un costo total menor. Recomendado para creditos de mayor monto y plazo.")]),
+  spacer(),
+
+  para([bold("Como funciona la periodicidad diaria?", { color: COLOR_ACCENT })]),
+  para("Al seleccionar periodicidad Diario:"),
+  bullet("El campo \"Numero de Cuotas\" se habilita para que lo ingrese manualmente (1-365)."),
+  bullet("Los domingos se excluyen del calendario de pagos."),
+  bullet("Aparecen campos opcionales de \"Fecha Desde\" y \"Fecha Hasta\" para definir el rango de pagos diarios."),
+  spacer(),
+
+  para([bold("Que roles pueden acceder a este modulo?", { color: COLOR_ACCENT })]),
+  spacer(),
+  makeTable(
+    ["Rol", "Permisos"],
+    [
+      ["Administrador", "Acceso completo a todas las funciones"],
+      ["Asesor", "Crear, editar, analizar y trasladar solicitudes"],
+      ["Comite", "Ver solicitudes y tomar decisiones (aprobar, denegar, observar)"],
+    ],
+    [25, 75]
+  )
+);
+
+// ==================== GENERAR DOCUMENTO ====================
+
 const doc = new Document({
-    styles: {
-        paragraphStyles: [
-            {
-                id: "Normal",
-                name: "Normal",
-                run: { size: 24 },
-                paragraph: { spacing: { line: 276, after: 120 } },
-            },
-        ],
+  styles: {
+    default: {
+      document: {
+        run: { font: "Calibri", size: 22 },
+      },
+      heading1: {
+        run: { font: "Calibri", size: 36, bold: true, color: COLOR_PRIMARY },
+        paragraph: { spacing: { before: 360, after: 200 } },
+      },
+      heading2: {
+        run: { font: "Calibri", size: 30, bold: true, color: COLOR_ACCENT },
+        paragraph: { spacing: { before: 280, after: 160 } },
+      },
+      heading3: {
+        run: { font: "Calibri", size: 26, bold: true, color: "333333" },
+        paragraph: { spacing: { before: 200, after: 120 } },
+      },
     },
-    sections: [{
-        properties: {},
-        children: [
-            // PORTADA
-            new Paragraph({ spacing: { before: 2000 } }),
-            new Paragraph({
-                children: [new TextRun({ text: "MANUAL DE USUARIO", bold: true, size: 56, color: "1976D2" })],
-                alignment: AlignmentType.CENTER,
-            }),
-            new Paragraph({
-                children: [new TextRun({ text: "SISTEMA FINANZIA", bold: true, size: 48, color: "333333" })],
-                alignment: AlignmentType.CENTER,
-                spacing: { before: 400 },
-            }),
-            new Paragraph({
-                children: [new TextRun({ text: "Sistema de Gestión de Microcréditos", size: 32, italics: true })],
-                alignment: AlignmentType.CENTER,
-                spacing: { before: 400 },
-            }),
-            new Paragraph({ spacing: { before: 1500 } }),
-            new Paragraph({
-                children: [new TextRun({ text: "FINANZIA S.C. DE R.L. DE C.V.", bold: true, size: 28 })],
-                alignment: AlignmentType.CENTER,
-            }),
-            new Paragraph({
-                children: [new TextRun({ text: "Versión 1.0 - Enero 2026", size: 24 })],
-                alignment: AlignmentType.CENTER,
-                spacing: { before: 200 },
-            }),
-            new Paragraph({ children: [new PageBreak()] }),
-
-            // TABLA DE CONTENIDO
-            new Paragraph({
-                text: "TABLA DE CONTENIDO",
-                heading: HeadingLevel.HEADING_1,
-                spacing: { after: 300 },
-            }),
-            new Paragraph({ children: [new TextRun({ text: "1. Ingreso de Clientes", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "2. Registro de Solicitudes de Crédito", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "3. Análisis del Asesor", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "4. Resolución del Comité de Crédito", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "5. Desembolso del Préstamo", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "6. Registro de Pagos", size: 24 })] }),
-            new Paragraph({ children: [new PageBreak()] }),
-
-            // ==================== SECCIÓN 1: CLIENTES ====================
-            new Paragraph({
-                text: "1. INGRESO DE CLIENTES",
-                heading: HeadingLevel.HEADING_1,
-                spacing: { after: 300 },
-            }),
-
-            new Paragraph({
-                text: "1.1 Acceso al Módulo",
-                heading: HeadingLevel.HEADING_2,
-            }),
-            new Paragraph({ children: [new TextRun({ text: "1. Inicie sesión en el sistema FINANZIA", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "2. En el menú lateral, seleccione ", size: 24 }), new TextRun({ text: "Clientes > Nuevo Cliente", bold: true, size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "3. También puede acceder desde ", size: 24 }), new TextRun({ text: "Clientes > Lista de Clientes", bold: true, size: 24 }), new TextRun({ text: " y hacer clic en el botón ", size: 24 }), new TextRun({ text: "+ Nuevo Cliente", bold: true, size: 24 })] }),
-
-            ...createImageOrPlaceholder("01_menu_clientes.png", "Figura 1.1 - Menú de acceso al módulo de Clientes"),
-
-            new Paragraph({
-                text: "1.2 Formulario de Registro",
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 400 },
-            }),
-            new Paragraph({ children: [new TextRun({ text: "El formulario de registro de clientes consta de 3 pasos:", size: 24 })] }),
-
-            new Paragraph({
-                text: "PASO 1: Datos Personales",
-                heading: HeadingLevel.HEADING_3,
-                spacing: { before: 300 },
-            }),
-            new Paragraph({ children: [new TextRun({ text: "Complete los siguientes campos:", size: 24 })], spacing: { after: 200 } }),
-
-            createTable(
-                ["Campo", "Descripción", "Obligatorio"],
-                [
-                    ["Nombre", "Nombre(s) del cliente", "✓"],
-                    ["Apellido", "Apellidos del cliente", "✓"],
-                    ["Fecha de Nacimiento", "Formato DD/MM/AAAA", "✓"],
-                    ["Género", "Masculino, Femenino u Otro", "-"],
-                    ["Nacionalidad", "País de origen", "✓"],
-                    ["Estado Civil", "Soltero/a, Casado/a, Divorciado/a, Viudo/a, Unión libre", "-"],
-                    ["Teléfono", "Número de contacto principal", "-"],
-                    ["Correo Electrónico", "Email válido", "-"],
-                    ["Número de DUI", "Documento Único de Identidad (único)", "✓"],
-                    ["Fecha de Expedición DUI", "Fecha en que se emitió el DUI", "✓"],
-                    ["Lugar de Expedición", "Lugar donde se emitió el DUI", "✓"],
-                ]
-            ),
-
-            new Paragraph({ spacing: { before: 200 } }),
-            ...createImageOrPlaceholder("02_cliente_paso1.png", "Figura 1.2 - Formulario de Datos Personales del Cliente"),
-
-            new Paragraph({
-                text: "PASO 2: Dirección de Domicilio",
-                heading: HeadingLevel.HEADING_3,
-                spacing: { before: 300 },
-            }),
-
-            createTable(
-                ["Campo", "Descripción", "Obligatorio"],
-                [
-                    ["Departamento", "Seleccione de la lista", "✓"],
-                    ["Municipio", "Se carga según el departamento", "✓"],
-                    ["Distrito", "Se carga según el municipio", "✓"],
-                    ["Dirección Detallada", "Colonia, calle, número, referencias", "-"],
-                ]
-            ),
-
-            new Paragraph({ spacing: { before: 200 } }),
-            ...createImageOrPlaceholder("03_cliente_paso2.png", "Figura 1.3 - Formulario de Dirección del Cliente"),
-
-            new Paragraph({
-                text: "PASO 3: Actividad Económica",
-                heading: HeadingLevel.HEADING_3,
-                spacing: { before: 300 },
-            }),
-
-            createTable(
-                ["Campo", "Descripción", "Obligatorio"],
-                [
-                    ["Tipo de Actividad", "Empleado, Independiente, Empresario, Jubilado, Estudiante, Otro", "✓"],
-                    ["Nombre de Empresa", "Donde labora o nombre del negocio propio", "-"],
-                    ["Ocupación/Cargo", "Puesto que desempeña", "-"],
-                    ["Ingreso Mensual", "Ingreso aproximado en USD", "-"],
-                    ["Departamento (trabajo)", "Ubicación del trabajo/negocio", "✓"],
-                    ["Municipio (trabajo)", "Se carga según departamento", "✓"],
-                    ["Distrito (trabajo)", "Se carga según municipio", "✓"],
-                    ["Dirección del Trabajo", "Dirección detallada", "-"],
-                ]
-            ),
-
-            new Paragraph({ spacing: { before: 200 } }),
-            ...createImageOrPlaceholder("04_cliente_paso3.png", "Figura 1.4 - Formulario de Actividad Económica"),
-
-            new Paragraph({
-                text: "1.3 Referencias",
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 400 },
-            }),
-            new Paragraph({ children: [new TextRun({ text: "Se recomienda agregar al menos una referencia personal y una familiar:", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Referencias Personales: ", bold: true, size: 24 }), new TextRun({ text: "Nombre, relación (Amigo, Vecino, etc.) y teléfono", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Referencias Familiares: ", bold: true, size: 24 }), new TextRun({ text: "Nombre, parentesco y teléfono", size: 24 })] }),
-
-            ...createImageOrPlaceholder("05_cliente_referencias.png", "Figura 1.5 - Sección de Referencias"),
-
-            new Paragraph({ children: [new PageBreak()] }),
-
-            // ==================== SECCIÓN 2: SOLICITUDES ====================
-            new Paragraph({
-                text: "2. REGISTRO DE SOLICITUDES DE CRÉDITO",
-                heading: HeadingLevel.HEADING_1,
-                spacing: { after: 300 },
-            }),
-
-            new Paragraph({
-                text: "2.1 Acceso al Módulo",
-                heading: HeadingLevel.HEADING_2,
-            }),
-            new Paragraph({ children: [new TextRun({ text: "1. En el menú lateral, seleccione ", size: 24 }), new TextRun({ text: "Créditos > Solicitudes", bold: true, size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "2. Haga clic en el botón ", size: 24 }), new TextRun({ text: "+ Nueva Solicitud", bold: true, size: 24 })] }),
-
-            ...createImageOrPlaceholder("06_lista_solicitudes.png", "Figura 2.1 - Lista de Solicitudes de Crédito"),
-
-            new Paragraph({
-                text: "2.2 Formulario de Solicitud (5 Pasos)",
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 400 },
-            }),
-
-            new Paragraph({
-                text: "PASO 1: Selección del Cliente",
-                heading: HeadingLevel.HEADING_3,
-            }),
-            new Paragraph({ children: [new TextRun({ text: "1. En el campo de búsqueda, escriba el DUI, nombre o apellido del cliente", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "2. Seleccione el cliente de la lista de resultados", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "3. Verifique los datos mostrados y haga clic en Siguiente", size: 24 })] }),
-
-            ...createImageOrPlaceholder("07_solicitud_paso1.png", "Figura 2.2 - Selección del Cliente"),
-
-            new Paragraph({
-                text: "PASO 2: Tipo de Crédito y Destino",
-                heading: HeadingLevel.HEADING_3,
-                spacing: { before: 300 },
-            }),
-
-            createTable(
-                ["Campo", "Descripción", "Obligatorio"],
-                [
-                    ["Línea de Crédito", "Categoría principal del crédito", "✓"],
-                    ["Tipo de Crédito", "Producto específico dentro de la línea", "✓"],
-                    ["Destino del Crédito", "Para qué se utilizará el dinero", "✓"],
-                    ["Descripción del Destino", "Detalle adicional del uso", "-"],
-                ]
-            ),
-
-            new Paragraph({ spacing: { before: 200 } }),
-            new Paragraph({ children: [new TextRun({ text: "Destinos de Crédito Disponibles:", bold: true, size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Capital de Trabajo • Activo Fijo • Consumo Personal • Vivienda Nueva", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Vivienda Usada • Mejora de Vivienda • Consolidación de Deudas", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Educación • Salud • Vehículo • Otro", size: 22 })] }),
-
-            ...createImageOrPlaceholder("08_solicitud_paso2.png", "Figura 2.3 - Tipo de Crédito y Destino"),
-
-            new Paragraph({
-                text: "PASO 3: Condiciones del Crédito",
-                heading: HeadingLevel.HEADING_3,
-                spacing: { before: 300 },
-            }),
-
-            createTable(
-                ["Campo", "Descripción", "Obligatorio"],
-                [
-                    ["Monto Solicitado", "Cantidad en USD que solicita el cliente", "✓"],
-                    ["Plazo Solicitado", "Número de meses para pagar", "✓"],
-                    ["Tasa de Interés", "Porcentaje anual de interés", "✓"],
-                    ["Fecha de Solicitud", "Fecha de registro de la solicitud", "✓"],
-                ]
-            ),
-
-            new Paragraph({ spacing: { before: 200 } }),
-            ...createImageOrPlaceholder("09_solicitud_paso3.png", "Figura 2.4 - Condiciones del Crédito"),
-
-            new Paragraph({
-                text: "PASO 4: Garantías",
-                heading: HeadingLevel.HEADING_3,
-                spacing: { before: 300 },
-            }),
-            new Paragraph({ children: [new TextRun({ text: "Si el tipo de crédito requiere garantía, debe registrar al menos una. Tipos disponibles:", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Garantía Hipotecaria: ", bold: true, size: 24 }), new TextRun({ text: "Inmuebles (casa, terreno, local)", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Garantía Prendaria: ", bold: true, size: 24 }), new TextRun({ text: "Bienes muebles (vehículo, maquinaria)", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Garantía Fiduciaria: ", bold: true, size: 24 }), new TextRun({ text: "Fiador (debe estar registrado como cliente)", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Garantía Documentaria: ", bold: true, size: 24 }), new TextRun({ text: "Documentos (pagaré, letra de cambio)", size: 24 })] }),
-
-            ...createImageOrPlaceholder("10_solicitud_garantias.png", "Figura 2.5 - Registro de Garantías"),
-
-            new Paragraph({ children: [new PageBreak()] }),
-
-            // ==================== SECCIÓN 3: ANÁLISIS ====================
-            new Paragraph({
-                text: "3. ANÁLISIS DEL ASESOR",
-                heading: HeadingLevel.HEADING_1,
-                spacing: { after: 300 },
-            }),
-
-            new Paragraph({
-                text: "3.1 Acceso a la Solicitud",
-                heading: HeadingLevel.HEADING_2,
-            }),
-            new Paragraph({ children: [new TextRun({ text: "1. Vaya a ", size: 24 }), new TextRun({ text: "Créditos > Solicitudes", bold: true, size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "2. Busque y seleccione la solicitud a analizar", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "3. Acceda a la pestaña ", size: 24 }), new TextRun({ text: "Análisis del Asesor", bold: true, size: 24 })] }),
-
-            ...createImageOrPlaceholder("11_detalle_solicitud.png", "Figura 3.1 - Detalle de la Solicitud"),
-
-            new Paragraph({
-                text: "3.2 Completar el Análisis",
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 400 },
-            }),
-
-            createTable(
-                ["Campo", "Descripción", "Obligatorio"],
-                [
-                    ["Análisis Detallado", "Evaluación completa del caso", "✓"],
-                    ["Antecedentes del Cliente", "Historial, comportamiento de pago, referencias", "-"],
-                    ["Capacidad de Pago Mensual", "Monto que puede pagar según análisis", "-"],
-                    ["Recomendación", "APROBAR, RECHAZAR u OBSERVAR", "-"],
-                ]
-            ),
-
-            new Paragraph({ spacing: { before: 300 } }),
-            new Paragraph({ children: [new TextRun({ text: "El análisis debe incluir:", bold: true, size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Evaluación de Ingresos: ", bold: true, size: 22 }), new TextRun({ text: "fuente, estabilidad, ingresos adicionales", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Evaluación de Gastos: ", bold: true, size: 22 }), new TextRun({ text: "gastos fijos, otras deudas, dependientes", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Capacidad de Pago: ", bold: true, size: 22 }), new TextRun({ text: "ingreso disponible, relación cuota/ingreso", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Evaluación de Garantías: ", bold: true, size: 22 }), new TextRun({ text: "calidad y cobertura", size: 22 })] }),
-
-            ...createImageOrPlaceholder("12_analisis_asesor.png", "Figura 3.2 - Formulario de Análisis del Asesor"),
-
-            new Paragraph({
-                text: "3.3 Recomendaciones",
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 400 },
-            }),
-
-            createTable(
-                ["Recomendación", "Descripción"],
-                [
-                    ["APROBAR", "El asesor considera que el crédito es viable y recomienda su aprobación"],
-                    ["RECHAZAR", "El asesor identifica riesgos significativos y no recomienda el crédito"],
-                    ["OBSERVAR", "Requiere información adicional o tiene condiciones especiales"],
-                ]
-            ),
-
-            new Paragraph({ spacing: { before: 300 } }),
-            new Paragraph({ children: [new TextRun({ text: "Una vez completado el análisis:", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "1. Haga clic en ", size: 24 }), new TextRun({ text: "Guardar Análisis", bold: true, size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "2. Luego haga clic en ", size: 24 }), new TextRun({ text: "Enviar al Comité", bold: true, size: 24 })] }),
-
-            new Paragraph({ children: [new PageBreak()] }),
-
-            // ==================== SECCIÓN 4: COMITÉ ====================
-            new Paragraph({
-                text: "4. RESOLUCIÓN DEL COMITÉ DE CRÉDITO",
-                heading: HeadingLevel.HEADING_1,
-                spacing: { after: 300 },
-            }),
-
-            new Paragraph({
-                text: "4.1 Acceso al Módulo",
-                heading: HeadingLevel.HEADING_2,
-            }),
-            new Paragraph({ children: [new TextRun({ text: "1. En el menú lateral, seleccione ", size: 24 }), new TextRun({ text: "Créditos > Comité de Crédito", bold: true, size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "2. Verá la lista de solicitudes pendientes de resolución", size: 24 })] }),
-
-            ...createImageOrPlaceholder("13_bandeja_comite.png", "Figura 4.1 - Bandeja del Comité de Crédito"),
-
-            new Paragraph({
-                text: "4.2 Revisar la Solicitud",
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 400 },
-            }),
-            new Paragraph({ children: [new TextRun({ text: "Al seleccionar una solicitud, el comité puede ver:", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Resumen de la solicitud: ", bold: true, size: 22 }), new TextRun({ text: "número, cliente, tipo, monto, plazo, tasa", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Análisis del asesor: ", bold: true, size: 22 }), new TextRun({ text: "recomendación, análisis, capacidad de pago", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Garantías: ", bold: true, size: 22 }), new TextRun({ text: "lista de garantías y porcentaje de cobertura", size: 22 })] }),
-
-            ...createImageOrPlaceholder("14_revision_comite.png", "Figura 4.2 - Revisión de Solicitud por el Comité"),
-
-            new Paragraph({
-                text: "4.3 Registrar la Decisión",
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 400 },
-            }),
-            new Paragraph({ children: [new TextRun({ text: "Haga clic en ", size: 24 }), new TextRun({ text: "Registrar Decisión", bold: true, size: 24 }), new TextRun({ text: " para abrir el formulario de resolución.", size: 24 })] }),
-
-            new Paragraph({ spacing: { before: 200 } }),
-            new Paragraph({ children: [new TextRun({ text: "A. AUTORIZAR (Aprobar)", bold: true, size: 24, color: "2E7D32" })] }),
-            createTable(
-                ["Campo", "Descripción", "Obligatorio"],
-                [
-                    ["Monto Autorizado", "Puede ser igual o menor al solicitado", "✓"],
-                    ["Plazo Autorizado", "Meses aprobados para el pago", "✓"],
-                    ["Tasa Autorizada", "Tasa de interés aprobada", "✓"],
-                    ["Condiciones Especiales", "Observaciones adicionales", "-"],
-                ]
-            ),
-
-            new Paragraph({ spacing: { before: 200 } }),
-            new Paragraph({ children: [new TextRun({ text: "B. DENEGAR (Rechazar)", bold: true, size: 24, color: "C62828" })] }),
-            createTable(
-                ["Campo", "Descripción", "Obligatorio"],
-                [
-                    ["Motivo del Rechazo", "Razón detallada de la denegación", "✓"],
-                ]
-            ),
-
-            new Paragraph({ spacing: { before: 200 } }),
-            new Paragraph({ children: [new TextRun({ text: "C. OBSERVAR", bold: true, size: 24, color: "F57C00" })] }),
-            createTable(
-                ["Campo", "Descripción", "Obligatorio"],
-                [
-                    ["Observaciones", "Información o documentos requeridos", "✓"],
-                ]
-            ),
-
-            ...createImageOrPlaceholder("15_decision_comite.png", "Figura 4.3 - Formulario de Decisión del Comité"),
-
-            new Paragraph({ children: [new PageBreak()] }),
-
-            // ==================== SECCIÓN 5: DESEMBOLSO ====================
-            new Paragraph({
-                text: "5. DESEMBOLSO DEL PRÉSTAMO",
-                heading: HeadingLevel.HEADING_1,
-                spacing: { after: 300 },
-            }),
-
-            new Paragraph({
-                text: "5.1 Acceso al Módulo",
-                heading: HeadingLevel.HEADING_2,
-            }),
-            new Paragraph({ children: [new TextRun({ text: "1. En el menú lateral, seleccione ", size: 24 }), new TextRun({ text: "Créditos > Desembolsos", bold: true, size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "2. Verá las solicitudes aprobadas pendientes de desembolso", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "3. Seleccione la solicitud y haga clic en ", size: 24 }), new TextRun({ text: "Desembolsar", bold: true, size: 24 })] }),
-
-            ...createImageOrPlaceholder("16_bandeja_desembolso.png", "Figura 5.1 - Bandeja de Desembolsos"),
-
-            new Paragraph({
-                text: "5.2 Configuración del Desembolso (4 Pasos)",
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 400 },
-            }),
-
-            new Paragraph({
-                text: "PASO 1: Configuración General",
-                heading: HeadingLevel.HEADING_3,
-            }),
-
-            createTable(
-                ["Campo", "Descripción", "Obligatorio"],
-                [
-                    ["Periodicidad de Pago", "Frecuencia de las cuotas", "✓"],
-                    ["Tipo de Interés", "FLAT o AMORTIZADO", "✓"],
-                    ["Fecha Primera Cuota", "Cuándo vence la primera cuota", "✓"],
-                ]
-            ),
-
-            new Paragraph({ spacing: { before: 200 } }),
-            new Paragraph({ children: [new TextRun({ text: "Periodicidades: ", bold: true, size: 22 }), new TextRun({ text: "Diario, Semanal, Quincenal, Mensual, Trimestral, Semestral, Anual, Al Vencimiento", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "Tipos de Interés:", bold: true, size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• FLAT: ", bold: true, size: 22 }), new TextRun({ text: "Interés sobre monto original durante todo el plazo", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• AMORTIZADO: ", bold: true, size: 22 }), new TextRun({ text: "Interés sobre saldo (sistema francés)", size: 22 })] }),
-
-            ...createImageOrPlaceholder("17_desembolso_paso1.png", "Figura 5.2 - Configuración General del Desembolso"),
-
-            new Paragraph({
-                text: "PASO 2: Deducciones",
-                heading: HeadingLevel.HEADING_3,
-                spacing: { before: 300 },
-            }),
-            new Paragraph({ children: [new TextRun({ text: "Las deducciones se descuentan del monto autorizado antes del desembolso:", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Gastos de formalización", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Seguro de desgravamen", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Comisión por apertura", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Gastos de papelería", size: 22 })] }),
-
-            ...createImageOrPlaceholder("18_desembolso_deducciones.png", "Figura 5.3 - Configuración de Deducciones"),
-
-            new Paragraph({
-                text: "PASO 3: Cargos/Recargos",
-                heading: HeadingLevel.HEADING_3,
-                spacing: { before: 300 },
-            }),
-            new Paragraph({ children: [new TextRun({ text: "Los cargos se agregan a cada cuota del préstamo:", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Seguro de vida o de bien", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Ahorro programado", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Servicio de GPS (vehículos)", size: 22 })] }),
-
-            ...createImageOrPlaceholder("19_desembolso_cargos.png", "Figura 5.4 - Configuración de Cargos"),
-
-            new Paragraph({
-                text: "PASO 4: Confirmación",
-                heading: HeadingLevel.HEADING_3,
-                spacing: { before: 300 },
-            }),
-            new Paragraph({ children: [new TextRun({ text: "Revise el resumen completo antes de confirmar:", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Monto Autorizado - Deducciones = Monto a Desembolsar", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Número de cuotas y monto de cada una", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Plan de pagos completo con fechas de vencimiento", size: 22 })] }),
-
-            ...createImageOrPlaceholder("20_desembolso_confirmacion.png", "Figura 5.5 - Confirmación del Desembolso"),
-
-            new Paragraph({ children: [new PageBreak()] }),
-
-            // ==================== SECCIÓN 6: PAGOS ====================
-            new Paragraph({
-                text: "6. REGISTRO DE PAGOS",
-                heading: HeadingLevel.HEADING_1,
-                spacing: { after: 300 },
-            }),
-
-            new Paragraph({
-                text: "6.1 Acceso al Módulo",
-                heading: HeadingLevel.HEADING_2,
-            }),
-            new Paragraph({ children: [new TextRun({ text: "Opción A: Desde ", size: 24 }), new TextRun({ text: "Créditos > Préstamos", bold: true, size: 24 }), new TextRun({ text: ", busque el préstamo y seleccione ", size: 24 }), new TextRun({ text: "Registrar Pago", bold: true, size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "Opción B: Desde ", size: 24 }), new TextRun({ text: "Créditos > Consulta de Pagos", bold: true, size: 24 }), new TextRun({ text: ", busque el préstamo y haga clic en ", size: 24 }), new TextRun({ text: "Nuevo Pago", bold: true, size: 24 })] }),
-
-            ...createImageOrPlaceholder("21_lista_prestamos.png", "Figura 6.1 - Lista de Préstamos"),
-
-            new Paragraph({
-                text: "6.2 Formulario de Pago",
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 400 },
-            }),
-
-            createTable(
-                ["Campo", "Descripción", "Obligatorio"],
-                [
-                    ["Fecha de Pago", "Fecha en que se realiza el pago", "✓"],
-                    ["Monto a Pagar", "Cantidad que el cliente paga", "✓"],
-                    ["Observaciones", "Notas adicionales", "-"],
-                ]
-            ),
-
-            ...createImageOrPlaceholder("22_formulario_pago.png", "Figura 6.2 - Formulario de Registro de Pago"),
-
-            new Paragraph({
-                text: "6.3 Vista Previa del Pago",
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 400 },
-            }),
-            new Paragraph({ children: [new TextRun({ text: "Antes de confirmar, el sistema muestra:", size: 24 })] }),
-
-            new Paragraph({ spacing: { before: 200 } }),
-            new Paragraph({ children: [new TextRun({ text: "Resumen de Adeudo:", bold: true, size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Capital Pendiente", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Interés Pendiente", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Cargos Pendientes", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "• Interés Moratorio (si hay mora)", size: 22 })] }),
-
-            new Paragraph({ spacing: { before: 200 } }),
-            new Paragraph({ children: [new TextRun({ text: "Distribución del Pago:", bold: true, size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "El sistema aplica el pago en este orden:", size: 22 })] }),
-            new Paragraph({ children: [new TextRun({ text: "1. Interés Moratorio → 2. Interés Corriente → 3. Cargos → 4. Capital", size: 22 })] }),
-
-            ...createImageOrPlaceholder("23_preview_pago.png", "Figura 6.3 - Vista Previa del Pago"),
-
-            new Paragraph({
-                text: "6.4 Tipos de Pago",
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 400 },
-            }),
-
-            createTable(
-                ["Tipo", "Descripción"],
-                [
-                    ["CUOTA COMPLETA", "Se pagó una o más cuotas completas"],
-                    ["PAGO PARCIAL", "Se pagó parte de una cuota"],
-                    ["PAGO ADELANTADO", "Se pagó más de lo adeudado actualmente"],
-                    ["CANCELACIÓN TOTAL", "Se liquidó todo el préstamo"],
-                ]
-            ),
-
-            new Paragraph({
-                text: "6.5 Confirmar y Recibo",
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 400 },
-            }),
-            new Paragraph({ children: [new TextRun({ text: "1. Revise la distribución del pago", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "2. Verifique las cuotas afectadas", size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "3. Haga clic en ", size: 24 }), new TextRun({ text: "Confirmar Pago", bold: true, size: 24 })] }),
-            new Paragraph({ children: [new TextRun({ text: "4. Imprima el recibo para el cliente", size: 24 })] }),
-
-            ...createImageOrPlaceholder("24_recibo_pago.png", "Figura 6.4 - Recibo de Pago"),
-
-            new Paragraph({ children: [new PageBreak()] }),
-
-            // ==================== ANEXOS ====================
-            new Paragraph({
-                text: "ANEXOS",
-                heading: HeadingLevel.HEADING_1,
-                spacing: { after: 300 },
-            }),
-
-            new Paragraph({
-                text: "A. Estados de una Solicitud",
-                heading: HeadingLevel.HEADING_2,
-            }),
-            createTable(
-                ["Estado", "Descripción"],
-                [
-                    ["CREADA", "Solicitud recién registrada"],
-                    ["PENDIENTE_ANÁLISIS", "Esperando análisis del asesor"],
-                    ["ENVIADA_A_COMITÉ", "En revisión por el comité"],
-                    ["APROBADA", "Autorizada por el comité"],
-                    ["DENEGADA", "Rechazada por el comité"],
-                    ["OBSERVADA", "Requiere información adicional"],
-                    ["LISTA_DESEMBOLSO", "Aprobada y lista para desembolsar"],
-                    ["DESEMBOLSADA", "Préstamo activo creado"],
-                ]
-            ),
-
-            new Paragraph({
-                text: "B. Estados de un Préstamo",
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 400 },
-            }),
-            createTable(
-                ["Estado", "Descripción"],
-                [
-                    ["VIGENTE", "Préstamo activo al día"],
-                    ["MORA", "Préstamo con cuotas vencidas"],
-                    ["CANCELADO", "Préstamo totalmente pagado"],
-                    ["CASTIGADO", "Préstamo irrecuperable"],
-                ]
-            ),
-
-            new Paragraph({
-                text: "C. Clasificación de Riesgo (NCB-022)",
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 400 },
-            }),
-            createTable(
-                ["Categoría", "Días de Mora", "Provisión"],
-                [
-                    ["A - Normal", "0-30 días", "1%"],
-                    ["B - Subnormal", "31-90 días", "5%"],
-                    ["C - Deficiente", "91-180 días", "20%"],
-                    ["D - Difícil Cobro", "181-360 días", "50%"],
-                    ["E - Irrecuperable", ">360 días", "100%"],
-                ]
-            ),
-
-            new Paragraph({ spacing: { before: 600 } }),
-            new Paragraph({
-                children: [new TextRun({ text: "FINANZIA S.C. DE R.L. DE C.V.", bold: true, size: 24 })],
-                alignment: AlignmentType.CENTER,
-            }),
-            new Paragraph({
-                children: [new TextRun({ text: "Manual de Usuario v1.0 - Enero 2026", italics: true, size: 20 })],
-                alignment: AlignmentType.CENTER,
-            }),
-        ],
-    }],
+  },
+  sections: [{
+    properties: {
+      page: {
+        margin: { top: 1440, right: 1200, bottom: 1440, left: 1200 },
+      },
+    },
+    children,
+  }],
 });
 
-// Crear directorio de capturas si no existe
-if (!fs.existsSync(screenshotsDir)) {
-    fs.mkdirSync(screenshotsDir, { recursive: true });
-    console.log(`\nDirectorio creado: ${screenshotsDir}`);
-    console.log('\nPor favor, guarde las capturas de pantalla con los siguientes nombres:');
-    console.log('─'.repeat(60));
-    const screenshots = [
-        '01_menu_clientes.png - Menú de Clientes',
-        '02_cliente_paso1.png - Formulario Datos Personales',
-        '03_cliente_paso2.png - Formulario Dirección',
-        '04_cliente_paso3.png - Formulario Actividad Económica',
-        '05_cliente_referencias.png - Referencias',
-        '06_lista_solicitudes.png - Lista de Solicitudes',
-        '07_solicitud_paso1.png - Selección de Cliente',
-        '08_solicitud_paso2.png - Tipo de Crédito',
-        '09_solicitud_paso3.png - Condiciones',
-        '10_solicitud_garantias.png - Garantías',
-        '11_detalle_solicitud.png - Detalle de Solicitud',
-        '12_analisis_asesor.png - Análisis del Asesor',
-        '13_bandeja_comite.png - Bandeja del Comité',
-        '14_revision_comite.png - Revisión del Comité',
-        '15_decision_comite.png - Decisión del Comité',
-        '16_bandeja_desembolso.png - Bandeja de Desembolsos',
-        '17_desembolso_paso1.png - Configuración Desembolso',
-        '18_desembolso_deducciones.png - Deducciones',
-        '19_desembolso_cargos.png - Cargos',
-        '20_desembolso_confirmacion.png - Confirmación',
-        '21_lista_prestamos.png - Lista de Préstamos',
-        '22_formulario_pago.png - Formulario de Pago',
-        '23_preview_pago.png - Vista Previa de Pago',
-        '24_recibo_pago.png - Recibo de Pago',
-    ];
-    screenshots.forEach(s => console.log(`  ${s}`));
-    console.log('─'.repeat(60));
-}
-
-// Generar documento
-const outputPath = path.join(__dirname, 'MANUAL_USUARIO_FINANZIA.docx');
-Packer.toBuffer(doc).then((buffer) => {
-    fs.writeFileSync(outputPath, buffer);
-    console.log(`\n✓ Documento generado: ${outputPath}`);
-    console.log('\nPara incluir las capturas de pantalla:');
-    console.log('1. Guarde las capturas en la carpeta "capturas_manual"');
-    console.log('2. Ejecute este script nuevamente');
-    console.log('3. O abra el documento en Word y reemplace los placeholders manualmente');
+docx.Packer.toBuffer(doc).then((buffer) => {
+  fs.writeFileSync("MANUAL_SOLICITUD_CREDITO.docx", buffer);
+  console.log("Archivo generado: MANUAL_SOLICITUD_CREDITO.docx");
 });

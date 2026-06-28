@@ -645,18 +645,16 @@ export class SolicitudService {
       }
     }
 
-    // Calcular fechaPrimeraCuota
-    // IMPORTANTE: La primera cuota debe iniciar el día POSTERIOR a la fecha de solicitud
-    let fechaPrimeraCuota: Date;
-    if (dto.fechaPrimeraCuota) {
-      fechaPrimeraCuota = parseLocalDate(dto.fechaPrimeraCuota);
-      // Agregar 1 día para que la primera cuota sea el día posterior
-      fechaPrimeraCuota.setDate(fechaPrimeraCuota.getDate() + 1);
-    } else {
-      // Por defecto: hoy + 30 días (ya incluye el día posterior)
-      fechaPrimeraCuota = new Date();
-      fechaPrimeraCuota.setDate(fechaPrimeraCuota.getDate() + 30);
-    }
+    // Fecha base: la que envíe el frontend (fecha de solicitud) o hoy
+    const fechaBase = dto.fechaPrimeraCuota
+      ? parseLocalDate(dto.fechaPrimeraCuota)
+      : new Date();
+    // La primera cuota vence exactamente un período después de la fecha base
+    const fechaPrimeraCuota = this.calcularFechaPrimeraCuotaPorPeriodicidad(
+      fechaBase,
+      dto.periodicidad,
+      dto.plazo,
+    );
 
     // NUEVA LÓGICA: Determinar el número de cuotas según la periodicidad
     let numeroCuotasCalculado: number;
@@ -949,5 +947,45 @@ export class SolicitudService {
       .getRawMany();
 
     return stats;
+  }
+
+  /**
+   * Calcula la fecha de la primera cuota sumando exactamente un período
+   * a la fecha base según la periodicidad del crédito.
+   */
+  private calcularFechaPrimeraCuotaPorPeriodicidad(
+    fechaBase: Date,
+    periodicidad: PeriodicidadPago,
+    plazoMeses: number,
+  ): Date {
+    const fecha = new Date(fechaBase);
+    switch (periodicidad) {
+      case PeriodicidadPago.DIARIO:
+        fecha.setDate(fecha.getDate() + 1);
+        break;
+      case PeriodicidadPago.SEMANAL:
+        fecha.setDate(fecha.getDate() + 7);
+        break;
+      case PeriodicidadPago.QUINCENAL:
+        fecha.setDate(fecha.getDate() + 15);
+        break;
+      case PeriodicidadPago.MENSUAL:
+        fecha.setMonth(fecha.getMonth() + 1);
+        break;
+      case PeriodicidadPago.TRIMESTRAL:
+        fecha.setMonth(fecha.getMonth() + 3);
+        break;
+      case PeriodicidadPago.SEMESTRAL:
+        fecha.setMonth(fecha.getMonth() + 6);
+        break;
+      case PeriodicidadPago.ANUAL:
+        fecha.setFullYear(fecha.getFullYear() + 1);
+        break;
+      case PeriodicidadPago.AL_VENCIMIENTO:
+        // Cuota única al vencimiento: fecha base + plazo completo
+        fecha.setMonth(fecha.getMonth() + plazoMeses);
+        break;
+    }
+    return fecha;
   }
 }

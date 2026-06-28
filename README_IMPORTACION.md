@@ -1,435 +1,276 @@
-# GUÍA DE IMPORTACIÓN DE DATOS - SISTEMA DE MICROCRÉDITOS
-
-Esta guía te ayudará a importar los datos procesados del archivo `prestamos.xlsx` al sistema de créditos.
-
----
+# IMPORTACIÓN DE DESEMBOLSOS - GUÍA RÁPIDA
 
 ## ARCHIVOS GENERADOS
 
-### Datos Procesados (JSON)
-- `clientes_import.json` - 67 clientes
-- `direcciones_import.json` - 67 direcciones
-- `prestamos_import.json` - 170 préstamos
-- `pagos_import.json` - 969 pagos
-
-### Scripts SQL
-- `01_insert_personas.sql` - Importación de personas
-- `02_insert_direcciones.sql` - Importación de direcciones
-- `03_insert_prestamos.sql` - Importación de préstamos
-- `04_insert_pagos.sql` - Importación de pagos
-- `import_all.sql` - Script completo (todos juntos)
-- `validar_importacion.sql` - Script de validación
-
-### Documentación
-- `RESUMEN_ETL.md` - Resumen ejecutivo completo
-- `MAPEO_CAMPOS.md` - Documentación del mapeo de campos
-- `reporte_transformacion.json` - Estadísticas del proceso
+| Archivo | Descripción | Acción |
+|---------|-------------|--------|
+| `importar_desembolsos.sql` | Script SQL principal | **EJECUTAR EN LA BD** |
+| `verificar_importacion.sql` | Script de verificación | Ejecutar después de importar |
+| `desembolsos_lista.json` | Datos procesados | Referencia |
+| `RESUMEN_IMPORTACION.md` | Resumen ejecutivo | Leer primero |
+| `INSTRUCCIONES_IMPORTACION.md` | Guía detallada | Para problemas |
 
 ---
 
-## OPCIÓN 1: IMPORTACIÓN MEDIANTE SQL (RECOMENDADO)
+## PROCESO EN 3 PASOS
 
-### Paso 1: Verificar prerrequisitos
-
-Asegúrate de que existan los siguientes catálogos en la base de datos:
+### 1️⃣ PREPARACIÓN (5 min)
 
 ```sql
--- Verificar catálogos necesarios
-SELECT * FROM tipo_credito WHERE id = 1;  -- Debe existir
-SELECT * FROM departamento WHERE id = 6;  -- San Salvador
-SELECT * FROM municipio WHERE id = 1;     -- San Salvador
-SELECT * FROM distrito WHERE id = 1;      -- Distrito 1
+-- A. Verificar IDs de catálogos
+SELECT id FROM tipo_credito WHERE codigo = 'EMP-MICROEMPRESA';      -- Esperado: 12
+SELECT id FROM estado_solicitud WHERE codigo = 'APROBADA';          -- Esperado: 6
+SELECT id FROM estado_prestamo WHERE codigo = 'VIGENTE';            -- Esperado: 1
+SELECT id FROM estado_prestamo WHERE codigo = 'CANCELADO';          -- Esperado: 3
+SELECT id FROM periodicidad_pago WHERE codigo = 'MENSUAL';          -- Esperado: 3
+
+-- B. Verificar personas
+SELECT COUNT(*) FROM persona WHERE id BETWEEN 1 AND 69;             -- Esperado: 69
+
+-- C. Backup
+-- mysqldump -u usuario -p base_datos > backup_antes_importacion.sql
 ```
 
-Si no existen, créalos primero:
+**Si algún ID no coincide:** Editar `generar_sql_desembolsos.js` líneas 13-19 y regenerar con `node generar_sql_desembolsos.js`
+
+### 2️⃣ IMPORTACIÓN (2 min)
 
 ```sql
--- Ejemplo: crear tipo de crédito
-INSERT INTO tipo_credito (id, nombre, descripcion)
-VALUES (1, 'Crédito Personal', 'Crédito personal de microfinanzas');
+-- Abrir: importar_desembolsos.sql
+
+-- Descomentar líneas iniciales:
+SET FOREIGN_KEY_CHECKS = 0;
+SET AUTOCOMMIT = 0;
+START TRANSACTION;
+
+-- Ejecutar todo el script
+
+-- Verificar (ver paso 3)
+
+-- Si todo OK, descomentar y ejecutar:
+COMMIT;
+SET FOREIGN_KEY_CHECKS = 1;
+SET AUTOCOMMIT = 1;
 ```
 
-### Paso 2: Conectar a la base de datos
+### 3️⃣ VERIFICACIÓN (3 min)
 
 ```bash
-# Windows (PowerShell o CMD)
-psql -U tu_usuario -d nombre_base_datos
+# Ejecutar script de verificación
+mysql -u usuario -p base_datos < verificar_importacion.sql
 
-# Linux/Mac
-psql -U tu_usuario -d nombre_base_datos
+# O copiar/pegar en tu cliente SQL
 ```
 
-### Paso 3: Ejecutar el script de importación
-
-**Opción A: Script completo (más rápido)**
-
-```sql
-\i C:/Users/javie/OneDrive/Documentos/DESARROLLO/MICRO/import_all.sql
-```
-
-**Opción B: Scripts individuales (más control)**
-
-```sql
-\i C:/Users/javie/OneDrive/Documentos/DESARROLLO/MICRO/01_insert_personas.sql
-\i C:/Users/javie/OneDrive/Documentos/DESARROLLO/MICRO/02_insert_direcciones.sql
-\i C:/Users/javie/OneDrive/Documentos/DESARROLLO/MICRO/03_insert_prestamos.sql
-\i C:/Users/javie/OneDrive/Documentos/DESARROLLO/MICRO/04_insert_pagos.sql
-```
-
-### Paso 4: Validar la importación
-
-```sql
-\i C:/Users/javie/OneDrive/Documentos/DESARROLLO/MICRO/validar_importacion.sql
-```
-
-Este script mostrará:
-- Conteo de registros importados
-- Validación de integridad referencial
-- Validación de montos
-- Errores y advertencias
+**Checks esperados:**
+- ✓ 173 solicitudes creadas
+- ✓ 173 préstamos creados
+- ✓ 69 préstamos VIGENTES (uno por cliente)
+- ✓ 104 préstamos CANCELADOS (desembolsos anteriores)
+- ✓ Cada cliente tiene solo 1 préstamo VIGENTE
+- ✓ El último desembolso de cada cliente está VIGENTE
 
 ---
 
-## OPCIÓN 2: IMPORTACIÓN MEDIANTE API (NESTJS)
+## DATOS A IMPORTAR
 
-### Paso 1: Crear endpoint de importación masiva
-
-Agrega los siguientes endpoints al backend:
-
-```typescript
-// src/persona/persona.controller.ts
-@Post('import/bulk')
-async importBulk(@Body() personas: CreatePersonaDto[]) {
-  return await this.personaService.createMany(personas);
-}
-
-// src/creditos/desembolso/prestamo.controller.ts
-@Post('import/bulk')
-async importBulk(@Body() prestamos: CreatePrestamoDto[]) {
-  return await this.prestamoService.createMany(prestamos);
-}
-
-// src/creditos/pagos/pago.controller.ts
-@Post('import/bulk')
-async importBulk(@Body() pagos: CreatePagoDto[]) {
-  return await this.pagoService.createMany(pagos);
-}
 ```
+📊 ESTADÍSTICAS
+├── 69 clientes únicos
+├── 173 desembolsos totales
+├── $49,352.50 monto total
+├── $285.27 monto promedio
+├── $50 - $1,500 rango de montos
+└── 2025-02-03 a 2026-01-23 rango de fechas
 
-### Paso 2: Implementar servicios de importación masiva
+👥 DISTRIBUCIÓN
+├── 42 clientes con múltiples desembolsos
+└── 27 clientes con un solo desembolso
 
-```typescript
-// src/persona/persona.service.ts
-async createMany(personas: CreatePersonaDto[]) {
-  return await this.personaRepository.save(personas);
-}
-```
-
-### Paso 3: Importar usando cURL o Postman
-
-```bash
-# Importar personas
-curl -X POST http://localhost:3000/api/persona/import/bulk \
-  -H "Content-Type: application/json" \
-  -d @clientes_import.json
-
-# Importar direcciones
-curl -X POST http://localhost:3000/api/direccion/import/bulk \
-  -H "Content-Type: application/json" \
-  -d @direcciones_import.json
-
-# Importar préstamos
-curl -X POST http://localhost:3000/api/prestamo/import/bulk \
-  -H "Content-Type: application/json" \
-  -d @prestamos_import.json
-
-# Importar pagos
-curl -X POST http://localhost:3000/api/pago/import/bulk \
-  -H "Content-Type: application/json" \
-  -d @pagos_import.json
+🏆 TOP 5 CLIENTES
+├── 1. Olga Yanira Galicia (11 desembolsos)
+├── 2. Sandra Gómez de Rivera (10 desembolsos)
+├── 3. Deysi Emeli García (9 desembolsos)
+├── 4. Norma Isabel Cácamo (8 desembolsos)
+└── 5. Karen Yaneth Chachagua (6 desembolsos)
 ```
 
 ---
 
-## OPCIÓN 3: IMPORTACIÓN MEDIANTE SCRIPT DE NODEJS
+## REGLA DE MÚLTIPLES DESEMBOLSOS
 
-### Crear script de importación
+Para clientes con más de un desembolso:
 
-```javascript
-// import-data.js
-const fs = require('fs');
-const { DataSource } = require('typeorm');
+```
+┌─────────────────────────────────────────────────┐
+│ Cliente: Karen Chachagua (6 desembolsos)        │
+├─────────────────────────────────────────────────┤
+│ 1. 2025-02-03  $200  →  CANCELADO ❌          │
+│ 2. 2025-05-15  $200  →  CANCELADO ❌          │
+│ 3. 2025-06-12  $300  →  CANCELADO ❌          │
+│ 4. 2025-09-02  $400  →  CANCELADO ❌          │
+│ 5. 2025-11-08  $500  →  CANCELADO ❌          │
+│ 6. 2026-01-05  $500  →  VIGENTE ✅ (último)   │
+└─────────────────────────────────────────────────┘
 
-const dataSource = new DataSource({
-  type: 'postgres',
-  host: 'localhost',
-  port: 5432,
-  username: 'tu_usuario',
-  password: 'tu_password',
-  database: 'nombre_base_datos',
-  entities: ['dist/**/*.entity.js'],
-});
-
-async function importData() {
-  await dataSource.initialize();
-
-  // Importar personas
-  const personas = JSON.parse(fs.readFileSync('clientes_import.json', 'utf8'));
-  await dataSource.manager.save('Persona', personas);
-
-  // Importar direcciones
-  const direcciones = JSON.parse(fs.readFileSync('direcciones_import.json', 'utf8'));
-  await dataSource.manager.save('Direccion', direcciones);
-
-  // Importar préstamos
-  const prestamos = JSON.parse(fs.readFileSync('prestamos_import.json', 'utf8'));
-  await dataSource.manager.save('Prestamo', prestamos);
-
-  // Importar pagos
-  const pagos = JSON.parse(fs.readFileSync('pagos_import.json', 'utf8'));
-  await dataSource.manager.save('Pago', pagos);
-
-  await dataSource.destroy();
-  console.log('Importación completada');
-}
-
-importData();
+RESULTADO: 1 préstamo activo, 5 cancelados
 ```
 
-Ejecutar:
-
-```bash
-node import-data.js
-```
+Esta regla se aplica automáticamente en el SQL.
 
 ---
 
-## VERIFICACIÓN POST-IMPORTACIÓN
+## ESTRUCTURA GENERADA
 
-### 1. Verificar conteo de registros
+Por cada desembolso se crea:
 
-```sql
-SELECT
-  (SELECT COUNT(*) FROM persona WHERE "numeroDui" LIKE '10000%') as personas,
-  (SELECT COUNT(*) FROM prestamo WHERE "numeroCredito" LIKE 'CRE2026%') as prestamos,
-  (SELECT COUNT(*) FROM pago WHERE "numeroPago" LIKE 'PAG2026%') as pagos;
 ```
-
-**Resultado esperado:**
-- Personas: 67
-- Préstamos: 170
-- Pagos: 969
-
-### 2. Verificar montos
-
-```sql
-SELECT
-  ROUND(SUM("montoDesembolsado")::numeric, 2) as total_desembolsado,
-  ROUND(SUM("saldoCapital")::numeric, 2) as saldo_pendiente
-FROM prestamo
-WHERE "numeroCredito" LIKE 'CRE2026%';
+SOLICITUD (SOL-XXXXXX)
+├── Estado: APROBADA
+├── Tipo: Microcrédito (ID: 12)
+├── Monto: [Monto del desembolso]
+├── Plazo: 12 meses
+├── Tasa: 120% anual
+└── Fecha: [Fecha del desembolso]
+    │
+    └──> PRÉSTAMO (CRE-XXXXXX)
+         ├── Estado: VIGENTE o CANCELADO
+         ├── Fecha otorgamiento: [Fecha del desembolso]
+         ├── Fecha vencimiento: [Fecha + 12 meses]
+         ├── Interés total: [Monto × 120%]
+         └── Cuota mensual: [(Monto + Interés) ÷ 12]
 ```
-
-**Resultado esperado:**
-- Total desembolsado: $48,702.50
-- Saldo pendiente: $26,999.40
-
-### 3. Verificar total pagado
-
-```sql
-SELECT ROUND(SUM("montoPagado")::numeric, 2) as total_pagado
-FROM pago
-WHERE "numeroPago" LIKE 'PAG2026%';
-```
-
-**Resultado esperado:**
-- Total pagado: $45,209.30
 
 ---
 
 ## TAREAS POST-IMPORTACIÓN
 
-### CRÍTICO - Datos ficticios a reemplazar
+### CRÍTICO: Generar planes de pago
 
-1. **DUIs ficticios:** Todos los DUIs con formato `10000XXX-X` son ficticios y DEBEN reemplazarse con DUIs reales.
+Los préstamos se crean SIN plan de pagos. Ejecutar:
 
-```sql
--- Listar personas con DUI ficticio
-SELECT "idPersona", nombre, apellido, "numeroDui"
-FROM persona
-WHERE "numeroDui" LIKE '10000%'
-ORDER BY "idPersona";
+```typescript
+// Para cada préstamo importado
+POST /api/desembolso/prestamo/:id/generar-plan-pago
 ```
 
-2. **Actualizar DUI de un cliente:**
+O ejecutar un script masivo desde el backend.
 
-```sql
-UPDATE persona
-SET "numeroDui" = '12345678-9'  -- DUI real
-WHERE "idPersona" = 1;
-```
-
-### IMPORTANTE - Datos faltantes a completar
-
-3. **Completar teléfonos:**
-
-```sql
-UPDATE persona
-SET telefono = '7890-1234'
-WHERE "idPersona" = 1;
-```
-
-4. **Completar emails:**
-
-```sql
-UPDATE persona
-SET "correoElectronico" = 'cliente@example.com'
-WHERE "idPersona" = 1;
-```
-
-5. **Actualizar fechas de nacimiento reales:**
-
-```sql
-UPDATE persona
-SET "fechaNacimiento" = '1985-05-15'
-WHERE "idPersona" = 1;
-```
-
-6. **Actualizar sexo correcto:**
-
-```sql
-UPDATE persona
-SET sexo = 'Masculino'  -- o 'Femenino'
-WHERE "idPersona" = 1;
-```
-
-7. **Completar direcciones:**
-
-```sql
-UPDATE direccion
-SET "detalleDireccion" = 'Col. Escalón, Pasaje 5, Casa #123'
-WHERE "idPersona" = 1;
-```
-
-### RECOMENDADO - Ajustes financieros
-
-8. **Verificar y ajustar tasas de interés:**
-
-```sql
--- Ver préstamos con tasa por defecto (10%)
-SELECT id, "numeroCredito", "montoDesembolsado", "tasaInteres"
-FROM prestamo
-WHERE "numeroCredito" LIKE 'CRE2026%'
-  AND "tasaInteres" = 0.10;
-
--- Actualizar tasa de un préstamo
-UPDATE prestamo
-SET "tasaInteres" = 0.12  -- 12% tasa real
-WHERE id = 1;
-```
-
-9. **Recalcular totales si cambia la tasa:**
+### Actualizar saldos de préstamos cancelados
 
 ```sql
 UPDATE prestamo
-SET
-  "totalInteres" = "montoDesembolsado" * "tasaInteres",
-  "totalPagar" = "montoDesembolsado" + ("montoDesembolsado" * "tasaInteres"),
-  "cuotaNormal" = ("montoDesembolsado" + ("montoDesembolsado" * "tasaInteres")) / "numeroCuotas"
-WHERE id = 1;
+SET saldoCapital = 0,
+    saldoInteres = 0,
+    fechaCancelacion = fechaOtorgamiento,
+    fechaUltimoPago = fechaOtorgamiento
+WHERE estado = 'CANCELADO'
+  AND numeroCredito LIKE 'CRE-%';
 ```
 
 ---
 
 ## SOLUCIÓN DE PROBLEMAS
 
-### Error: "solicitudId violates foreign key constraint"
+### Error: Duplicate entry
 
-**Problema:** El campo `solicitudId` en préstamos no tiene un registro correspondiente.
-
-**Solución:** Los datos importados tienen `solicitudId = NULL`. Si tu base de datos requiere una solicitud, créala primero o modifica la constraint.
-
-```sql
--- Opción 1: Permitir NULL temporalmente
-ALTER TABLE prestamo ALTER COLUMN "solicitudId" DROP NOT NULL;
-
--- Opción 2: Crear solicitudes ficticias
-INSERT INTO solicitud (id, "personaId", "montoSolicitado", "fechaSolicitud", estado)
-SELECT
-  pr.id,
-  pr."personaId",
-  pr."montoAutorizado",
-  pr."fechaOtorgamiento",
-  'APROBADA'
-FROM prestamo pr
-WHERE pr."numeroCredito" LIKE 'CRE2026%'
-  AND pr."solicitudId" IS NULL;
-
--- Vincular préstamos con solicitudes
-UPDATE prestamo pr
-SET "solicitudId" = pr.id
-WHERE pr."numeroCredito" LIKE 'CRE2026%'
-  AND pr."solicitudId" IS NULL;
+```bash
+# Editar generar_sql_desembolsos.js
+# Ajustar línea: let solicitudCounter = 1000; (usar siguiente ID disponible)
+node generar_sql_desembolsos.js
 ```
 
-### Error: "duplicate key value violates unique constraint"
-
-**Problema:** Ya existen registros con los mismos IDs.
-
-**Solución:** Ajusta las secuencias o modifica los IDs antes de importar.
+### Error: Foreign key personaId
 
 ```sql
--- Ver ID máximo actual
-SELECT MAX("idPersona") FROM persona;
-
--- Ajustar secuencia
-SELECT setval('persona_"idPersona"_seq', 1000);
-
--- Ahora los nuevos registros comenzarán desde 1001
+-- Ver personas faltantes
+SELECT id FROM (
+    SELECT 1 as id UNION SELECT 2 UNION SELECT 3 -- ... hasta 69
+) as ids_excel
+WHERE id NOT IN (SELECT id FROM persona);
 ```
 
-### Error: "tipo_credito con id 1 no existe"
-
-**Problema:** Falta el catálogo de tipo de crédito.
-
-**Solución:** Crear el tipo de crédito antes de importar préstamos.
+### Error: Foreign key tipoCreditoId
 
 ```sql
-INSERT INTO tipo_credito (id, nombre, descripcion, "tasaInteresMinima", "tasaInteresMaxima")
-VALUES (1, 'Crédito Personal', 'Microcrédito personal', 0.08, 0.20);
+-- Ver ID real del tipo de crédito
+SELECT id FROM tipo_credito WHERE codigo = 'EMP-MICROEMPRESA';
+-- Actualizar CONFIG.TIPO_CREDITO_ID en generar_sql_desembolsos.js
 ```
 
 ---
 
-## RESUMEN RÁPIDO
+## COMANDOS ÚTILES
 
+### Regenerar SQL
 ```bash
-# 1. Conectar a la base de datos
-psql -U usuario -d base_datos
-
-# 2. Verificar catálogos (ver sección prerrequisitos)
-
-# 3. Importar datos
-\i import_all.sql
-
-# 4. Validar importación
-\i validar_importacion.sql
-
-# 5. Completar datos faltantes (ver sección tareas)
+cd C:\Users\javie\OneDrive\Documentos\DESARROLLO\MICRO
+node generar_sql_desembolsos.js
 ```
+
+### Backup
+```bash
+mysqldump -u usuario -p base_datos > backup.sql
+```
+
+### Restaurar backup
+```bash
+mysql -u usuario -p base_datos < backup.sql
+```
+
+### Ver log de errores
+```sql
+SHOW ERRORS;
+```
+
+---
+
+## CHECKLIST
+
+Antes de ejecutar:
+- [ ] Leí `RESUMEN_IMPORTACION.md`
+- [ ] Verifiqué IDs de catálogos
+- [ ] Verifiqué que existen todas las personas
+- [ ] Hice backup de la BD
+- [ ] Revisé el archivo `importar_desembolsos.sql`
+
+Durante la ejecución:
+- [ ] Descomentarías líneas de transacción
+- [ ] Ejecuté el script completo
+- [ ] Ejecuté `verificar_importacion.sql`
+- [ ] Todos los checks pasaron ✓
+
+Después de importar:
+- [ ] Hice COMMIT
+- [ ] Generé planes de pago
+- [ ] Actualicé saldos de cancelados
+- [ ] Verifiqué integridad final
 
 ---
 
 ## CONTACTO
 
-Si encuentras problemas durante la importación:
-
-1. Revisa el archivo `reporte_transformacion.json` para ver errores del proceso ETL
-2. Ejecuta `validar_importacion.sql` para identificar inconsistencias
-3. Consulta `RESUMEN_ETL.md` para detalles completos del proceso
-4. Revisa `MAPEO_CAMPOS.md` para entender el mapeo de campos
+Para problemas:
+1. Revisar `INSTRUCCIONES_IMPORTACION.md` (guía detallada)
+2. Ejecutar `verificar_importacion.sql`
+3. Hacer ROLLBACK si algo falla
+4. Ajustar configuración y reintentar
 
 ---
 
-**Última actualización:** 2026-01-24
-**Versión:** 1.0
+## RESULTADO ESPERADO
+
+Después de la importación exitosa:
+
+```
+✓ 173 solicitudes aprobadas
+✓ 173 préstamos creados
+✓ 69 préstamos VIGENTES (uno por cliente)
+✓ 104 préstamos CANCELADOS (históricos)
+✓ $49,352.50 capital activo
+✓ Regla de múltiples desembolsos aplicada correctamente
+```
+
+---
+
+**SIGUIENTE PASO:** Leer `RESUMEN_IMPORTACION.md` para comenzar

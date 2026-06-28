@@ -6,6 +6,7 @@
 import { ReciboData } from '@core/models/credito.model';
 
 export const MOCK_RECIBO_DATA: ReciboData = {
+  pagoId: 1,
   numeroPago: 'PAG2026000001',
   fechaPago: '2026-01-23',
   fechaImpresion: '2026-01-23T16:30:45.123Z',
@@ -27,6 +28,7 @@ export const MOCK_RECIBO_DATA: ReciboData = {
     interesAplicado: 80.00,
     recargosAplicado: 10.00,
     interesMoratorioAplicado: 10.00,
+    recargoManualAplicado: 0,
   },
 
   saldoAnterior: 2500.00,
@@ -35,6 +37,7 @@ export const MOCK_RECIBO_DATA: ReciboData = {
 };
 
 export const MOCK_RECIBO_DATA_2: ReciboData = {
+  pagoId: 2,
   numeroPago: 'PAG2026000025',
   fechaPago: '2026-01-23',
   fechaImpresion: '2026-01-23T17:15:30.456Z',
@@ -56,6 +59,7 @@ export const MOCK_RECIBO_DATA_2: ReciboData = {
     interesAplicado: 200.00,
     recargosAplicado: 25.50,
     interesMoratorioAplicado: 25.00,
+    recargoManualAplicado: 0,
   },
 
   saldoAnterior: 8500.00,
@@ -64,6 +68,7 @@ export const MOCK_RECIBO_DATA_2: ReciboData = {
 };
 
 export const MOCK_RECIBO_CANCELACION_TOTAL: ReciboData = {
+  pagoId: 3,
   numeroPago: 'PAG2026000100',
   fechaPago: '2026-01-23',
   fechaImpresion: '2026-01-23T18:45:12.789Z',
@@ -85,6 +90,7 @@ export const MOCK_RECIBO_CANCELACION_TOTAL: ReciboData = {
     interesAplicado: 120.00,
     recargosAplicado: 15.00,
     interesMoratorioAplicado: 15.00,
+    recargoManualAplicado: 0,
   },
 
   saldoAnterior: 1500.00,
@@ -96,6 +102,7 @@ export const MOCK_RECIBO_CANCELACION_TOTAL: ReciboData = {
  * Datos con montos muy pequeños (para probar formateo de decimales)
  */
 export const MOCK_RECIBO_SMALL_AMOUNTS: ReciboData = {
+  pagoId: 4,
   numeroPago: 'PAG2026000150',
   fechaPago: '2026-01-23',
   fechaImpresion: '2026-01-23T19:20:05.321Z',
@@ -117,6 +124,7 @@ export const MOCK_RECIBO_SMALL_AMOUNTS: ReciboData = {
     interesAplicado: 3.50,
     recargosAplicado: 1.00,
     interesMoratorioAplicado: 1.00,
+    recargoManualAplicado: 0,
   },
 
   saldoAnterior: 100.00,
@@ -128,6 +136,7 @@ export const MOCK_RECIBO_SMALL_AMOUNTS: ReciboData = {
  * Datos con montos muy grandes (para probar formateo de miles)
  */
 export const MOCK_RECIBO_LARGE_AMOUNTS: ReciboData = {
+  pagoId: 5,
   numeroPago: 'PAG2026000200',
   fechaPago: '2026-01-23',
   fechaImpresion: '2026-01-23T20:10:55.654Z',
@@ -149,6 +158,7 @@ export const MOCK_RECIBO_LARGE_AMOUNTS: ReciboData = {
     interesAplicado: 2800.00,
     recargosAplicado: 250.75,
     interesMoratorioAplicado: 200.00,
+    recargoManualAplicado: 0,
   },
 
   saldoAnterior: 125000.00,
@@ -160,6 +170,7 @@ export const MOCK_RECIBO_LARGE_AMOUNTS: ReciboData = {
  * Datos con nombres largos (para probar overflow de texto)
  */
 export const MOCK_RECIBO_LONG_NAMES: ReciboData = {
+  pagoId: 6,
   numeroPago: 'PAG2026000300',
   fechaPago: '2026-01-23',
   fechaImpresion: '2026-01-23T21:30:15.987Z',
@@ -181,6 +192,7 @@ export const MOCK_RECIBO_LONG_NAMES: ReciboData = {
     interesAplicado: 120.00,
     recargosAplicado: 15.00,
     interesMoratorioAplicado: 15.00,
+    recargoManualAplicado: 0,
   },
 
   saldoAnterior: 5600.00,

@@ -307,14 +307,27 @@ export class CalculoInteresService {
     let saldoCapital = capital;
 
     for (let i = 1; i <= numeroCuotas; i++) {
-      saldoCapital = this.redondear(Math.max(0, saldoCapital - capitalPorCuota), 'saldo capital');
+      let capitalCuota: number;
+      let interesCuota: number;
+
+      if (i === numeroCuotas) {
+        // Última cuota: el capital cubre exactamente el saldo restante;
+        // el interés absorbe la diferencia de redondeo para mantener cuotaNormal.
+        capitalCuota = saldoCapital;
+        interesCuota = this.redondear(Math.max(0, cuotaNormal - capitalCuota), 'interes última cuota FLAT');
+        saldoCapital = 0;
+      } else {
+        capitalCuota = capitalPorCuota;
+        interesCuota = interesPorCuota;
+        saldoCapital = this.redondear(Math.max(0, saldoCapital - capitalPorCuota), 'saldo capital');
+      }
 
       cuotas.push({
         numeroCuota: i,
-        capital: capitalPorCuota,
-        interes: interesPorCuota,
+        capital: capitalCuota,
+        interes: interesCuota,
         cuotaTotal: cuotaNormal,
-        saldoCapital: Math.max(0, saldoCapital),
+        saldoCapital,
       });
     }
 
@@ -458,14 +471,25 @@ export class CalculoInteresService {
     let saldoCapital = capital;
 
     for (let i = 1; i <= numeroCuotas; i++) {
-      saldoCapital = this.redondear(Math.max(0, saldoCapital - capitalPorCuota), 'saldo capital');
+      let capitalCuota: number;
+      let interesCuota: number;
+
+      if (i === numeroCuotas) {
+        capitalCuota = saldoCapital;
+        interesCuota = this.redondear(Math.max(0, cuotaNormal - capitalCuota), 'interes última cuota FLAT');
+        saldoCapital = 0;
+      } else {
+        capitalCuota = capitalPorCuota;
+        interesCuota = interesPorCuota;
+        saldoCapital = this.redondear(Math.max(0, saldoCapital - capitalPorCuota), 'saldo capital');
+      }
 
       cuotas.push({
         numeroCuota: i,
-        capital: capitalPorCuota,
-        interes: interesPorCuota,
+        capital: capitalCuota,
+        interes: interesCuota,
         cuotaTotal: cuotaNormal,
-        saldoCapital: Math.max(0, saldoCapital),
+        saldoCapital,
       });
     }
 

@@ -1400,13 +1400,8 @@ export class SolicitudFormComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Construir la fecha de primera cuota
-    let fechaPrimeraCuota: string;
-    if (periodicidad.codigo === 'DIARIO' && this.condicionesForm.value.fechaDesdePago) {
-      fechaPrimeraCuota = formatLocalDate(new Date(this.condicionesForm.value.fechaDesdePago));
-    } else {
-      fechaPrimeraCuota = this.condicionesForm.value.fechaSolicitud;
-    }
+    // El backend calcula la primera cuota sumando el período a esta fecha base
+    const fechaPrimeraCuota = this.condicionesForm.value.fechaSolicitud as string;
 
     // Obtener el número de cuotas
     const numeroCuotasValue = this.condicionesForm.value.numeroCuotas
@@ -1714,15 +1709,8 @@ export class SolicitudFormComponent implements OnInit, OnDestroy {
     this.isCalculando.set(true);
     this.planPagoCalculado.set(null);
 
-    // Usar la fecha de solicitud como fecha de primera cuota
-    // Si es pago diario y hay fechaDesdePago, usar esa fecha
-    let fechaPrimeraCuota: string;
-    if (periodicidad.codigo === 'DIARIO' && this.condicionesForm.value.fechaDesdePago) {
-      fechaPrimeraCuota = formatLocalDate(new Date(this.condicionesForm.value.fechaDesdePago));
-    } else {
-      // Por defecto usar la fecha de solicitud
-      fechaPrimeraCuota = this.condicionesForm.value.fechaSolicitud;
-    }
+    // El backend calcula la primera cuota sumando el período a esta fecha base
+    const fechaPrimeraCuota = this.condicionesForm.value.fechaSolicitud as string;
 
     // Obtener el número de cuotas (para DIARIA es ingresado, para otras es calculado)
     const numeroCuotasValue = this.condicionesForm.value.numeroCuotas
@@ -1808,4 +1796,5 @@ export class SolicitudFormComponent implements OnInit, OnDestroy {
 
     return columnas;
   }
+
 }

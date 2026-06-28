@@ -648,13 +648,8 @@ export class SolicitudDetailComponent implements OnInit {
     const tipoCuotaMap: Record<string, string> = { 'fija': 'FLAT', 'variable': 'AMORTIZADO' };
     const tipoInteres = tipoCuotaMap[tipoInteresRaw.toLowerCase()] || tipoInteresRaw.toUpperCase();
 
-    // Determinar fecha de primera cuota según periodicidad
-    let fechaPrimeraCuota: string | undefined;
-    if (periodicidad === 'DIARIO' && sol.fechaDesdePago) {
-      fechaPrimeraCuota = sol.fechaDesdePago;
-    } else if (sol.fechaSolicitud) {
-      fechaPrimeraCuota = sol.fechaSolicitud;
-    }
+    // El backend calcula la primera cuota sumando el período a esta fecha base
+    const fechaPrimeraCuota = sol.fechaSolicitud;
 
     // Para periodicidad DIARIA, enviar numeroCuotas (requerido por el backend)
     const numeroCuotas = periodicidad === 'DIARIO' && sol.diasCalculados
@@ -792,3 +787,4 @@ export class SolicitudDetailComponent implements OnInit {
     this.router.navigate(['/creditos/solicitudes']);
   }
 }
+

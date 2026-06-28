@@ -1,192 +1,190 @@
-# Reporte de Colocación de Créditos
+# Componentes de Reportes del Módulo de Créditos
 
-Componente para generar reportes de préstamos desembolsados con capacidad de filtrado y exportación a Excel y PDF.
+Este directorio contiene los componentes para generación de reportes del módulo de créditos con capacidad de filtrado y exportación.
 
-## Ubicación
+---
+
+## 1. Reporte de Colocación de Créditos
 
 **Ruta**: `/creditos/reportes/colocacion`
 
 **Componente**: `ReporteColocacionComponent`
 
-**Servicio**: `ReporteService`
+### Filtros
+- Fecha Desde (requerido)
+- Fecha Hasta (requerido)
+- Línea de Crédito (opcional)
+- Tipo de Crédito (opcional)
 
-## Características
+### Columnas
+No. Préstamo, Cliente, Línea, Tipo, Monto Desembolsado, Tasa, Plazo, Periodicidad, Saldo Capital, F. Otorgamiento, F. Vencimiento
 
-### Filtros Disponibles
+### Totales
+- Total de préstamos
+- Total desembolsado
+- Saldo total de capital
 
-1. **Fecha Desde** (requerido): Fecha inicial del periodo de consulta
-2. **Fecha Hasta** (requerido): Fecha final del periodo de consulta
-3. **Línea de Crédito** (opcional): Filtra por línea de crédito específica
-4. **Tipo de Crédito** (opcional): Filtra por tipo de crédito específico
+---
 
-### Columnas del Reporte
+## 2. Reporte de Pagos
 
-- No. de Préstamo
-- Nombre del Cliente (persona)
-- Línea de Crédito
-- Tipo de Crédito
-- Monto Desembolsado
-- Tasa de Interés
-- Plazo (número de cuotas)
-- Periodicidad de Pago
-- Saldo Capital
-- Fecha de Otorgamiento
-- Fecha de Vencimiento
+**Ruta**: `/creditos/reportes/pagos`
 
-### Resumen de Datos
+**Componente**: `ReportePagosComponent`
 
-El reporte incluye un resumen con:
-- Total de préstamos encontrados
-- Total desembolsado (suma de todos los montos)
-- Saldo total de capital (suma de todos los saldos)
+### Filtros
+- Fecha Desde (requerido)
+- Fecha Hasta (requerido)
+- Estado de Pago (opcional)
+
+### Columnas
+Fecha, No. Préstamo, Cliente, Línea, Tipo, Monto Pagado, Distribución (Capital, Interés, Recargos, Mora), Saldo Anterior, Saldo Nuevo
+
+### Totales
+- Total de pagos
+- Total monto pagado
+- Total capital aplicado
+- Total interés aplicado
+
+---
+
+## 3. Detalle de Cartera de Préstamos
+
+**Ruta**: `/creditos/reportes/cartera`
+
+**Componente**: `ReporteCarteraComponent`
+
+### Filtros
+- Fecha de Corte (requerido): Fecha para el cálculo del estado de la cartera
+
+### Columnas (16 columnas)
+1. numeroCredito
+2. nombreCliente
+3. lineaCredito
+4. tipoCredito
+5. fechaOtorgamiento
+6. fechaVencimiento
+7. monto
+8. plazo (meses)
+9. tasaInteres
+10. cuotaTotal
+11. numeroCuotas
+12. saldoCapital
+13. saldoInteres
+14. cuotasAtrasadas
+15. capitalMora
+16. interesMora
+
+### Totales
+- Total de préstamos
+- Total monto
+- Total saldo capital
+- Total saldo interés
+- Total capital en mora
+- Total interés en mora
+
+### Backend Endpoint
+```
+GET /api/reportes/cartera?fechaCorte=YYYY-MM-DD
+```
+
+### Características Especiales
+- Resaltado visual de cuotas atrasadas y montos en mora
+- Badge con la fecha de corte en los resultados
+- Exportación completa de las 16 columnas a Excel y PDF
+- Diseño optimizado para tablas amplias (landscape en PDF)
+
+---
+
+## Características Comunes
+
+### Roles Permitidos
+- ADMIN
+- COMITE
+- ASESOR (solo para Reporte de Colocación)
 
 ### Exportación
 
-#### Excel
-- Formato `.xlsx`
-- Incluye todas las columnas del reporte
+#### Excel (xlsx)
+- Todas las columnas incluidas
 - Fila de totales al final
-- Nombre del archivo: `reporte-colocacion-YYYY-MM-DD-YYYY-MM-DD.xlsx`
+- Formato numérico para montos
+- Nombres de archivo descriptivos
 
 #### PDF
 - Formato landscape para mejor visualización
-- Encabezado con:
-  - Logo de la institución (FINANZIA)
-  - Título del reporte
-  - Periodo consultado
-  - Fecha de generación
+- Encabezado con logo FINANZIA
+- Título del reporte
+- Periodo/Fecha de corte
+- Fecha de generación
 - Tabla con todos los datos
 - Fila de totales resaltada
-- Nombre del archivo: `reporte-colocacion-YYYY-MM-DD-YYYY-MM-DD.pdf`
 
-## Uso
+### Responsive Design
+- Desktop: Grid multi-columna
+- Tablet: Grid adaptativo
+- Mobile: Stack vertical, scroll horizontal en tablas
 
-### Acceso al Componente
-
-El reporte está disponible para los siguientes roles:
-- ADMIN
-- ASESOR
-- COMITE
-
-### Flujo de Uso
-
-1. Seleccionar las fechas del periodo a consultar
-2. (Opcional) Seleccionar una línea de crédito específica
-3. (Opcional) Seleccionar un tipo de crédito específico
-4. Hacer clic en "Generar Reporte"
-5. Revisar los datos en la tabla
-6. Exportar a Excel o PDF según necesidad
-
-### Navegación
-
-Para agregar un enlace al menú de navegación, agregar en el sidebar o menú principal:
-
-```typescript
-{
-  label: 'Reporte de Colocación',
-  icon: 'assessment',
-  route: '/creditos/reportes/colocacion',
-  roles: [RoleCodes.ADMIN, RoleCodes.ASESOR, RoleCodes.COMITE]
-}
-```
+### Paginación
+- Tamaño por defecto: 10 registros
+- Opciones: 10, 25, 50, 100
+- Navegación completa (first/last)
 
 ## Dependencias
 
-- **xlsx**: Exportación a Excel
-- **jspdf**: Generación de PDF
-- **jspdf-autotable**: Tablas en PDF
-- **Angular Material**: Componentes UI
+```json
+{
+  "xlsx": "^0.18.5",
+  "jspdf": "^4.0.0",
+  "jspdf-autotable": "^5.0.7"
+}
+```
 
-## Personalización
+## Servicio
 
-### Modificar Columnas Visibles
+**Archivo**: `reporte.service.ts`
 
-Editar el array `columnasVisibles` en el componente:
+### Métodos Disponibles
 
 ```typescript
-columnasVisibles = [
-  'numeroCredito',
-  'nombreCliente',
-  // ... agregar o quitar columnas
-];
+getReporteColocacion(filtros: FiltrosReporteColocacion): Observable<DatosReporteColocacion[]>
+getReportePagos(filtros: FiltrosReportePagos): Observable<DatosReportePagos[]>
+getReporteCartera(fechaCorte: string): Observable<DatosReporteCartera[]>
 ```
 
-### Cambiar Logo en PDF
+## Navegación
 
-Descomentar y configurar la línea del logo en el método `exportarPDF()`:
+Los reportes están accesibles desde el menú lateral en la sección "Reportes":
 
-```typescript
-// Convertir el logo a base64 primero
-const logoBase64 = '...'; // Base64 del logo
-doc.addImage(logoBase64, 'PNG', 15, 10, 30, 20);
+```html
+<mat-expansion-panel>
+  <mat-expansion-panel-header>
+    <mat-icon>assessment</mat-icon>
+    <span>Reportes</span>
+  </mat-expansion-panel-header>
+  <mat-nav-list>
+    <a routerLink="/creditos/reportes/colocacion">Colocación de Créditos</a>
+    <a routerLink="/creditos/reportes/pagos">Reporte de Pagos</a>
+    <a routerLink="/creditos/reportes/cartera">Detalle de Cartera</a>
+  </mat-nav-list>
+</mat-expansion-panel>
 ```
 
-### Ajustar Tamaño de Página en PDF
+## Stack Tecnológico
 
-Modificar en el método `exportarPDF()`:
-
-```typescript
-const doc = new jsPDF('landscape'); // o 'portrait'
-```
-
-## Integración con Backend
-
-El servicio consulta el endpoint:
-```
-GET /api/prestamos
-```
-
-Con los siguientes parámetros:
-- `fechaDesde`: string (formato YYYY-MM-DD)
-- `fechaHasta`: string (formato YYYY-MM-DD)
-- `lineaCreditoId`: number (opcional)
-- `tipoCreditoId`: number (opcional)
-
-**Nota**: Asegurarse de que el backend soporte estos filtros para obtener préstamos desembolsados en el rango de fechas especificado.
-
-## Responsive Design
-
-El componente es completamente responsive:
-- **Desktop**: Layout en grid con múltiples columnas
-- **Tablet**: Grid adaptativo
-- **Mobile**: Columnas en stack vertical, tabla con scroll horizontal
-
-## Estados del Componente
-
-1. **Inicial**: Formulario de filtros vacío con fechas por defecto (mes actual)
-2. **Cargando**: Spinner visible mientras se obtienen datos
-3. **Con Datos**: Tabla visible con datos paginados y opciones de exportación
-4. **Sin Datos**: Mensaje informativo cuando no hay resultados
-
-## Validaciones
-
-- Fechas desde y hasta son obligatorias
-- No se permite generar reporte con formulario inválido
-- Validación de línea-tipo de crédito (tipos filtrados por línea seleccionada)
-
-## Paginación
-
-- Tamaño de página por defecto: 10 registros
-- Opciones: 10, 25, 50, 100 registros por página
-- Navegación first/last incluida
-
-## Soporte y Mejoras Futuras
-
-Posibles mejoras a implementar:
-- [ ] Filtros adicionales (estado del préstamo, asesor, sucursal)
-- [ ] Gráficos estadísticos
-- [ ] Comparación entre periodos
-- [ ] Exportación a otros formatos (CSV)
-- [ ] Programación de reportes automáticos
-- [ ] Envío por correo electrónico
-
-## Desarrollador
-
-Componente creado siguiendo los estándares y patrones del proyecto FINANZIA.
-
-**Stack**:
-- Angular 17
+- Angular 17+
 - Angular Material
 - Reactive Forms
 - Standalone Components
 - Signals API
+- TypeScript 5.2+
+
+## Mejoras Futuras
+
+- [ ] Gráficos estadísticos (charts)
+- [ ] Comparación entre periodos
+- [ ] Exportación a CSV
+- [ ] Reportes programados
+- [ ] Envío automático por email
+- [ ] Más filtros avanzados
+- [ ] Drill-down en los datos

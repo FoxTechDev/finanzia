@@ -180,19 +180,6 @@ import {
               </mat-form-field>
             </div>
 
-            <div class="form-row">
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Fondos Propios</mat-label>
-                <input matInput type="number" formControlName="fondosPropios" min="0" step="0.01">
-                <span matPrefix>$&nbsp;</span>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Transferencia Bancaria</mat-label>
-                <input matInput type="number" formControlName="transferenciaBancaria" min="0" step="0.01">
-                <span matPrefix>$&nbsp;</span>
-              </mat-form-field>
-            </div>
           </form>
 
           <!-- Mostrar Plan de Pago de la Solicitud -->
@@ -564,6 +551,42 @@ import {
 
               <mat-divider></mat-divider>
 
+              <!-- Origen de Fondos -->
+              <div class="preview-section" [formGroup]="configForm">
+                <h3>Origen de Fondos</h3>
+                <p class="fondos-hint">
+                  Indique cómo se entregará el monto líquido de
+                  <strong>{{ preview()!.montoDesembolsado | currency:'USD' }}</strong>.
+                  La suma no puede superar ese valor.
+                </p>
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Fondos Propios</mat-label>
+                    <input matInput type="number" formControlName="fondosPropios" min="0" step="0.01"
+                           (input)="onFondosChange()">
+                    <span matPrefix>$&nbsp;</span>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Transferencia Bancaria</mat-label>
+                    <input matInput type="number" formControlName="transferenciaBancaria" min="0" step="0.01"
+                           (input)="onFondosChange()">
+                    <span matPrefix>$&nbsp;</span>
+                  </mat-form-field>
+                </div>
+
+                @if (fondosSuperanLiquido()) {
+                  <mat-error class="fondos-error">
+                    <mat-icon>error_outline</mat-icon>
+                    La suma de fondos propios + transferencia bancaria
+                    ({{ sumaFondos() | currency:'USD' }}) supera el monto líquido a entregar
+                    ({{ preview()!.montoDesembolsado | currency:'USD' }}).
+                  </mat-error>
+                }
+              </div>
+
+              <mat-divider></mat-divider>
+
               <!-- Plan de Pago -->
               <div class="preview-section">
                 <h3>Plan de Pago</h3>
@@ -621,7 +644,7 @@ import {
               mat-raised-button
               color="primary"
               (click)="confirmarDesembolso()"
-              [disabled]="!preview() || procesando()"
+              [disabled]="!preview() || procesando() || fondosSuperanLiquido()"
             >
               @if (procesando()) {
                 <mat-spinner diameter="20"></mat-spinner>
@@ -764,6 +787,27 @@ import {
       margin: 0 0 12px 0;
       color: #333;
       font-size: 16px;
+    }
+
+    .fondos-hint {
+      margin: 0 0 12px 0;
+      font-size: 13px;
+      color: #555;
+    }
+
+    .fondos-error {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #f44336;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .fondos-error mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
     }
 
     .summary-grid {
@@ -966,6 +1010,13 @@ export class CrearDesembolsoDialogComponent implements OnInit {
   loadingPreview = signal(false);
   procesando = signal(false);
 
+  sumaFondos = signal(0);
+  fondosSuperanLiquido = computed(() => {
+    const p = this.preview();
+    if (!p) return false;
+    return this.sumaFondos() > p.montoDesembolsado;
+  });
+
   // Plan de pago de la solicitud
   planSolicitud = signal<PlanPagoCalculado | null>(null);
   loadingPlanSolicitud = signal(false);
@@ -1110,16 +1161,19 @@ export class CrearDesembolsoDialogComponent implements OnInit {
     const periodicidad = this.data.solicitud.periodicidadPago?.codigo ||
                          this.data.solicitud.tipoCredito?.periodicidadPago ||
                          'MENSUAL';
-    // Obtener tipo de interés de la solicitud, o del tipo de crédito como fallback
     const tipoInteres = this.data.solicitud.tipoInteres ||
                         this.data.solicitud.tipoCredito?.tipoCuota ||
                         'FLAT';
-    const plazo = this.data.solicitud.plazoAprobado || this.data.solicitud.plazoSolicitado;
+    const plazo = Number(this.data.solicitud.plazoAprobado || this.data.solicitud.plazoSolicitado) || 1;
+
+    // Fecha de primera cuota = hoy + 1 período según la periodicidad del crédito
+    const fechaPrimeraCuota = calcularFechaPrimeraCuota(new Date(), periodicidad, plazo);
 
     this.configForm.patchValue({
       periodicidadPago: periodicidad,
       tipoInteres: tipoInteres,
-      numeroCuotas: plazo, // Por defecto, el número de cuotas es igual al plazo en meses
+      numeroCuotas: plazo,
+      fechaPrimeraCuota,
     });
   }
 
@@ -1556,7 +1610,29 @@ export class CrearDesembolsoDialogComponent implements OnInit {
     });
   }
 
+  onFondosChange(): void {
+    const propios = Number(this.configForm.get('fondosPropios')?.value) || 0;
+    const transferencia = Number(this.configForm.get('transferenciaBancaria')?.value) || 0;
+    this.sumaFondos.set(Math.round((propios + transferencia) * 100) / 100);
+  }
+
   cancelar(): void {
     this.dialogRef.close(null);
   }
+}
+
+/** Calcula la fecha de la primera cuota sumando un período a la fecha base. */
+function calcularFechaPrimeraCuota(fechaBase: Date, periodicidad: string, plazoMeses: number): Date {
+  const fecha = new Date(fechaBase);
+  switch (periodicidad.toUpperCase()) {
+    case 'DIARIO':         fecha.setDate(fecha.getDate() + 1);               break;
+    case 'SEMANAL':        fecha.setDate(fecha.getDate() + 7);               break;
+    case 'QUINCENAL':      fecha.setDate(fecha.getDate() + 15);              break;
+    case 'MENSUAL':        fecha.setMonth(fecha.getMonth() + 1);             break;
+    case 'TRIMESTRAL':     fecha.setMonth(fecha.getMonth() + 3);             break;
+    case 'SEMESTRAL':      fecha.setMonth(fecha.getMonth() + 6);             break;
+    case 'ANUAL':          fecha.setFullYear(fecha.getFullYear() + 1);       break;
+    case 'AL_VENCIMIENTO': fecha.setMonth(fecha.getMonth() + plazoMeses);   break;
+  }
+  return fecha;
 }
