@@ -31,6 +31,7 @@ import {
   CuotaPlanPago,
 } from './plan-pago.service';
 import { parseLocalDate } from '../../../common/utils/date.utils';
+import { AnularPrestamoDto } from '../dto/anular-prestamo.dto';
 
 export interface DeduccionCalculada {
   nombre: string;
@@ -909,5 +910,45 @@ export class DesembolsoService {
         `montoAutorizado=${preview.montoAutorizado}, numeroCuotas=${preview.numeroCuotas}`,
       );
     }
+  }
+
+  async anularPrestamo(id: number, dto: AnularPrestamoDto): Promise<Prestamo> {
+    const prestamo = await this.prestamoRepository.findOne({ where: { id } });
+
+    if (!prestamo) {
+      throw new NotFoundException(`Préstamo ${id} no encontrado`);
+    }
+
+    if (prestamo.estado === EstadoPrestamo.ANULADO) {
+      throw new BadRequestException('El préstamo ya está anulado');
+    }
+
+    if (prestamo.estado === EstadoPrestamo.CANCELADO) {
+      throw new BadRequestException(
+        'No se puede anular un préstamo cancelado. Para revertir un pago, utilice la función de anular pago.',
+      );
+    }
+
+    // Validar que no tenga pagos aplicados
+    const pagosAplicados = await this.dataSource
+      .getRepository(Pago)
+      .count({ where: { prestamoId: id, estado: EstadoPago.APLICADO } });
+
+    if (pagosAplicados > 0) {
+      throw new BadRequestException(
+        `No se puede anular este préstamo porque tiene ${pagosAplicados} pago(s) registrado(s). ` +
+        'Anule primero todos los pagos antes de anular el préstamo.',
+      );
+    }
+
+    await this.prestamoRepository.update(id, {
+      estado: EstadoPrestamo.ANULADO,
+      fechaAnulacion: new Date(),
+      motivoAnulacion: dto.motivoAnulacion,
+      ...(dto.usuarioAnulacionId !== undefined && { usuarioAnulacionId: dto.usuarioAnulacionId }),
+      ...(dto.nombreUsuarioAnulacion !== undefined && { nombreUsuarioAnulacion: dto.nombreUsuarioAnulacion }),
+    });
+
+    return this.prestamoRepository.findOne({ where: { id } }) as Promise<Prestamo>;
   }
 }

@@ -304,6 +304,7 @@ export enum EstadoPrestamo {
   MORA = 'MORA',
   CANCELADO = 'CANCELADO',
   CASTIGADO = 'CASTIGADO',
+  ANULADO = 'ANULADO',
 }
 
 export enum CategoriaNCB022 {
@@ -347,6 +348,7 @@ export const ESTADO_PRESTAMO_LABELS: Record<EstadoPrestamo, string> = {
   [EstadoPrestamo.MORA]: 'En Mora',
   [EstadoPrestamo.CANCELADO]: 'Cancelado',
   [EstadoPrestamo.CASTIGADO]: 'Castigado',
+  [EstadoPrestamo.ANULADO]: 'Anulado',
 };
 
 export const CATEGORIA_NCB022_LABELS: Record<CategoriaNCB022, string> = {
@@ -468,6 +470,10 @@ export interface Prestamo {
   refinanciamiento: boolean;
   usuarioDesembolsoId: number | null;
   nombreUsuarioDesembolso: string | null;
+  fechaAnulacion: string | null;
+  motivoAnulacion: string | null;
+  usuarioAnulacionId: number | null;
+  nombreUsuarioAnulacion: string | null;
   createdAt: Date;
   updatedAt: Date;
   planPago?: PlanPago[];

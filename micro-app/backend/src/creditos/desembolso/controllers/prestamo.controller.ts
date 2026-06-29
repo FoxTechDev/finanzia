@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Param,
   Query,
   Body,
@@ -15,6 +16,8 @@ import { Roles } from '../../../auth/decorators/roles.decorator';
 import { RoleCodes } from '../../../auth/enums/roles.enum';
 import { PrestamoConsultaService } from '../services/prestamo-consulta.service';
 import { PlanPagoModificacionService } from '../services/plan-pago-modificacion.service';
+import { DesembolsoService } from '../services/desembolso.service';
+import { AnularPrestamoDto } from '../dto/anular-prestamo.dto';
 import { FiltrosPrestamoDto } from '../dto/filtros-prestamo.dto';
 import { ModificarPlanPagoDto, PreviewPlanPagoDto } from '../dto/modificar-plan-pago.dto';
 import {
@@ -35,6 +38,7 @@ export class PrestamoController {
   constructor(
     private readonly prestamoConsultaService: PrestamoConsultaService,
     private readonly planPagoModificacionService: PlanPagoModificacionService,
+    private readonly desembolsoService: DesembolsoService,
   ) {}
 
   /**
@@ -131,6 +135,20 @@ export class PrestamoController {
   ) {
     dto.prestamoId = id;
     return this.planPagoModificacionService.modificarPlanPago(dto);
+  }
+
+  /**
+   * PATCH /api/prestamos/:id/anular
+   * Anula un préstamo desembolsado por error (solo si no tiene pagos)
+   * Solo ADMIN
+   */
+  @Patch(':id/anular')
+  @Roles(RoleCodes.ADMIN)
+  async anularPrestamo(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: AnularPrestamoDto,
+  ) {
+    return this.desembolsoService.anularPrestamo(id, dto);
   }
 
   /**

@@ -16,6 +16,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PrestamoService } from '../../services/prestamo.service';
 import { RegistrarPagoDialogComponent } from '../pagos/registrar-pago-dialog/registrar-pago-dialog.component';
 import { ModificarPlanPagoDialogComponent } from './modificar-plan-pago-dialog.component';
+import { AnularPrestamoDialogComponent } from './anular-prestamo-dialog.component';
 import { PagoService } from '../../services/pago.service';
 import { CatalogosService } from '@features/catalogos/services/catalogos.service';
 import { EstadoPrestamoModel } from '@core/models/catalogo.model';
@@ -97,6 +98,17 @@ import {
             <mat-icon>description</mat-icon>
             Comprobante Desembolso
           </button>
+          @if (prestamo() && prestamo()!.estado !== 'ANULADO' && prestamo()!.estado !== 'CANCELADO') {
+            <button
+              mat-stroked-button
+              color="warn"
+              *appHasRole="rolAdmin"
+              (click)="anularPrestamo()"
+              matTooltip="Anular préstamo desembolsado por error">
+              <mat-icon>block</mat-icon>
+              Anular Préstamo
+            </button>
+          }
         </div>
       </div>
 
@@ -1102,6 +1114,11 @@ import {
       color: white !important;
     }
 
+    mat-chip.estado-anulado {
+      background-color: #9e9e9e !important;
+      color: white !important;
+    }
+
     /* Categorías NCB-022 */
     mat-chip.categoria-a {
       background-color: #4caf50 !important;
@@ -1532,6 +1549,24 @@ export class PrestamoDetailComponent implements OnInit {
           this.loadPagos();
         }
         this.snackBar.open('Pago registrado exitosamente', 'Cerrar', { duration: 3000 });
+      }
+    });
+  }
+
+  anularPrestamo(): void {
+    const prestamo = this.prestamo();
+    if (!prestamo) return;
+
+    const dialogRef = this.dialog.open(AnularPrestamoDialogComponent, {
+      width: '500px',
+      maxWidth: '95vw',
+      disableClose: true,
+      data: { prestamo },
+    });
+
+    dialogRef.afterClosed().subscribe((resultado) => {
+      if (resultado) {
+        this.loadPrestamo(prestamo.id);
       }
     });
   }

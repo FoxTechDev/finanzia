@@ -176,6 +176,13 @@ export class PrestamoService {
   }
 
   /**
+   * Anula un préstamo desembolsado por error (solo ADMIN, sin pagos)
+   */
+  anular(prestamoId: number, dto: { motivoAnulacion: string; nombreUsuarioAnulacion?: string }): Observable<Prestamo> {
+    return this.http.patch<Prestamo>(`${this.apiUrl}/${prestamoId}/anular`, dto);
+  }
+
+  /**
    * Obtiene estadísticas generales de préstamos
    */
   getEstadisticas(): Observable<{

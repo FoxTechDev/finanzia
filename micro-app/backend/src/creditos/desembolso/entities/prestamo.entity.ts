@@ -41,6 +41,7 @@ export enum EstadoPrestamo {
   MORA = 'MORA',
   CANCELADO = 'CANCELADO',
   CASTIGADO = 'CASTIGADO',
+  ANULADO = 'ANULADO',
 }
 
 export enum CategoriaNCB022 {
@@ -226,12 +227,25 @@ export class Prestamo {
   @Column({ default: false })
   refinanciamiento: boolean;
 
-  // Auditoría
+  // Auditoría — desembolso
   @Column({ nullable: true })
   usuarioDesembolsoId: number;
 
   @Column({ type: 'varchar', length: 150, nullable: true })
   nombreUsuarioDesembolso: string;
+
+  // Auditoría — anulación
+  @Column({ type: 'datetime', nullable: true, default: null })
+  fechaAnulacion: Date;
+
+  @Column({ type: 'varchar', length: 1000, nullable: true, default: null })
+  motivoAnulacion: string;
+
+  @Column({ nullable: true, default: null })
+  usuarioAnulacionId: number;
+
+  @Column({ type: 'varchar', length: 150, nullable: true, default: null })
+  nombreUsuarioAnulacion: string;
 
   @CreateDateColumn()
   createdAt: Date;

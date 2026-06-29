@@ -62,6 +62,10 @@ export class PagoService {
       throw new BadRequestException('El préstamo está castigado');
     }
 
+    if (prestamo.estado === EstadoPrestamo.ANULADO) {
+      throw new BadRequestException('El préstamo está anulado');
+    }
+
     // Obtener resumen de adeudo
     const resumenAdeudo = await this.pagoCalculoService.obtenerResumenAdeudo(
       dto.prestamoId,
@@ -137,6 +141,10 @@ export class PagoService {
 
       if (prestamo.estado === EstadoPrestamo.CASTIGADO) {
         throw new BadRequestException('El préstamo está castigado');
+      }
+
+      if (prestamo.estado === EstadoPrestamo.ANULADO) {
+        throw new BadRequestException('El préstamo está anulado');
       }
 
       // Obtener resumen y calcular distribución
