@@ -743,6 +743,7 @@ import {
     .deduccion-row mat-form-field,
     .recargo-row mat-form-field {
       flex: 1;
+      min-width: 0;
     }
 
     .small-field {
@@ -756,6 +757,34 @@ import {
     .deduccion-row.cancelacion-prestamo {
       background: #fff3e0;
       border: 1px solid #ff9800;
+    }
+
+    /* Responsive móvil para filas de deducciones y recargos.
+       Se coloca DESPUÉS de los estilos base para ganar en el cascade CSS.
+       Causa del bug: en móvil (95vw ≈ 360px) los mat-form-field con flex:1
+       dentro de estas filas flex quedaban de ~70px de ancho. El .mat-mdc-select-value
+       tiene overflow:hidden y sin espacio suficiente el texto del valor no se veía. */
+    @media (max-width: 600px) {
+      .deduccion-row,
+      .recargo-row {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .deduccion-row mat-form-field,
+      .recargo-row mat-form-field {
+        width: 100%;
+        flex: none;
+      }
+
+      .small-field {
+        max-width: none;
+      }
+
+      .prestamo-select {
+        min-width: auto;
+        width: 100%;
+      }
     }
 
     .step-actions {

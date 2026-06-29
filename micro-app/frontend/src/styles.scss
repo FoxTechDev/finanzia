@@ -776,6 +776,26 @@ mat-form-field {
   }
 }
 
+// Fix global: mat-select no muestra el texto seleccionado en contenedores flex/grid.
+// El trigger usa display:inline-flex y el value usa overflow:hidden; si el contenedor
+// padre no le da ancho suficiente (min-width:0 en el flex item), el texto desaparece.
+.mat-mdc-form-field {
+  // Permite que el form-field como flex-item se encoja por debajo de su ancho mínimo
+  // de contenido, evitando que apriete el trigger del select a ancho 0
+  min-width: 0;
+}
+
+.mat-mdc-select-trigger {
+  // Garantiza que el trigger ocupe todo el ancho disponible del infix
+  width: 100%;
+  min-width: 0;
+}
+
+.mat-mdc-select-value {
+  // Permite que el contenedor del texto se encoja correctamente en flex
+  min-width: 0;
+}
+
 // Client info en tablas
 .client-info {
   display: flex;
