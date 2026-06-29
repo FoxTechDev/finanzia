@@ -90,12 +90,13 @@ export class PagoService {
       recargoManual,
     );
 
-    // Calcular saldos posteriores
+    // Calcular saldos posteriores usando el plan como fuente de verdad,
+    // ya que prestamo.saldoInteres es 0 para préstamos AMORTIZADO por diseño
     const saldoCapitalPosterior = this.redondear(
-      Number(prestamo.saldoCapital) - distribucion.capitalAplicado,
+      resumenAdeudo.totales.capitalPendiente - distribucion.capitalAplicado,
     );
     const saldoInteresPosterior = this.redondear(
-      Number(prestamo.saldoInteres) - distribucion.interesAplicado,
+      resumenAdeudo.totales.interesPendiente - distribucion.interesAplicado,
     );
 
     return {
@@ -183,12 +184,13 @@ export class PagoService {
       // Generar número de pago
       const numeroPago = await this.generarNumeroPago(queryRunner);
 
-      // Calcular saldos posteriores
+      // Calcular saldos posteriores usando el plan como fuente de verdad,
+      // ya que prestamo.saldoInteres es 0 para préstamos AMORTIZADO por diseño
       const saldoCapitalPosterior = this.redondear(
-        Number(prestamo.saldoCapital) - distribucion.capitalAplicado,
+        resumenAdeudo.totales.capitalPendiente - distribucion.capitalAplicado,
       );
       const saldoInteresPosterior = this.redondear(
-        Number(prestamo.saldoInteres) - distribucion.interesAplicado,
+        resumenAdeudo.totales.interesPendiente - distribucion.interesAplicado,
       );
 
       // Crear registro de pago
@@ -203,9 +205,9 @@ export class PagoService {
         recargosAplicado: distribucion.recargosAplicado,
         interesMoratorioAplicado: distribucion.interesMoratorioAplicado,
         recargoManualAplicado: distribucion.recargoManualAplicado,
-        // Saldos anteriores para reversa
-        saldoCapitalAnterior: Number(prestamo.saldoCapital),
-        saldoInteresAnterior: Number(prestamo.saldoInteres),
+        // Saldos anteriores para reversa (desde el plan, no del campo denormalizado)
+        saldoCapitalAnterior: resumenAdeudo.totales.capitalPendiente,
+        saldoInteresAnterior: resumenAdeudo.totales.interesPendiente,
         capitalMoraAnterior: Number(prestamo.capitalMora),
         interesMoraAnterior: Number(prestamo.interesMora),
         diasMoraAnterior: prestamo.diasMora,
