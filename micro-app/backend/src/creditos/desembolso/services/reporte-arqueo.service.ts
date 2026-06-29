@@ -91,7 +91,8 @@ export class ReporteArqueoService {
       .where('prestamo.fechaOtorgamiento BETWEEN :desde AND :hasta', {
         desde: params.fechaDesde,
         hasta: params.fechaHasta,
-      });
+      })
+      .andWhere('prestamo.estado != :estadoAnulado', { estadoAnulado: 'ANULADO' });
 
     if (usuarioId) {
       desembolsosQuery
@@ -172,7 +173,8 @@ export class ReporteArqueoService {
         hasta: params.fechaHasta,
       })
       .andWhere('pago.estado = :estado', { estado: 'APLICADO' })
-      .andWhere('pago.idFormaPago IN (:...formasPago)', { formasPago: [1, 2] });
+      .andWhere('pago.idFormaPago IN (:...formasPago)', { formasPago: [1, 2] })
+      .andWhere('prestamo.estado != :estadoAnulado', { estadoAnulado: 'ANULADO' });
 
     if (usuarioId) {
       pagosQuery.andWhere('pago.usuarioId = :usuarioId', { usuarioId });

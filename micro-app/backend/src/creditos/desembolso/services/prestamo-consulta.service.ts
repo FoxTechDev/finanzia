@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, Like, Between, MoreThanOrEqual } from 'typeorm';
-import { Prestamo } from '../entities/prestamo.entity';
+import { Prestamo, EstadoPrestamo } from '../entities/prestamo.entity';
 import { PlanPago, EstadoCuota } from '../entities/plan-pago.entity';
 import { FiltrosPrestamoDto } from '../dto/filtros-prestamo.dto';
 import {
@@ -66,6 +66,10 @@ export class PrestamoConsultaService {
     // Aplicar filtros
     if (filtros.estado) {
       queryBuilder.andWhere('prestamo.estado = :estado', { estado: filtros.estado });
+    } else {
+      queryBuilder.andWhere('prestamo.estado != :estadoAnulado', {
+        estadoAnulado: EstadoPrestamo.ANULADO,
+      });
     }
 
     if (filtros.clasificacion) {

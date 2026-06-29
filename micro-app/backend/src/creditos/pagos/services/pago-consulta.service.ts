@@ -91,6 +91,9 @@ export class PagoConsultaService {
       .leftJoinAndSelect('pago.detallesCuota', 'detalles')
       .leftJoinAndSelect('pago.formaPago', 'formaPago');
 
+    // Excluir pagos de préstamos anulados
+    queryBuilder.andWhere('prestamo.estado != :estadoAnulado', { estadoAnulado: 'ANULADO' });
+
     // Aplicar filtros
     if (filtros.prestamoId) {
       queryBuilder.andWhere('pago.prestamoId = :prestamoId', {
