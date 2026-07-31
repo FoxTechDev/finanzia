@@ -52,6 +52,9 @@ export class CuentaAhorroController {
       await this.capitalizacionService.generarPlanAV(cuenta.id);
     } else if (tipoAhorro.lineaAhorro?.codigo === 'DPF') {
       await this.capitalizacionService.generarPlanDPF(cuenta.id);
+      if (cuenta.tipoCapitalizacion?.codigo === 'ANTICIPADO') {
+        await this.capitalizacionService.procesarPagoAnticipado(cuenta.id);
+      }
     } else if (dto.tipoCapitalizacionId) {
       await this.capitalizacionService.generarPlan(cuenta.id);
     }

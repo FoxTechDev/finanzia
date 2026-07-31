@@ -25,6 +25,8 @@ export interface DatosReporteColocacion {
   tipoCredito: string;
   montoAutorizado: number;
   montoDesembolsado: number;
+  fondosPropios: number;
+  transferenciaBancaria: number;
   tasaInteres: number;
   plazo: number;
   periodicidadPago: string;
@@ -292,6 +294,8 @@ export class ReporteService {
       tipoCredito: prestamo.tipoCredito?.nombre || 'N/A',
       montoAutorizado: Number(prestamo.montoAutorizado) || 0,
       montoDesembolsado: Number(prestamo.montoDesembolsado) || 0,
+      fondosPropios: Number(prestamo.fondosPropios) || 0,
+      transferenciaBancaria: Number(prestamo.transferenciaBancaria) || 0,
       tasaInteres: Number(prestamo.tasaInteres) || 0,
       plazo: Number(prestamo.numeroCuotas) || 0,
       periodicidadPago: prestamo.periodicidadPago || 'N/A',

@@ -247,6 +247,24 @@ import { LineaCredito, TipoCredito, PERIODICIDAD_PAGO_LABELS, PeriodicidadPago }
                   </span>
                 </div>
               </div>
+              <div class="summary-item">
+                <mat-icon>savings</mat-icon>
+                <div>
+                  <span class="summary-label">Total Fondos Propios</span>
+                  <span class="summary-value">
+                    {{ calcularTotalFondosPropios() | currency:'USD':'symbol':'1.2-2' }}
+                  </span>
+                </div>
+              </div>
+              <div class="summary-item">
+                <mat-icon>sync_alt</mat-icon>
+                <div>
+                  <span class="summary-label">Total Transferencias</span>
+                  <span class="summary-value">
+                    {{ calcularTotalTransferencias() | currency:'USD':'symbol':'1.2-2' }}
+                  </span>
+                </div>
+              </div>
             </div>
 
             <mat-divider style="margin: 24px 0;"></mat-divider>
@@ -315,6 +333,22 @@ import { LineaCredito, TipoCredito, PERIODICIDAD_PAGO_LABELS, PeriodicidadPago }
                   <th mat-header-cell *matHeaderCellDef>Periodicidad</th>
                   <td mat-cell *matCellDef="let item">
                     {{ getPeriodicidadLabel(item.periodicidadPago) }}
+                  </td>
+                </ng-container>
+
+                <!-- Fondos Propios -->
+                <ng-container matColumnDef="fondosPropios">
+                  <th mat-header-cell *matHeaderCellDef>Fondos Propios</th>
+                  <td mat-cell *matCellDef="let item">
+                    {{ item.fondosPropios | currency:'USD':'symbol':'1.2-2' }}
+                  </td>
+                </ng-container>
+
+                <!-- Transferencia Bancaria -->
+                <ng-container matColumnDef="transferenciaBancaria">
+                  <th mat-header-cell *matHeaderCellDef>Transferencias</th>
+                  <td mat-cell *matCellDef="let item">
+                    {{ item.transferenciaBancaria | currency:'USD':'symbol':'1.2-2' }}
                   </td>
                 </ng-container>
 
@@ -670,6 +704,8 @@ export class ReporteColocacionComponent implements OnInit {
     'tipoCredito',
     'montoAutorizado',
     'montoDesembolsado',
+    'fondosPropios',
+    'transferenciaBancaria',
     'tasaInteres',
     'plazo',
     'periodicidadPago',
@@ -885,6 +921,26 @@ export class ReporteColocacionComponent implements OnInit {
   }
 
   /**
+   * Calcula el total de fondos propios
+   */
+  calcularTotalFondosPropios(): number {
+    return this.datosReporte().reduce(
+      (sum, item) => sum + item.fondosPropios,
+      0
+    );
+  }
+
+  /**
+   * Calcula el total de transferencias bancarias
+   */
+  calcularTotalTransferencias(): number {
+    return this.datosReporte().reduce(
+      (sum, item) => sum + item.transferenciaBancaria,
+      0
+    );
+  }
+
+  /**
    * Obtiene el label de la periodicidad de pago
    */
   getPeriodicidadLabel(periodicidad: string): string {
@@ -913,6 +969,8 @@ export class ReporteColocacionComponent implements OnInit {
         'Tipo de Crédito': item.tipoCredito,
         'Monto Otorgado': item.montoAutorizado,
         'Monto Desembolsado': item.montoDesembolsado,
+        'Fondos Propios': item.fondosPropios,
+        'Transferencias': item.transferenciaBancaria,
         'Tasa de Interés (%)': item.tasaInteres,
         'Plazo (Cuotas)': item.plazo,
         'Periodicidad de Pago': this.getPeriodicidadLabel(item.periodicidadPago),
@@ -929,6 +987,8 @@ export class ReporteColocacionComponent implements OnInit {
         'Tipo de Crédito': 'TOTALES',
         'Monto Otorgado': this.calcularTotalAutorizado(),
         'Monto Desembolsado': this.calcularTotalDesembolsado(),
+        'Fondos Propios': this.calcularTotalFondosPropios(),
+        'Transferencias': this.calcularTotalTransferencias(),
         'Tasa de Interés (%)': '',
         'Plazo (Cuotas)': '',
         'Periodicidad de Pago': '',
@@ -1028,6 +1088,8 @@ export class ReporteColocacionComponent implements OnInit {
         item.tipoCredito,
         `$${item.montoAutorizado.toFixed(2)}`,
         `$${item.montoDesembolsado.toFixed(2)}`,
+        `$${item.fondosPropios.toFixed(2)}`,
+        `$${item.transferenciaBancaria.toFixed(2)}`,
         `${item.tasaInteres.toFixed(2)}%`,
         item.plazo.toString(),
         this.getPeriodicidadLabel(item.periodicidadPago),
@@ -1044,6 +1106,8 @@ export class ReporteColocacionComponent implements OnInit {
         'TOTALES',
         `$${this.calcularTotalAutorizado().toFixed(2)}`,
         `$${this.calcularTotalDesembolsado().toFixed(2)}`,
+        `$${this.calcularTotalFondosPropios().toFixed(2)}`,
+        `$${this.calcularTotalTransferencias().toFixed(2)}`,
         '',
         '',
         '',
@@ -1063,6 +1127,8 @@ export class ReporteColocacionComponent implements OnInit {
             'Tipo',
             'Otorgado',
             'Desembolsado',
+            'F. Propios',
+            'Transferencias',
             'Tasa',
             'Plazo',
             'Period.',

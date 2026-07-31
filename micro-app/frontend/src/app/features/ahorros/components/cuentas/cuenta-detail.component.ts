@@ -18,6 +18,7 @@ import { BeneficiarioService } from '../../services/beneficiario.service';
 import { CuentaAhorroDetalle, TransaccionAhorro, PlanCapitalizacion, BeneficiarioCuentaAhorro } from '@core/models/ahorro.model';
 import { BeneficiarioDialogComponent } from './beneficiario-dialog.component';
 import { HasRoleDirective } from '@core/directives/has-role.directive';
+import { parseLocalDate } from '@core/utils/date.utils';
 import { RoleCodes } from '@core/models/user.model';
 
 @Component({
@@ -625,7 +626,7 @@ export class CuentaDetailComponent implements OnInit {
     const vencStr = partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : vencActual;
 
     // Calcular nuevo vencimiento para mostrarlo en el confirm
-    const fechaVenc = new Date(vencActual);
+    const fechaVenc = parseLocalDate(vencActual.substring(0, 10));
     fechaVenc.setDate(fechaVenc.getDate() + plazo);
     const nuevoStr = `${String(fechaVenc.getDate()).padStart(2, '0')}/${String(fechaVenc.getMonth() + 1).padStart(2, '0')}/${fechaVenc.getFullYear()}`;
 

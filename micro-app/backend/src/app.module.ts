@@ -21,6 +21,7 @@ import { GastoClienteModule } from './gasto-cliente/gasto-cliente.module';
 import { IngresoClienteModule } from './ingreso-cliente/ingreso-cliente.module';
 import { AhorrosModule } from './ahorros/ahorros.module';
 import { BancosModule } from './bancos/banco.module';
+import { AccionesModule } from './acciones/acciones.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { BancosModule } from './bancos/banco.module';
     IngresoClienteModule,
     AhorrosModule,
     BancosModule,
+    AccionesModule,
   ],
   controllers: [],
   providers: [

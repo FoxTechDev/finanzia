@@ -5,7 +5,8 @@ import { CuentaAhorro } from '../entities/cuenta-ahorro.entity';
 import { PlanCapitalizacion } from '../entities/plan-capitalizacion.entity';
 import { TransaccionAhorro } from '../entities/transaccion-ahorro.entity';
 import { CatalogosAhorroService } from '../../catalogos/services/catalogos-ahorro.service';
-import { formatLocalDate } from '../../../common/utils/date.utils';
+import { formatLocalDate, parseLocalDate } from '../../../common/utils/date.utils';
+import { calcularInteresProrrateo } from '../../../common/utils/interes.utils';
 
 @Injectable()
 export class CapitalizacionService {
@@ -41,8 +42,8 @@ export class CapitalizacionService {
     }
 
     const fechas: PlanCapitalizacion[] = [];
-    const inicio = new Date(cuenta.fechaApertura);
-    const fin = new Date(cuenta.fechaVencimiento);
+    const inicio = parseLocalDate(cuenta.fechaApertura);
+    const fin = parseLocalDate(cuenta.fechaVencimiento);
 
     let fecha = new Date(inicio);
     fecha.setDate(fecha.getDate() + dias);
@@ -152,6 +153,112 @@ export class CapitalizacionService {
     return { procesados };
   }
 
+  /**
+   * Paga de inmediato (mismo día) el interés de un DPF con capitalización
+   * "Pago Anticipado". A diferencia de procesarCapitalizacion(), el interés
+   * NO se reinvierte en el saldo del propio DPF: se acredita a la cuenta AV
+   * o banco que el cliente eligió en la apertura, o se registra como pagado
+   * en efectivo si no eligió ninguno.
+   */
+  async procesarPagoAnticipado(cuentaId: number): Promise<void> {
+    const plan = await this.planRepo.findOne({
+      where: { cuentaAhorroId: cuentaId, procesado: false },
+      order: { fechaCapitalizacion: 'ASC' },
+    });
+    if (!plan) return;
+
+    const cuenta = await this.cuentaRepo.findOne({
+      where: { id: cuentaId },
+      relations: ['cuentaAhorroDestino', 'banco'],
+    });
+    if (!cuenta) return;
+
+    const interes = Number(plan.monto);
+    // Se ancla a la fecha de apertura del DPF (no a "hoy"), ya que el pago
+    // anticipado se considera efectuado el día de apertura del contrato.
+    const fechaPago = formatLocalDate(parseLocalDate(cuenta.fechaApertura));
+    const naturalezaAbono =
+      await this.catalogosService.findNaturalezaByCodigo('ABONO');
+    const tipoPagoIntereses =
+      await this.catalogosService.findTipoTransaccionByCodigo(
+        'PAGO_INTERESES',
+      );
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      let observacionDpf = 'Pago anticipado de intereses en efectivo';
+
+      if (cuenta.cuentaAhorroDestino) {
+        const destino = cuenta.cuentaAhorroDestino;
+        const saldoAnteriorDestino = Number(destino.saldo);
+        const nuevoSaldoDestino = saldoAnteriorDestino + interes;
+        const saldoDisponibleDestino = destino.pignorado
+          ? nuevoSaldoDestino - Number(destino.montoPignorado)
+          : nuevoSaldoDestino;
+
+        await queryRunner.manager.save(
+          TransaccionAhorro,
+          Object.assign(new TransaccionAhorro(), {
+            cuentaAhorroId: destino.id,
+            fecha: fechaPago,
+            monto: interes,
+            naturalezaId: naturalezaAbono.id,
+            tipoTransaccionId: tipoPagoIntereses.id,
+            saldoAnterior: saldoAnteriorDestino,
+            nuevoSaldo: nuevoSaldoDestino,
+            observacion: `Pago anticipado de intereses DPF ${cuenta.noCuenta}`,
+          }),
+        );
+
+        await queryRunner.manager.update(CuentaAhorro, destino.id, {
+          saldo: nuevoSaldoDestino,
+          saldoDisponible: Math.max(saldoDisponibleDestino, 0),
+          fechaUltMovimiento: fechaPago,
+        });
+
+        observacionDpf = `Pago anticipado de intereses transferido a cuenta ${destino.noCuenta}`;
+      } else if (cuenta.banco) {
+        observacionDpf = `Pago anticipado de intereses transferido al banco ${cuenta.banco.nombre}, cuenta ${cuenta.cuentaBancoNumero || ''}`.trim();
+      }
+
+      // Registro informativo en la propia cuenta DPF: el interés no forma
+      // parte de su saldo, ya que se pagó de inmediato a otro destino.
+      const saldoDpf = Number(cuenta.saldo);
+      await queryRunner.manager.save(
+        TransaccionAhorro,
+        Object.assign(new TransaccionAhorro(), {
+          cuentaAhorroId: cuenta.id,
+          fecha: fechaPago,
+          monto: interes,
+          naturalezaId: naturalezaAbono.id,
+          tipoTransaccionId: tipoPagoIntereses.id,
+          saldoAnterior: saldoDpf,
+          nuevoSaldo: saldoDpf,
+          observacion: observacionDpf,
+        }),
+      );
+
+      await queryRunner.manager.update(PlanCapitalizacion, plan.id, {
+        procesado: true,
+        fechaProcesado: fechaPago,
+        monto: interes,
+      });
+
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error(
+        `Error en pago anticipado de intereses, cuenta ${cuentaId}: ${error.message}`,
+      );
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   async generarPlanAV(cuentaId: number): Promise<PlanCapitalizacion[]> {
     const cuenta = await this.cuentaRepo.findOne({
       where: { id: cuentaId },
@@ -166,7 +273,7 @@ export class CapitalizacionService {
       { mes: 11, dia: 31 }, // Diciembre
     ];
 
-    const apertura = new Date(cuenta.fechaApertura);
+    const apertura = parseLocalDate(cuenta.fechaApertura);
     const anioApertura = apertura.getFullYear();
     const fechas: PlanCapitalizacion[] = [];
 
@@ -212,15 +319,30 @@ export class CapitalizacionService {
 
     const saldo = Number(cuenta.monto);
     const tasaAnual = Number(cuenta.tasaInteres);
-    const apertura = new Date(cuenta.fechaApertura);
-    const vencimiento = new Date(cuenta.fechaVencimiento);
+    const apertura = parseLocalDate(cuenta.fechaApertura);
+    const vencimiento = parseLocalDate(cuenta.fechaVencimiento);
     const diasCap = cuenta.tipoCapitalizacion?.dias || 0;
 
     const fechas: PlanCapitalizacion[] = [];
 
-    if (diasCap === 0) {
+    if (cuenta.tipoCapitalizacion?.codigo === 'ANTICIPADO') {
+      // Pago anticipado: interés de todo el plazo, en la fecha de apertura
+      const interes = calcularInteresProrrateo(
+        saldo,
+        tasaAnual,
+        apertura,
+        vencimiento,
+      );
+      fechas.push(
+        this.planRepo.create({
+          cuentaAhorroId: cuentaId,
+          fechaCapitalizacion: formatLocalDate(apertura),
+          monto: interes,
+        }),
+      );
+    } else if (diasCap === 0) {
       // Al vencimiento: una sola entrada
-      const interes = this.calcularInteresProrrateo(
+      const interes = calcularInteresProrrateo(
         saldo,
         tasaAnual,
         apertura,
@@ -240,7 +362,7 @@ export class CapitalizacionService {
       fechaActual.setDate(fechaActual.getDate() + diasCap);
 
       while (fechaActual <= vencimiento) {
-        const interes = this.calcularInteresProrrateo(
+        const interes = calcularInteresProrrateo(
           saldo,
           tasaAnual,
           fechaAnterior,
@@ -260,7 +382,7 @@ export class CapitalizacionService {
 
       // Período residual si queda entre último corte y vencimiento
       if (fechaAnterior < vencimiento) {
-        const interes = this.calcularInteresProrrateo(
+        const interes = calcularInteresProrrateo(
           saldo,
           tasaAnual,
           fechaAnterior,
@@ -280,38 +402,6 @@ export class CapitalizacionService {
       return this.planRepo.save(fechas);
     }
     return [];
-  }
-
-  private esAnioBisiesto(anio: number): boolean {
-    return (anio % 4 === 0 && anio % 100 !== 0) || anio % 400 === 0;
-  }
-
-  private calcularInteresProrrateo(
-    saldo: number,
-    tasaAnual: number,
-    fechaInicio: Date,
-    fechaFin: Date,
-  ): number {
-    const tasa = tasaAnual / 100;
-    let interes = 0;
-    let current = new Date(fechaInicio);
-
-    while (current < fechaFin) {
-      const anio = current.getFullYear();
-      const diasAnio = this.esAnioBisiesto(anio) ? 366 : 365;
-
-      const finAnio = new Date(anio + 1, 0, 1); // 1 enero del siguiente
-      const endDate = fechaFin < finAnio ? fechaFin : finAnio;
-
-      const dias = Math.round(
-        (endDate.getTime() - current.getTime()) / (1000 * 60 * 60 * 24),
-      );
-      interes += ((saldo * tasa) / diasAnio) * dias;
-
-      current = new Date(endDate);
-    }
-
-    return Math.round(interes * 100) / 100;
   }
 
   /**
@@ -339,9 +429,24 @@ export class CapitalizacionService {
 
     const fechas: PlanCapitalizacion[] = [];
 
-    if (diasCap === 0) {
+    if (cuenta.tipoCapitalizacion?.codigo === 'ANTICIPADO') {
+      // Pago anticipado: interés de todo el nuevo plazo, en la fecha de inicio
+      const interes = calcularInteresProrrateo(
+        saldo,
+        tasaAnual,
+        fechaInicio,
+        fechaFin,
+      );
+      fechas.push(
+        this.planRepo.create({
+          cuentaAhorroId: cuentaId,
+          fechaCapitalizacion: formatLocalDate(fechaInicio),
+          monto: interes,
+        }),
+      );
+    } else if (diasCap === 0) {
       // Al vencimiento: una sola entrada
-      const interes = this.calcularInteresProrrateo(
+      const interes = calcularInteresProrrateo(
         saldo,
         tasaAnual,
         fechaInicio,
@@ -361,7 +466,7 @@ export class CapitalizacionService {
       fechaActual.setDate(fechaActual.getDate() + diasCap);
 
       while (fechaActual <= fechaFin) {
-        const interes = this.calcularInteresProrrateo(
+        const interes = calcularInteresProrrateo(
           saldo,
           tasaAnual,
           fechaAnterior,
@@ -381,7 +486,7 @@ export class CapitalizacionService {
 
       // Período residual
       if (fechaAnterior < fechaFin) {
-        const interes = this.calcularInteresProrrateo(
+        const interes = calcularInteresProrrateo(
           saldo,
           tasaAnual,
           fechaAnterior,

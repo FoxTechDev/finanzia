@@ -174,6 +174,8 @@ export class PrestamoResumenDto {
 
   montoAutorizado: number;
   montoDesembolsado: number;
+  fondosPropios: number;
+  transferenciaBancaria: number;
   saldoCapital: number;
   diasMora: number;
   periodicidadPago: string;

@@ -13,7 +13,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTableModule } from '@angular/material/table';
 import { debounceTime, switchMap, of } from 'rxjs';
 import { CuentaAhorroService } from '../../services/cuenta-ahorro.service';
-import { formatLocalDate } from '@core/utils/date.utils';
+import { formatLocalDate, parseLocalDate } from '@core/utils/date.utils';
 import { CatalogosAhorroService } from '../../services/catalogos-ahorro.service';
 import { BancoService } from '../../services/banco.service';
 import { BeneficiarioService } from '../../services/beneficiario.service';
@@ -294,11 +294,7 @@ export class DpfAperturaComponent implements OnInit {
 
   ngOnInit(): void {
     this.catalogos.getTiposByLinea('DPF').subscribe((data) => this.tiposAhorro.set(data));
-    this.catalogos.getTiposCapitalizacion().subscribe((data) => {
-      // Filtrar: solo mensual (dias=30) y al vencimiento (dias=0)
-      const filtrados = data.filter((c) => c.dias === 0 || c.dias === 30);
-      this.tiposCapitalizacion.set(filtrados);
-    });
+    this.catalogos.getTiposCapitalizacion().subscribe((data) => this.tiposCapitalizacion.set(data));
 
     // Cargar lista de bancos activos
     this.bancoService.getAll(true).subscribe((data) => this.bancos.set(data));
@@ -368,7 +364,7 @@ export class DpfAperturaComponent implements OnInit {
     const tipo = this.tipoSeleccionado();
     const fechaApertura = this.form.get('fechaApertura')?.value;
     if (tipo && fechaApertura && tipo.plazo > 0) {
-      const fecha = new Date(fechaApertura);
+      const fecha = parseLocalDate(fechaApertura);
       fecha.setDate(fecha.getDate() + tipo.plazo);
       this.form.patchValue({
         fechaVencimiento: formatLocalDate(fecha),

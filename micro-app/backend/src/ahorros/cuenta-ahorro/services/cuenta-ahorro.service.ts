@@ -13,7 +13,7 @@ import { PlanCapitalizacion } from '../entities/plan-capitalizacion.entity';
 import { CatalogosAhorroService } from '../../catalogos/services/catalogos-ahorro.service';
 import { TipoAhorroService } from '../../tipo-ahorro/tipo-ahorro.service';
 import { CapitalizacionService } from './capitalizacion.service';
-import { formatLocalDate } from '../../../common/utils/date.utils';
+import { formatLocalDate, parseLocalDate } from '../../../common/utils/date.utils';
 
 @Injectable()
 export class CuentaAhorroService {
@@ -248,7 +248,7 @@ export class CuentaAhorroService {
     }
 
     // Calcular nuevo vencimiento: fechaVencimiento actual + plazo días
-    const vencimientoAnterior = new Date(cuenta.fechaVencimiento);
+    const vencimientoAnterior = parseLocalDate(cuenta.fechaVencimiento);
     const nuevoVencimiento = new Date(vencimientoAnterior);
     nuevoVencimiento.setDate(nuevoVencimiento.getDate() + cuenta.plazo);
     const nuevoVencimientoStr = formatLocalDate(nuevoVencimiento);
@@ -297,6 +297,11 @@ export class CuentaAhorroService {
       }
 
       await queryRunner.commitTransaction();
+
+      if (cuenta.tipoCapitalizacion?.codigo === 'ANTICIPADO') {
+        await this.capitalizacionService.procesarPagoAnticipado(id);
+      }
+
       return this.findOneEntity(id);
     } catch (error) {
       await queryRunner.rollbackTransaction();
